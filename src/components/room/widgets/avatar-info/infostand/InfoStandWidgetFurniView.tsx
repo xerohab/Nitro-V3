@@ -21,7 +21,7 @@ import {
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { FaCrosshairs, FaTimes } from 'react-icons/fa';
 import { GrFormNextLink, GrRotateLeft, GrRotateRight } from 'react-icons/gr';
-import { AvatarInfoFurni, GetConfigurationValue, GetGroupInformation, LocalizeText, SendMessageComposer } from '../../../../../api';
+import { AvatarInfoFurni, GetConfigurationValue, GetGroupInformation, IPhotoData, isSafeExternalUrl, LocalizeText, SendMessageComposer } from '../../../../../api';
 import {
     Button,
     Column,
@@ -94,6 +94,26 @@ export const InfoStandWidgetFurniView: FC<InfoStandWidgetFurniViewProps> = (prop
     const isModerator = useHasPermission('acc_anyroomowner');
     const { getValue: getRareValue } = useRareValues();
     const rareValue = useMemo(() => (avatarInfo ? getRareValue(avatarInfo.spriteId) : null), [avatarInfo, getRareValue]);
+
+    // Photos (interaction type external_image) carry their thumbnail URL in
+    // the room object's stuff data; show the actual photo instead of the
+    // generic furni sprite.
+    const externalImagePhotoUrl = useMemo(() => {
+        if (!avatarInfo || !roomSession) return null;
+
+        const roomObject = GetRoomEngine().getRoomObject(roomSession.roomId, avatarInfo.id, avatarInfo.category);
+
+        if (!roomObject || roomObject.type.indexOf('external_image') !== 0) return null;
+
+        try {
+            const photoData = JSON.parse(roomObject.model.getValue<string>(RoomObjectVariable.FURNITURE_DATA)) as IPhotoData;
+            const photoUrl = photoData?.w ?? null;
+
+            return photoUrl && isSafeExternalUrl(photoUrl) ? photoUrl : null;
+        } catch {
+            return null;
+        }
+    }, [avatarInfo, roomSession]);
     const descriptionsEnabled = GetConfigurationValue<boolean>('furni.descriptions.enabled', true);
     const itemLocationEnabled = GetConfigurationValue<boolean>('furni.location.enabled', true);
     const itemLocationRequireAccess = GetConfigurationValue<boolean>('furni.location.require.access', true);
@@ -565,18 +585,29 @@ export const InfoStandWidgetFurniView: FC<InfoStandWidgetFurniViewProps> = (prop
                                     </div>
                                 )}
                                 <Flex center fullWidth className="min-h-[74px] max-h-[86px] overflow-hidden">
-                                    <LayoutRoomObjectImageView
-                                        category={avatarInfo.category}
-                                        objectId={avatarInfo.id}
-                                        roomId={roomSession.roomId}
-                                        style={{
-                                            maxWidth: 120,
-                                            maxHeight: 82,
-                                            backgroundSize: 'contain',
-                                            backgroundPosition: 'center',
-                                            backgroundRepeat: 'no-repeat'
-                                        }}
-                                    />
+                                    {externalImagePhotoUrl ? (
+                                        <div className="bg-white p-[3px] pb-[9px] rounded-[2px] border border-[#00000080] shadow-[1px_2px_3px_rgba(0,0,0,0.5)]">
+                                            <img
+                                                alt=""
+                                                draggable={false}
+                                                src={externalImagePhotoUrl}
+                                                style={{ width: 64, height: 64, objectFit: 'contain', imageRendering: 'pixelated' }}
+                                            />
+                                        </div>
+                                    ) : (
+                                        <LayoutRoomObjectImageView
+                                            category={avatarInfo.category}
+                                            objectId={avatarInfo.id}
+                                            roomId={roomSession.roomId}
+                                            style={{
+                                                maxWidth: 120,
+                                                maxHeight: 82,
+                                                backgroundSize: 'contain',
+                                                backgroundPosition: 'center',
+                                                backgroundRepeat: 'no-repeat'
+                                            }}
+                                        />
+                                    )}
                                 </Flex>
                             </Flex>
                             <hr className="m-0 bg-[#0003] border-0 opacity-[.5] h-px" />

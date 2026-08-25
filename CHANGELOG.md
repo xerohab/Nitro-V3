@@ -5,7 +5,7 @@
 Long-running work on the `feat/react19-modernization` branch — see
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the design rationale.
 Companion changes shipped on `feat/react19-event-bus` in
-[`Nitro_Render_V3`](../Nitro_Render_V3) — see that repo's CLAUDE.md
+[`octane-renderer`](../octane-renderer) — see that repo's CLAUDE.md
 for the renderer-side notes.
 
 ### Pattern #1: `useNitroEventState` + companions

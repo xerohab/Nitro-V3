@@ -5,23 +5,27 @@ import { UserIdentityView } from '../../../../common';
 import { useOnClickChat } from '../../../../hooks';
 import { useUserDataSnapshot } from '../../../../hooks/session/useSessionSnapshots';
 import { CHAT_TEXT_SIZE_EVENT, CHAT_TEXT_SIZE_PIXELS, ChatTextSize, getStoredChatTextSize } from '../chat-input/chatTextSize';
+import { measureBubbleVisualOffsets } from './chatBubbleMetrics';
 import { highlightMentions } from './highlightMentions';
 
 interface ChatWidgetMessageViewProps {
     chat: ChatBubbleMessage;
     makeRoom: (chat: ChatBubbleMessage) => void;
     bubbleWidth?: number;
+    showPointer?: boolean;
 }
 
 export const ChatWidgetMessageView: FC<ChatWidgetMessageViewProps> = ({
     chat = null,
     makeRoom = null,
-    bubbleWidth = RoomChatSettings.CHAT_BUBBLE_WIDTH_NORMAL
+    bubbleWidth = RoomChatSettings.CHAT_BUBBLE_WIDTH_NORMAL,
+    showPointer = true
 }) => {
     const [isVisible, setIsVisible] = useState(false);
     const [isReady, setIsReady] = useState(false);
     const [chatTextSize, setChatTextSize] = useState<ChatTextSize>(() => getStoredChatTextSize());
     const elementRef = useRef<HTMLDivElement>(null);
+    const makeRoomRef = useRef(makeRoom);
     const { onClickChat } = useOnClickChat();
     const { userName: ownUsername = '' } = useUserDataSnapshot();
 
@@ -59,9 +63,12 @@ export const ChatWidgetMessageView: FC<ChatWidgetMessageViewProps> = ({
         const previousWidth = chat.width;
         const previousHeight = chat.height;
         const { offsetWidth: width, offsetHeight: height } = element;
+        const visualOffsets = measureBubbleVisualOffsets(element);
 
         chat.width = width;
         chat.height = height;
+        chat.visualOffsetTop = visualOffsets.top;
+        chat.visualOffsetBottom = visualOffsets.bottom;
         chat.elementRef = element;
 
         let { left, top } = chat;
@@ -79,7 +86,17 @@ export const ChatWidgetMessageView: FC<ChatWidgetMessageViewProps> = ({
         setIsReady(true);
 
         if (isVisible && (previousWidth !== width || previousHeight !== height) && makeRoom) makeRoom(chat);
-    }, [chat, chat.formattedText, chat.originalFormattedText, chat.showTranslation, chat.translatedFormattedText, chatTextSize, isVisible, makeRoom]);
+    }, [
+        chat,
+        chat.formattedText,
+        chat.originalFormattedText,
+        chat.showTranslation,
+        chat.translatedFormattedText,
+        chatTextSize,
+        isVisible,
+        makeRoom,
+        showPointer
+    ]);
 
     useEffect(() => {
         const onChatTextSizeChange = (event: Event) => {
@@ -90,6 +107,37 @@ export const ChatWidgetMessageView: FC<ChatWidgetMessageViewProps> = ({
 
         return () => window.removeEventListener(CHAT_TEXT_SIZE_EVENT, onChatTextSizeChange);
     }, []);
+
+    useEffect(() => {
+        makeRoomRef.current = makeRoom;
+    }, [makeRoom]);
+
+    useEffect(() => {
+        const element = elementRef.current;
+
+        if (!element || typeof ResizeObserver === 'undefined') return;
+
+        const observer = new ResizeObserver(() => {
+            const { offsetWidth: width, offsetHeight: height } = element;
+
+            if (width === chat.width && height === chat.height) return;
+
+            if (chat.width && chat.width !== width) chat.left += (chat.width - width) / 2;
+
+            const visualOffsets = measureBubbleVisualOffsets(element);
+
+            chat.width = width;
+            chat.height = height;
+            chat.visualOffsetTop = visualOffsets.top;
+            chat.visualOffsetBottom = visualOffsets.bottom;
+
+            if (makeRoomRef.current) makeRoomRef.current(chat);
+        });
+
+        observer.observe(element);
+
+        return () => observer.disconnect();
+    }, [chat]);
 
     useEffect(() => {
         return () => {
@@ -163,7 +211,12 @@ export const ChatWidgetMessageView: FC<ChatWidgetMessageViewProps> = ({
                         </div>
                     )}
                 </div>
-                <div className="pointer absolute left-[50%] translate-x-[-50%] w-[9px] h-[6px] bottom-[-5px]" />
+                {showPointer && (
+                    <div
+                        className="pointer absolute translate-x-[-50%] w-[9px] h-[6px] bottom-[-5px]"
+                        style={{ left: 'var(--chat-pointer-x, 50%)' }}
+                    />
+                )}
             </div>
         </div>
     );

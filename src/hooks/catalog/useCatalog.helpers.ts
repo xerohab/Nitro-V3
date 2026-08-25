@@ -23,6 +23,90 @@ export const normalizeCatalogType = (type?: string): string => {
     return CatalogType.NORMAL;
 };
 
+export interface CatalogIndexRequestCoordinator {
+    request: (catalogType: string) => boolean;
+    complete: (catalogType: string) => void;
+    reset: () => void;
+}
+
+export interface CatalogIndexPrewarmState {
+    authenticated: boolean;
+    visible: boolean;
+    hasIndex: boolean;
+    catalogType: string;
+}
+
+export interface CatalogIndexPrewarmController {
+    update: (state: CatalogIndexPrewarmState) => void;
+}
+
+export const createCatalogIndexRequestCoordinator = (
+    send: (catalogType: string) => void,
+    timeoutMs: number = 10_000,
+    now: () => number = Date.now
+): CatalogIndexRequestCoordinator => {
+    const requestedAt = new Map<string, number>();
+
+    return {
+        request: (catalogType) => {
+            const requested = requestedAt.get(catalogType);
+            const currentTime = now();
+
+            if (requested !== undefined && currentTime - requested < timeoutMs) return false;
+
+            requestedAt.set(catalogType, currentTime);
+            send(catalogType);
+
+            return true;
+        },
+        complete: (catalogType) => requestedAt.delete(catalogType),
+        reset: () => requestedAt.clear()
+    };
+};
+
+export const createCatalogIndexPrewarmController = (request: (catalogType: string) => void): CatalogIndexPrewarmController => {
+    let previous: CatalogIndexPrewarmState = {
+        authenticated: false,
+        visible: false,
+        hasIndex: false,
+        catalogType: CatalogType.NORMAL
+    };
+
+    return {
+        update: (state) => {
+            if (state.authenticated) {
+                const authenticatedNow = !previous.authenticated;
+                const openedNow = state.visible && !previous.visible;
+                const switchedVisibleCatalog = state.visible && state.catalogType !== previous.catalogType;
+
+                if (authenticatedNow || openedNow || switchedVisibleCatalog) request(state.catalogType);
+            }
+
+            previous = state;
+        }
+    };
+};
+
+export const restoreCatalogActivePath = (rootNode: ICatalogNode, activePageId: number): ICatalogNode[] => {
+    const target = findNodeById(activePageId, rootNode, rootNode);
+    if (!target) return [];
+
+    const path: ICatalogNode[] = [];
+    let node: ICatalogNode | null = target;
+
+    while (node && node !== rootNode) {
+        path.unshift(node);
+        node = node.parent;
+    }
+
+    for (const activeNode of path) {
+        activeNode.activate();
+        activeNode.open();
+    }
+
+    return path;
+};
+
 export const isCurrentCatalogPageResponse = (requestedPageId: number, responsePageId: number): boolean => requestedPageId === responsePageId;
 
 export interface CatalogPageRequestCorrelation {

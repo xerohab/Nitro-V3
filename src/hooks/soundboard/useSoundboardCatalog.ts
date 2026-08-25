@@ -32,7 +32,14 @@ export const useSoundboardCatalog = () => {
 
         pendingOperationRef.current = 1;
         setPendingOperation(1);
-        SendMessageComposer(new SoundboardCatalogUpsertComposer(draft.id, draft.name.trim(), draft.url.trim(), draft.minRank, draft.enabled));
+        SendMessageComposer(new SoundboardCatalogUpsertComposer(
+            draft.id,
+            draft.name.trim(),
+            draft.url.trim(),
+            draft.minRank,
+            draft.enabled,
+            draft.classname?.trim().toLowerCase() ?? ''
+        ));
         return true;
     }, []);
 

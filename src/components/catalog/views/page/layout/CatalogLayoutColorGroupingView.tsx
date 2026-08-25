@@ -7,8 +7,8 @@ import { useCatalogData, useCatalogUiState } from '../../../../../hooks';
 import { CatalogGridOfferView } from '../common/CatalogGridOfferView';
 import { CatalogAddOnBadgeWidgetView } from '../widgets/CatalogAddOnBadgeWidgetView';
 import { CatalogLimitedItemWidgetView } from '../widgets/CatalogLimitedItemWidgetView';
-import { CatalogPurchaseWidgetView } from '../widgets/CatalogPurchaseWidgetView';
 import { CatalogPreviewControls } from '../widgets/CatalogPreviewControls';
+import { CatalogPurchaseWidgetView } from '../widgets/CatalogPurchaseWidgetView';
 import { CatalogSpinnerWidgetView } from '../widgets/CatalogSpinnerWidgetView';
 import { CatalogTotalPriceWidget } from '../widgets/CatalogTotalPriceWidget';
 import { CatalogViewProductWidgetView } from '../widgets/CatalogViewProductWidgetView';
@@ -160,7 +160,7 @@ export const CatalogLayoutColorGroupingView: FC<CatalogLayoutColorGroupViewProps
                 <div className="nitro-catalog-offer-panel flex flex-col items-center grow overflow-hidden gap-2">
                     <div className="nitro-catalog-offer-preview relative flex items-center justify-center overflow-hidden">
                         <CatalogPreviewControls productType={currentOffer.product.productType} roomPreviewer={roomPreviewer} />
-                        <CatalogViewProductWidgetView />
+                        <CatalogViewProductWidgetView height={348} />
                         <CatalogAddOnBadgeWidgetView className="bg-muted rounded bottom-1 inset-e-1" position="absolute" />
                         {currentOffer.product.furnitureData.hasIndexedColor && (
                             <Button className="bottom-1 inset-s-1" position="absolute" onClick={(event) => setColorsShowing((prev) => !prev)}>

@@ -4,7 +4,7 @@ import { useSyncExternalStore } from 'react';
  * useSyncExternalStore wrapper for the Nitro renderer's subscribe + snapshot
  * getter contract.
  *
- * Pair with EventDispatcher.subscribe() (Nitro_Render_V3 v2.1.0+) and a
+ * Pair with EventDispatcher.subscribe() (Octane Renderer v2.1.0+) and a
  * referentially-stable snapshot getter such as
  * SessionDataManager.getUserDataSnapshot() or
  * RoomSessionManager.getActiveRoomSessionSnapshot().

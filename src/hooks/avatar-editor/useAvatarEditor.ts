@@ -22,6 +22,7 @@ import {
     GetConfigurationValue,
     IAvatarEditorCategory,
     IAvatarEditorCategoryPartItem,
+    IsNftAvatarPartSet,
     Randomizer,
     SendMessageComposer
 } from '../../api';
@@ -321,7 +322,6 @@ const useAvatarEditorState = () => {
                 if (!partSet || !partSet.isSelectable || (partSet.gender !== gender && partSet.gender !== AvatarFigurePartType.UNISEX)) continue;
 
                 if (allowedPartIds) {
-
                     if (allowedPartIds.indexOf(partSet.id) === -1) continue;
 
                     let maxPaletteCount = 0;
@@ -333,8 +333,9 @@ const useAvatarEditorState = () => {
                     continue;
                 }
 
-                const isNftPartSet =
-                    nftFigureSetIds.size > 0 ? nftFigureSetIds.has(partSet.id) : GetAvatarRenderManager().downloadManager.isNftPartSet(partSet);
+                const isNftPartSet = IsNftAvatarPartSet(partSet, nftFigureSetIds, (candidate) =>
+                    GetAvatarRenderManager().downloadManager.isNftPartSet(candidate)
+                );
 
                 if (buildMode === buildModeDefault && isNftPartSet) continue;
                 if (buildMode === buildModeNft && !isNftPartSet) continue;

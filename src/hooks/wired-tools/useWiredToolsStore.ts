@@ -9,9 +9,9 @@ import {
     WiredUserVariablesRequestComposer,
     WiredUserVariableUpdateComposer
 } from '@nitrots/nitro-renderer';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { registerSharedHook } from '@/state/useSharedHook';
-import { LocalizeText, NotificationAlertType, SendMessageComposer } from '../../api';
+import { createPacketCooldownGate, LocalizeText, NotificationAlertType, SendMessageComposer } from '../../api';
 import { useMessageEvent } from '../events';
 import { useNotification } from '../notification';
 import { useRoom } from '../rooms';
@@ -140,6 +140,19 @@ export const useWiredToolsStore = () => {
     const [roomVariableAssignments, setRoomVariableAssignments] = useState<IWiredRoomVariableAssignment[]>([]);
     const [contextVariableDefinitions, setContextVariableDefinitions] = useState<IWiredContextVariableDefinition[]>([]);
     const [areUserVariablesLoaded, setAreUserVariablesLoaded] = useState(false);
+    const userVariablesRequestGateRef = useRef<ReturnType<typeof createPacketCooldownGate> | null>(null);
+
+    if (!userVariablesRequestGateRef.current) {
+        userVariablesRequestGateRef.current = createPacketCooldownGate();
+    }
+
+    const requestUserVariables = useCallback(() => {
+        if (!roomSettings.canInspect) return;
+
+        userVariablesRequestGateRef.current?.request(() => {
+            SendMessageComposer(new WiredUserVariablesRequestComposer());
+        });
+    }, [roomSettings.canInspect]);
 
     const storageKey = useMemo(() => {
         const userId = GetSessionDataManager().userId;
@@ -211,8 +224,8 @@ export const useWiredToolsStore = () => {
             return;
         }
 
-        SendMessageComposer(new WiredUserVariablesRequestComposer());
-    }, [roomSession?.roomId, roomSettings.canInspect]);
+        requestUserVariables();
+    }, [roomSession?.roomId, roomSettings.canInspect, requestUserVariables]);
 
     useMessageEvent<WiredRoomSettingsDataEvent>(WiredRoomSettingsDataEvent, (event) => {
         const parser = event.getParser();
@@ -277,12 +290,6 @@ export const useWiredToolsStore = () => {
         },
         [roomSettings.canManageSettings]
     );
-
-    const requestUserVariables = useCallback(() => {
-        if (!roomSettings.canInspect) return;
-
-        SendMessageComposer(new WiredUserVariablesRequestComposer());
-    }, [roomSettings.canInspect]);
 
     const updateUserVariableValue = useCallback(
         (userId: number, variableItemId: number, value: number) => {

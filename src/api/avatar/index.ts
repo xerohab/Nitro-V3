@@ -6,3 +6,4 @@ export * from './BuildPurchasableClothingFigure';
 export * from './dedupeBadges';
 export * from './IAvatarEditorCategory';
 export * from './IAvatarEditorCategoryPartItem';
+export * from './IsNftAvatarPartSet';

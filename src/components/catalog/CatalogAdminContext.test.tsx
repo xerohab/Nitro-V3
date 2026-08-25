@@ -5,7 +5,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CatalogAdminProvider, useCatalogAdmin } from './CatalogAdminContext';
 
 const mocks = vi.hoisted(() => ({
-    acquireLock: vi.fn(),
     applyMutation: vi.fn(),
     handlers: new Map<string, (event: any) => void>(),
     loadHistory: vi.fn(),
@@ -103,7 +102,6 @@ describe('CatalogAdminProvider page mutations', () => {
     let studio: Record<string, any>;
 
     beforeEach(() => {
-        mocks.acquireLock.mockReset();
         mocks.applyMutation.mockReset();
         mocks.handlers.clear();
         mocks.loadHistory.mockReset();
@@ -112,13 +110,10 @@ describe('CatalogAdminProvider page mutations', () => {
         studio = {
             session,
             revision: session.revision,
-            locks: {},
             lastError: null,
-            acquireLock: mocks.acquireLock,
             refresh: mocks.refresh,
             loadHistory: mocks.loadHistory,
-            applyMutation: mocks.applyMutation,
-            publish: vi.fn()
+            applyMutation: mocks.applyMutation
         };
         mocks.useCatalogStudio.mockImplementation(() => studio);
     });
@@ -133,70 +128,49 @@ describe('CatalogAdminProvider page mutations', () => {
         {
             action: 'delete',
             composer: 'CatalogAdminDeletePageComposer',
-            args: [ 42, 'NORMAL', 12, 3, 'token-42', 'Deleted page' ]
+            args: [ 42, 'NORMAL', 12, 3, '', 'Deleted page' ]
         },
         {
             action: 'move',
             composer: 'CatalogAdminMovePageComposer',
-            args: [ 42, 7, 1, 'NORMAL', 12, 3, 'token-42', 'Moved page' ]
+            args: [ 42, 7, 1, 'NORMAL', 12, 3, '', 'Moved page' ]
         },
         {
             action: 'toggleEnabled',
             composer: 'CatalogAdminSetPageEnabledComposer',
-            args: [ 42, false, 'NORMAL', 12, 3, 'token-42', 'Disabled page' ]
+            args: [ 42, false, 'NORMAL', 12, 3, '', 'Disabled page' ]
         },
         {
             action: 'toggleVisible',
             composer: 'CatalogAdminSetPageVisibleComposer',
-            args: [ 42, false, 'NORMAL', 12, 3, 'token-42', 'Hidden page' ]
+            args: [ 42, false, 'NORMAL', 12, 3, '', 'Hidden page' ]
         }
     ];
 
-    it.each(cases)('acquires the page lock and resumes a queued $action mutation', async ({ action, composer, args }) => {
-        const view = render(<CatalogAdminProvider><Probe action={action} /></CatalogAdminProvider>);
+    it.each(cases)('sends the optimistic $action mutation immediately', ({ action, composer, args }) => {
+        render(<CatalogAdminProvider><Probe action={action} /></CatalogAdminProvider>);
 
         act(() => screen.getByText(action).click());
 
-        expect(mocks.acquireLock).toHaveBeenCalledWith('PAGE', 42, 'NORMAL');
-        expect(mocks.sendMessage).not.toHaveBeenCalled();
-
-        studio = {
-            ...studio,
-            locks: {
-                'PAGE:42': {
-                    draftVersionId: 12,
-                    entityType: 'PAGE',
-                    catalogType: 'NORMAL',
-                    entityId: 42,
-                    ownerId: 9,
-                    ownerName: 'Alice',
-                    token: 'token-42',
-                    expiresAt: '2026-08-02T18:00:00Z'
-                }
-            }
-        };
-        view.rerender(<CatalogAdminProvider><Probe action={action} /></CatalogAdminProvider>);
-
-        await waitFor(() => expect(mocks.sendMessage).toHaveBeenCalledTimes(1));
+        expect(mocks.sendMessage).toHaveBeenCalledTimes(1);
         const message = mocks.sendMessage.mock.calls[0][0];
         expect(message.constructor.name).toBe(composer);
-        expect(message.getMessageArray()).toEqual(args);
+        expect(message.getMessageArray().slice(0, -1)).toEqual(args);
+        expect(message.getMessageArray().at(-1)).toEqual(expect.any(String));
+        expect(message.getMessageArray().at(-1)).not.toBe('');
     });
 
-    it('refreshes a missing session and then acquires the queued page lock', async () => {
+    it('refreshes a missing session and then sends the queued mutation', async () => {
         studio = { ...studio, session: null };
         const view = render(<CatalogAdminProvider><Probe action="move" /></CatalogAdminProvider>);
 
         act(() => screen.getByText('move').click());
 
         expect(mocks.refresh).toHaveBeenCalledTimes(1);
-        expect(mocks.acquireLock).not.toHaveBeenCalled();
-
         studio = { ...studio, session };
         view.rerender(<CatalogAdminProvider><Probe action="move" /></CatalogAdminProvider>);
 
-        await waitFor(() => expect(mocks.acquireLock).toHaveBeenCalledWith('PAGE', 42, 'NORMAL'));
-        expect(mocks.sendMessage).not.toHaveBeenCalled();
+        await waitFor(() => expect(mocks.sendMessage).toHaveBeenCalledTimes(1));
     });
 
     it('retries an offer inspector read after the studio session becomes ready', async () => {

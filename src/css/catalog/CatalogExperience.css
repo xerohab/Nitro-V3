@@ -4,20 +4,22 @@
     left: 10px;
     z-index: 5;
     width: 280px;
-    max-height: 72px;
-    padding: 1px 12px 5px 0;
+    height: 64px;
+    max-height: 64px;
+    padding: 0;
     overflow: hidden;
     color: #fff;
+    font-family: HabboAirUbuntu, UbuntuRegular, sans-serif;
     pointer-events: none;
-    background: linear-gradient(90deg, rgba(0, 0, 0, 0.34) 0%, rgba(0, 0, 0, 0.12) 68%, transparent 100%);
-    border-radius: 2px;
-    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.95);
+    background: none;
+    border-radius: 0;
+    text-shadow: none;
 }
 
 .nitro-catalog-product-details {
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    gap: 0;
     min-width: 0;
 }
 
@@ -28,14 +30,18 @@
 }
 
 .nitro-catalog-product-details-description {
-    display: -webkit-box;
-    overflow: hidden;
+    display: block;
     color: inherit;
     font-size: 10px;
     font-style: italic;
     line-height: 15px;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
+    overflow-wrap: anywhere;
+}
+
+.nitro-catalog-product-details-description:empty {
+    height: 4px;
+    min-height: 4px;
+    line-height: 4px;
 }
 
 /* standard switches both fields to solid white whenever the 3D room canvas is
@@ -45,38 +51,45 @@
 .nitro-catalog-offer-preview:not(.is-badge) .nitro-catalog-product-details-description {
     color: #fff !important;
     opacity: 1 !important;
-    text-shadow:
-        0 1px 1px #000,
-        1px 0 1px rgba(0, 0, 0, 0.8),
-        -1px 0 1px rgba(0, 0, 0, 0.8);
+    text-shadow: none !important;
 }
 
 .nitro-catalog-product-details-badges {
     display: flex;
-    align-items: center;
-    gap: 5px;
-    margin-top: 2px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    margin-top: 0;
     color: inherit;
     font-size: 10px;
 }
 
 .nitro-catalog-product-capability {
-    display: inline-grid;
-    place-items: center;
-    width: 17px;
-    height: 17px;
-    border: 1px solid rgba(255, 255, 255, 0.68);
-    border-radius: 3px;
-    color: #103f12;
-    background: #8ed268;
-    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
-    font-size: 10px;
+    display: block;
+    height: 16px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
 }
 
-.nitro-catalog-product-capability.is-disabled {
-    color: #621313;
-    background: #d58a82;
-    opacity: 0.78;
+.nitro-catalog-product-capability.is-no-trade,
+.nitro-catalog-product-capability.is-no-trade img {
+    width: 40px;
+    height: 16px;
+}
+
+.nitro-catalog-product-capability.is-no-recycle,
+.nitro-catalog-product-capability.is-no-recycle img {
+    width: 28px;
+    height: 16px;
+}
+
+.nitro-catalog-product-capability img {
+    display: block;
+    max-width: none;
+    max-height: none;
+    image-rendering: pixelated;
 }
 
 .nitro-catalog-preview-limited {
@@ -96,15 +109,15 @@
 }
 
 .nitro-catalog-grid.nitro-catalog-grid-density-standard {
-    grid-template-columns: repeat(6, 53px) !important;
+    --nitro-grid-column-min-width: 53px;
 }
 
 .nitro-catalog-grid.nitro-catalog-grid-density-compact {
-    grid-template-columns: repeat(7, 45px) !important;
+    --nitro-grid-column-min-width: 45px;
 }
 
 .nitro-catalog-grid.nitro-catalog-grid-density-large {
-    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    --nitro-grid-column-min-width: 68px;
 }
 
 .nitro-catalog-default-layout .nitro-catalog-grid-shell {
@@ -141,7 +154,7 @@
 
 .nitro-catalog-pet-customization-layout {
     position: relative;
-    width: 360px;
+    width: 100%;
     height: 460px;
     overflow: hidden;
 }
@@ -149,7 +162,7 @@
 .nitro-catalog-pet-customization-preview {
     position: absolute;
     inset: 0 0 auto;
-    width: 360px;
+    width: 100%;
     height: 240px;
     overflow: hidden;
 }
@@ -179,7 +192,7 @@
     position: absolute;
     top: 245px;
     left: 0;
-    width: 360px;
+    width: 100%;
     height: 180px;
     overflow: auto;
 }
@@ -191,7 +204,7 @@
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    width: 360px;
+    width: 100%;
     height: 30px;
     font-size: 11px;
 }
@@ -417,6 +430,11 @@
     min-width: 0;
     min-height: 0;
     overflow: hidden;
+}
+
+.nitro-catalog-item-grid-scroll-area:has(> .nitro-classic-scrollbar[data-visible='true']) > .nitro-classic-scroll-area-viewport,
+.nitro-catalog-grid-virtual .nitro-classic-scroll-area:has(> .nitro-classic-scrollbar[data-visible='true']) > .nitro-classic-scroll-area-viewport {
+    padding-right: 17px;
 }
 
 .nitro-classic-scrollbar {
@@ -846,126 +864,432 @@
     overflow: auto;
 }
 
-.nitro-catalog-purchase-confirm-backdrop {
-    position: fixed;
-    inset: 0;
-    z-index: 10000;
-    display: grid;
-    place-items: center;
-    background: rgba(0, 0, 0, 0.38);
-}
-
-.nitro-catalog-purchase-confirm {
-    display: flex;
-    flex-direction: column;
-    width: min(325px, calc(100vw - 24px));
-    min-height: min(339px, calc(100vh - 24px));
-    padding: 10px;
-    border: 2px solid #262626;
-    border-radius: 6px;
+.nitro-card-shell.nitro-catalog-purchase-confirm {
+    box-sizing: border-box;
+    width: 325px !important;
+    min-width: 325px !important;
+    max-width: 325px !important;
+    height: 253px !important;
+    min-height: 253px !important;
+    max-height: 253px !important;
+    resize: none !important;
     outline: none;
-    color: var(--catalog-standard-text, #222);
-    background: var(--catalog-standard-panel, #f7f7f2);
-    box-shadow: inset 0 0 0 1px #fff, 0 5px 18px rgba(0, 0, 0, 0.45);
 }
 
-.nitro-catalog-purchase-confirm-title {
-    margin: -8px -8px 10px;
-    padding: 7px 9px;
-    border-radius: 4px 4px 0 0;
-    color: #fff;
-    background: var(--catalog-standard-blue, #418db0);
+.nitro-card-shell.nitro-catalog-purchase-confirm:has(.nitro-catalog-purchase-confirm-content.has-disclaimer) {
+    height: 280px !important;
+    min-height: 280px !important;
+    max-height: 280px !important;
+}
+
+.nitro-card-shell.nitro-catalog-purchase-confirm:has(.nitro-catalog-purchase-confirm-content.has-limited) {
+    height: 312px !important;
+    min-height: 312px !important;
+    max-height: 312px !important;
+}
+
+.nitro-card-shell.nitro-catalog-purchase-confirm:has(.nitro-catalog-purchase-confirm-content.has-disclaimer.has-limited) {
+    height: 339px !important;
+    min-height: 339px !important;
+    max-height: 339px !important;
+}
+
+.draggable-window:has(> .nitro-catalog-purchase-confirm) {
+    width: 325px !important;
+    min-width: 325px !important;
+    max-width: 325px !important;
+    height: 253px !important;
+    min-height: 253px !important;
+    max-height: 253px !important;
+}
+
+.draggable-window:has(> .nitro-catalog-purchase-confirm .nitro-catalog-purchase-confirm-content.has-disclaimer) {
+    height: 280px !important;
+    min-height: 280px !important;
+    max-height: 280px !important;
+}
+
+.draggable-window:has(> .nitro-catalog-purchase-confirm .nitro-catalog-purchase-confirm-content.has-limited) {
+    height: 312px !important;
+    min-height: 312px !important;
+    max-height: 312px !important;
+}
+
+.draggable-window:has(> .nitro-catalog-purchase-confirm .nitro-catalog-purchase-confirm-content.has-disclaimer.has-limited) {
+    height: 339px !important;
+    min-height: 339px !important;
+    max-height: 339px !important;
+}
+
+.nitro-catalog-purchase-confirm,
+.nitro-catalog-purchase-confirm * {
+    box-sizing: border-box;
+}
+
+.nitro-card-shell.nitro-catalog-purchase-confirm .nitro-catalog-purchase-confirm-content.container-fluid {
+    position: absolute !important;
+    /* The 1px frame box resolves this to AIR outer-local x=1/y=33. */
+    top: 32px !important;
+    left: 0 !important;
+    z-index: 1;
+    display: block !important;
+    width: 323px !important;
+    min-width: 323px !important;
+    max-width: 323px !important;
+    height: 208px !important;
+    min-height: 208px !important;
+    max-height: 208px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    background: transparent !important;
+    color: #000000;
+    font-family: HabboAirUbuntu, UbuntuRegular, sans-serif;
     font-size: 12px;
-    font-weight: 700;
 }
 
-.nitro-catalog-purchase-confirm-content {
-        display: grid;
-        grid-template-columns: 126px minmax(0, 1fr);
-        gap: 7px;
-        min-height: 171px;
-        padding: 2px 0 10px;
-    }
+.nitro-card-shell.nitro-catalog-purchase-confirm .nitro-catalog-purchase-confirm-content.has-disclaimer.container-fluid {
+    height: 235px !important;
+    min-height: 235px !important;
+    max-height: 235px !important;
+}
+
+.nitro-card-shell.nitro-catalog-purchase-confirm .nitro-catalog-purchase-confirm-content.has-limited.container-fluid {
+    height: 267px !important;
+    min-height: 267px !important;
+    max-height: 267px !important;
+}
+
+.nitro-card-shell.nitro-catalog-purchase-confirm .nitro-catalog-purchase-confirm-content.has-disclaimer.has-limited.container-fluid {
+    height: 294px !important;
+    min-height: 294px !important;
+    max-height: 294px !important;
+}
+
+.nitro-catalog-purchase-confirm-content :where(span, strong, label, input) {
+    color: #000000 !important;
+    font-family: HabboAirUbuntu, UbuntuRegular, sans-serif !important;
+}
 
 .nitro-catalog-purchase-confirm-preview {
+    --nitro-catalog-purchase-confirm-image-border: url("../../assets/images/catalog/air/gift/image-border-f1f1f1.png");
+
+    position: absolute;
+    top: 12px;
+    left: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
     width: 126px;
     height: 152px;
     overflow: hidden;
-    border: 1px solid #b4b4ae;
-    background: #f1f1ec;
+    background: transparent;
 }
 
-.nitro-catalog-purchase-confirm-preview img {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
+.nitro-catalog-purchase-confirm-preview::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border: 6px solid transparent;
+    border-image-source: var(--nitro-catalog-purchase-confirm-image-border);
+    border-image-slice: 6 fill;
+    border-image-width: 6px;
+    border-image-repeat: stretch;
+    image-rendering: pixelated;
+    pointer-events: none;
+}
+
+.nitro-catalog-purchase-confirm-preview img,
+.nitro-catalog-purchase-confirm-preview .furni-image {
+    position: relative;
+    z-index: 1;
+    flex: 0 0 auto;
+    width: auto;
+    max-width: none;
+    height: auto;
+    max-height: none;
     image-rendering: pixelated;
 }
 
 .nitro-catalog-purchase-confirm-properties {
+    position: absolute;
+    top: 8px;
+    left: 143px;
     display: flex;
     flex-direction: column;
-    min-width: 0;
-    min-height: 152px;
+    gap: 7px;
+    width: 176px;
+    min-height: 116px;
+}
+
+.nitro-catalog-purchase-confirm-product,
+.nitro-catalog-purchase-confirm-quantity,
+.nitro-catalog-purchase-confirm-free-quantity {
+    margin: 0;
+    color: #000000;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 19px;
 }
 
 .nitro-catalog-purchase-confirm-product {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    min-width: 0;
+    min-height: 35px;
+    overflow: hidden;
+    overflow-wrap: anywhere;
 }
 
-.nitro-catalog-purchase-confirm-product span {
-    color: var(--catalog-standard-muted, #666);
-    font-size: 10px;
-}
-
-.nitro-catalog-purchase-confirm-quantity,
-.nitro-catalog-purchase-confirm-limited,
 .nitro-catalog-purchase-confirm-summary,
+.nitro-catalog-purchase-confirm-cost,
 .nitro-catalog-purchase-confirm-price,
 .nitro-catalog-purchase-confirm-actions {
     display: flex;
     align-items: center;
-    gap: 6px;
-}
-
-.nitro-catalog-purchase-confirm-quantity {
-    gap: 5px;
-    margin-top: 10px;
-    font-size: 12px;
 }
 
 .nitro-catalog-purchase-confirm-limited {
-    margin-top: 6px;
-    color: var(--catalog-standard-muted, #666);
-    font-size: 10px;
+    position: absolute;
+    top: 181px;
+    left: 9px;
+    display: block;
+    width: 304px;
+    height: 49px;
+    padding: 0;
+    border: 0;
+    color: #000000;
+    background: transparent;
+    font-size: 12px;
+    line-height: 15px;
+}
+
+.nitro-catalog-purchase-confirm-content.has-disclaimer .nitro-catalog-purchase-confirm-limited {
+    top: 208px;
+}
+
+.nitro-catalog-purchase-confirm-limited::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border: 6px solid transparent;
+    border-image-source: url("../../assets/images/catalog/air/border-thin-dark-ebf9fc.png");
+    border-image-slice: 6 fill;
+    border-image-width: 6px;
+    border-image-repeat: stretch;
+    image-rendering: pixelated;
+    pointer-events: none;
+}
+
+.nitro-catalog-purchase-confirm-limited > span {
+    position: absolute;
+    top: 9px;
+    z-index: 1;
+    left: 10px;
+    width: 233px;
+    height: 30px;
+}
+
+.nitro-catalog-purchase-confirm-limited::after {
+    content: "";
+    position: absolute;
+    top: 6px;
+    left: 260px;
+    z-index: 1;
+    width: 34px;
+    height: 37px;
+    background: url("../../assets/images/catalog/air/unique-item-large-tile-upright.png") 0 0 / 34px 37px no-repeat;
+    image-rendering: pixelated;
 }
 
 .nitro-catalog-purchase-confirm-summary {
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: auto;
-    padding-bottom: 8px;
+    justify-content: flex-start;
+    width: 288px;
+    min-height: 22px;
+    color: #000000;
+    font-size: 14px;
+    line-height: 19px;
+}
+
+.nitro-catalog-purchase-confirm-cost {
+    gap: 1px;
+}
+
+.nitro-catalog-purchase-confirm-price {
+    gap: 1px;
+    height: 22px;
+    color: #000000;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 19px;
+    white-space: nowrap;
+}
+
+.nitro-catalog-purchase-confirm-price .nitro-currency-icon {
+    width: 22px !important;
+    min-width: 22px !important;
+    height: 22px !important;
+    min-height: 22px !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+}
+
+.nitro-catalog-purchase-confirm-price[data-currency-type="-1"] .nitro-currency-icon {
+    background-image: url("../../assets/images/catalog/air/currency-credit-big.png") !important;
+}
+
+.nitro-catalog-purchase-confirm-price[data-currency-type="0"] .nitro-currency-icon {
+    background-image: url("../../assets/images/catalog/air/currency-ducket-big.png") !important;
+}
+
+.nitro-catalog-purchase-confirm-price[data-currency-type="5"] .nitro-currency-icon {
+    background-image: url("../../assets/images/catalog/air/currency-diamond-big.png") !important;
+}
+
+.nitro-catalog-purchase-confirm-disclaimer {
+    position: absolute;
+    top: 181px;
+    left: 0;
+    width: 311px;
+    height: 17px;
+    margin: 0;
+    color: #000000;
+    font-size: 12px !important;
+    font-weight: 400;
+    line-height: 17px;
+}
+
+.nitro-catalog-purchase-confirm-disclaimer input {
+    position: absolute;
+    top: 0;
+    left: 13px;
+    width: 15px;
+    height: 15px;
+    margin: 0;
+    padding: 0;
+    appearance: none;
+    border: 0;
+    border-radius: 0;
+    background: url("../../assets/images/catalog/air/gift/checkbox-default.png") 0 0 / 15px 15px no-repeat;
+    image-rendering: pixelated;
+}
+
+.nitro-catalog-purchase-confirm-disclaimer input:checked {
+    background-image: url("../../assets/images/catalog/air/gift/checkbox-selected.png");
+}
+
+.nitro-catalog-purchase-confirm-disclaimer input:focus-visible {
+    outline: 1px solid #000000;
+    outline-offset: 1px;
+}
+
+.nitro-catalog-purchase-confirm-disclaimer span {
+    position: absolute;
+    top: 0;
+    left: 33px;
+    width: 278px;
+    min-height: 17px;
 }
 
 .nitro-catalog-purchase-confirm-actions {
-    justify-content: space-between;
-    width: 100%;
-    margin-top: auto;
+    position: absolute;
+    top: 181px;
+    left: 13px;
+    width: 315px;
+    height: 27px;
 }
 
-.nitro-catalog-purchase-confirm-actions button {
-    width: 110px;
-    min-height: 27px;
-    padding: 3px 12px;
+.nitro-catalog-purchase-confirm-content.has-disclaimer .nitro-catalog-purchase-confirm-actions {
+    top: 208px;
 }
 
-.nitro-catalog-window [role='option']:focus-visible,
+.nitro-catalog-purchase-confirm-content.has-limited .nitro-catalog-purchase-confirm-actions {
+    top: 240px;
+}
+
+.nitro-catalog-purchase-confirm-content.has-disclaimer.has-limited .nitro-catalog-purchase-confirm-actions {
+    top: 267px;
+}
+
+.nitro-catalog-purchase-confirm-button {
+    position: absolute !important;
+    top: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 110px !important;
+    min-width: 110px !important;
+    max-width: 110px !important;
+    height: 27px !important;
+    min-height: 27px !important;
+    max-height: 27px !important;
+    margin: 0 !important;
+    border-style: solid !important;
+    border-color: transparent !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    font-family: HabboAirUbuntu, UbuntuRegular, sans-serif !important;
+    font-size: 12px !important;
+    line-height: 17px !important;
+    text-shadow: none !important;
+    image-rendering: pixelated !important;
+}
+
+.nitro-catalog-purchase-confirm-button.is-cancel {
+    left: 0 !important;
+    padding: 0 8px !important;
+    border-width: 5px !important;
+    border-image-source: var(--habbo-skin-shiny) !important;
+    border-image-slice: 5 fill !important;
+    border-image-width: 5px !important;
+    border-image-repeat: stretch !important;
+    color: #000000 !important;
+    font-weight: 400 !important;
+}
+
+.nitro-catalog-purchase-confirm-button.is-cancel:hover {
+    border-image-source: var(--habbo-skin-shiny-hover) !important;
+}
+
+.nitro-catalog-purchase-confirm-button.is-cancel:active {
+    border-image-source: var(--habbo-skin-shiny-pressed) !important;
+}
+
+.nitro-catalog-purchase-confirm-button.is-cancel:disabled {
+    border-image-source: var(--habbo-skin-shiny-disabled) !important;
+    color: #777777 !important;
+}
+
+.nitro-catalog-purchase-confirm-button.is-buy {
+    left: 186px !important;
+    padding: 0 10px !important;
+    border-width: 5px !important;
+    border-image-source: var(--habbo-skin-shiny-thick-green) !important;
+    border-image-slice: 5 fill !important;
+    border-image-width: 5px !important;
+    border-image-repeat: stretch !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+
+.nitro-catalog-purchase-confirm-button.is-buy:hover {
+    border-image-source: var(--habbo-skin-shiny-thick-green-hover) !important;
+}
+
+.nitro-catalog-purchase-confirm-button.is-buy:active {
+    border-image-source: var(--habbo-skin-shiny-thick-green-pressed) !important;
+}
+
+.nitro-catalog-purchase-confirm-button.is-buy:disabled {
+    border-image-source: var(--habbo-skin-shiny-thick-green-disabled) !important;
+    color: #eeeeee !important;
+}
+
+.nitro-catalog-purchase-confirm-button:focus-visible {
+    outline: 1px solid #000000;
+    outline-offset: 1px;
+}
+
+.nitro-catalog-window [role='option']:not([aria-selected='true']):focus-visible,
 .nitro-catalog-window [role='treeitem']:focus-visible {
     outline: 2px solid var(--catalog-standard-select);
     outline-offset: -2px;

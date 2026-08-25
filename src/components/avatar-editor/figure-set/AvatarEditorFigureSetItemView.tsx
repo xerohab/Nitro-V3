@@ -1,6 +1,7 @@
 import { NitroEventType } from '@nitrots/nitro-renderer';
 import { FC, useEffect, useRef, useState } from 'react';
 import { AvatarEditorThumbnailsHelper, GetClubMemberLevel, GetConfigurationValue, IAvatarEditorCategoryPartItem } from '../../../api';
+import hcSmallSrc from '../../../assets/images/avatareditor/air/hc-small.png';
 import { LayoutCurrencyIcon, LayoutGridItemProps } from '../../../common';
 import { useAvatarEditor } from '../../../hooks';
 import { useNitroEvent } from '../../../hooks/events';
@@ -12,52 +13,63 @@ export const AvatarEditorFigureSetItemView: FC<
         setType: string;
         partItem: IAvatarEditorCategoryPartItem;
         isSelected: boolean;
-        width?: string;
     } & LayoutGridItemProps
 > = (props) => {
-    const { setType = null, partItem = null, isSelected = false, width = '100%', ...rest } = props;
-    const [assetUrl, setAssetUrl] = useState<string>('');
-    const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [retryId, setRetryId] = useState<number>(0);
+    const { setType = null, partItem = null, isSelected = false, ...rest } = props;
+    const partKey = `${setType}:${partItem?.id ?? -1}`;
+    const [thumbnail, setThumbnail] = useState<{ partKey: string; url: string }>(null);
+    const [loadingState, setLoadingState] = useState<{ partKey: string; isLoading: boolean }>(null);
     const { selectedColorParts = null, getFigureStringWithFace = null } = useAvatarEditor();
+    const selectedColors = selectedColorParts?.[setType] ?? null;
 
     const clubLevel = partItem.partSet?.clubLevel ?? 0;
     const isHC = !GetConfigurationValue<boolean>('hc.disabled', false) && clubLevel > 0;
-    const isLocked = isHC && GetClubMemberLevel() < clubLevel;
     const isSellableNotOwned = partItem.isSellableNotOwned ?? false;
+    const isHead = setType === 'hd';
+    const isPartLocked = (isHC && GetClubMemberLevel() < clubLevel) || isSellableNotOwned;
+    const faceFigureString = isHead && partItem ? getFigureStringWithFace?.(partItem.id) : null;
+    const [retryId, setRetryId] = useState(0);
+    const requestIdRef = useRef(0);
+    const assetUrl = thumbnail?.partKey === partKey ? thumbnail.url : '';
+    const isLoading = loadingState?.partKey === partKey ? loadingState.isLoading : true;
+    const assetUrlRef = useRef(assetUrl);
+    const retryTimeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
 
-    const assetUrlRef = useRef<string>(assetUrl);
     assetUrlRef.current = assetUrl;
-    const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     useNitroEvent(NitroEventType.AVATAR_ASSET_LOADED, () => {
+        if (!isHead || assetUrlRef.current || retryTimeoutRef.current) return;
 
-        if (assetUrlRef.current && assetUrlRef.current.length) return;
-        if (retryTimeoutRef.current) return;
-
+        // Avatar libraries notify after their download callbacks. Give the
+        // renderer a tick to publish the aliases before making a fresh face.
         retryTimeoutRef.current = setTimeout(() => {
             retryTimeoutRef.current = null;
 
-            if (!assetUrlRef.current || !assetUrlRef.current.length) setRetryId((prev) => prev + 1);
+            if (!assetUrlRef.current) setRetryId((previous) => previous + 1);
         }, 250);
     });
 
-    useEffect(() => () => {
-        if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
-    }, []);
+    useEffect(
+        () => () => {
+            if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
+        },
+        []
+    );
 
     useEffect(() => {
-        if (!isLoading) return;
+        const requestId = ++requestIdRef.current;
 
-        const timeout = setTimeout(() => setIsLoading(false), 6000);
+        if (!setType || !setType.length || !partItem || partItem.isClear) {
+            setLoadingState({ partKey, isLoading: false });
 
-        return () => clearTimeout(timeout);
-    }, [isLoading]);
+            return;
+        }
 
-    useEffect(() => {
-        setAssetUrl('');
-
-        if (!setType || !setType.length || !partItem || partItem.isClear) return;
+        setLoadingState({ partKey, isLoading: true });
+        let disposed = false;
+        const loadingTimeout = setTimeout(() => {
+            if (!disposed && requestIdRef.current === requestId) setLoadingState({ partKey, isLoading: false });
+        }, 6000);
 
         const loadImage = async () => {
             const partClubLevel = partItem.partSet?.clubLevel ?? 0;
@@ -66,47 +78,53 @@ export const AvatarEditorFigureSetItemView: FC<
 
             let url: string = null;
 
-            if (setType === 'hd') {
-                url = await AvatarEditorThumbnailsHelper.buildForFace(getFigureStringWithFace(partItem.id), partIsLocked || isSellableNotOwned);
+            if (isHead) {
+                url = await AvatarEditorThumbnailsHelper.buildForFace(faceFigureString, partIsLocked || isSellableNotOwned);
             } else {
-                url = await AvatarEditorThumbnailsHelper.build(
-                    setType,
-                    partItem,
-                    partItem.usesColor,
-                    selectedColorParts[setType] ?? null,
-                    partIsLocked || isSellableNotOwned
-                );
+                url = await AvatarEditorThumbnailsHelper.build(setType, partItem, partItem.usesColor, selectedColors, partIsLocked || isSellableNotOwned);
             }
 
+            if (disposed || requestIdRef.current !== requestId) return;
+
             if (url && url.length) {
-                setAssetUrl(url);
-                setIsLoading(false);
+                setThumbnail({ partKey, url });
             }
+
+            setLoadingState({ partKey, isLoading: false });
         };
 
         loadImage();
-    }, [setType, partItem, selectedColorParts, getFigureStringWithFace, isSellableNotOwned, retryId]);
+
+        return () => {
+            disposed = true;
+            clearTimeout(loadingTimeout);
+        };
+    }, [setType, partItem, partKey, selectedColors, faceFigureString, isHead, isSellableNotOwned, retryId]);
 
     if (!partItem) return null;
 
-    const isHead = setType === 'hd';
     const showLoading = !partItem.isClear && isLoading && (!assetUrl || !assetUrl.length);
 
     return (
         <InfiniteGrid.Item
             itemActive={isSelected}
-            itemImage={!partItem.isClear && isHead ? assetUrl : undefined}
-            className={`avatar-parts mx-auto${showLoading ? ' is-loading' : ''}${isSelected ? ' part-selected' : ''}${!partItem.isClear && isSellableNotOwned ? ' pet-sellable-locked' : ''}`}
-            style={isHead ? { backgroundSize: 'auto 80%', backgroundPosition: 'center', imageRendering: 'pixelated' } : undefined}
+            className={`avatar-parts mx-auto${isHead ? ' is-head' : ''}${showLoading ? ' is-loading' : ''}${isSelected ? ' part-selected' : ''}${!partItem.isClear && isSellableNotOwned ? ' pet-sellable-locked' : ''}`}
             {...rest}
         >
-            {!partItem.isClear && assetUrl && !isHead && (
-                <img src={assetUrl} alt="" className="max-w-full max-h-full pointer-events-none image-rendering-pixelated" draggable={false} />
+            {!partItem.isClear && assetUrl && (
+                <img
+                    src={assetUrl}
+                    alt=""
+                    className={`max-w-full max-h-full pointer-events-none image-rendering-pixelated${isHead ? ' avatar-editor-face-thumbnail' : ''}${
+                        isHead && isPartLocked ? ' is-disabled' : ''
+                    }`}
+                    draggable={false}
+                />
             )}
-            {!partItem.isClear && isHC && <LayoutCurrencyIcon className="absolute inset-e-1 bottom-1" type="hc" />}
+            {!partItem.isClear && isHC && <img className="avatar-editor-part-hc" src={hcSmallSrc} alt="" draggable={false} />}
             {partItem.isClear && <AvatarEditorIcon icon="clear" />}
             {!partItem.isClear && partItem.partSet.isSellable && !isSellableNotOwned && (
-                <AvatarEditorIcon className="inset-e-1 bottom-1 absolute" icon="sellable" />
+                <AvatarEditorIcon className="avatar-editor-sellable-icon absolute" icon="sellable" />
             )}
             {!partItem.isClear && isSellableNotOwned && (
                 <div className="pet-sellable-badge">

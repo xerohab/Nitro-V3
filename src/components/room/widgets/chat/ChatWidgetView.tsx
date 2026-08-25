@@ -1,4 +1,3 @@
-import { RoomChatSettings } from '@nitrots/nitro-renderer';
 import { FC, useCallback, useEffect, useRef } from 'react';
 import { ChatBubbleMessage, GetConfigurationValue } from '../../../../api';
 import { useChatWidget, useChatWindow } from '../../../../hooks';
@@ -7,12 +6,14 @@ import { WorkerBuilder } from '../../../../workers/WorkerBuilder';
 import { CHAT_TEXT_SIZE_EVENT } from '../chat-input/chatTextSize';
 import { ChatWidgetMessageView } from './ChatWidgetMessageView';
 import { ChatWidgetWindowView } from './ChatWidgetWindowView';
+import { measureBubbleVisualOffsets } from './chatBubbleMetrics';
+import { getChatViewerHeight } from './freeFlowChatLayout';
 
 const CHAT_MOVE_UP_PIXELS = 19;
 const CHAT_COLLISION_ITERATIONS = 20;
 const CHAT_COLLISION_MIN_WIDTH = 240;
-const CHAT_COLLISION_GAP = 1;
 const CHAT_REMOVE_TOP_MARGIN = -10;
+const STACK_OVERLAP = 0;
 
 export const ChatWidgetView: FC<{}> = (props) => {
     const { chatMessages = [], setChatMessages = null, chatSettings = null, getScrollSpeed = 6000 } = useChatWidget();
@@ -22,7 +23,7 @@ export const ChatWidgetView: FC<{}> = (props) => {
     const removeHiddenChats = useCallback(() => {
         setChatMessages((prevValue) => {
             if (prevValue) {
-                const newMessages = prevValue.filter((chat) => chat.top + chat.height >= CHAT_REMOVE_TOP_MARGIN);
+                const newMessages = prevValue.filter((chat) => chat.top + chat.height + chat.visualOffsetBottom >= CHAT_REMOVE_TOP_MARGIN);
 
                 if (newMessages.length !== prevValue.length) return newMessages;
             }
@@ -35,8 +36,12 @@ export const ChatWidgetView: FC<{}> = (props) => {
         chatMessages.forEach((chat) => {
             if (!chat.elementRef) return;
 
+            const visualOffsets = measureBubbleVisualOffsets(chat.elementRef);
+
             chat.width = chat.elementRef.offsetWidth;
             chat.height = chat.elementRef.offsetHeight;
+            chat.visualOffsetTop = visualOffsets.top;
+            chat.visualOffsetBottom = visualOffsets.bottom;
         });
     }, [chatMessages]);
 
@@ -70,13 +75,13 @@ export const ChatWidgetView: FC<{}> = (props) => {
 
                     if (!overlapsHorizontally || !overlapsVertically) continue;
 
-                    const topChat =
-                        firstChat.top < secondChat.top || (Math.abs(firstChat.top - secondChat.top) < 1 && firstChat.id < secondChat.id)
-                            ? firstChat
-                            : secondChat;
+                    const topChat = firstChat.id < secondChat.id ? firstChat : secondChat;
                     const bottomRect = topChat === firstChat ? secondRect : firstRect;
                     const topRect = topChat === firstChat ? firstRect : secondRect;
-                    const amount = Math.max(CHAT_COLLISION_GAP, topRect.bottom - bottomRect.top + CHAT_COLLISION_GAP);
+
+                    const amount = topRect.bottom - bottomRect.top - STACK_OVERLAP;
+
+                    if (amount <= 0) continue;
 
                     topChat.top -= amount;
                     moved = true;
@@ -88,37 +93,12 @@ export const ChatWidgetView: FC<{}> = (props) => {
     }, [chatMessages, getChatCollisionRect]);
 
     const makeRoom = useCallback(
-        (chat: ChatBubbleMessage) => {
+        (_chat: ChatBubbleMessage) => {
             refreshChatMeasurements();
-
-            if (chatSettings.mode === RoomChatSettings.CHAT_MODE_FREE_FLOW) {
-                resolveOverlappingChats();
-
-                removeHiddenChats();
-            } else {
-                const lowestPoint = chat.top + chat.height;
-                const requiredSpace = chat.height;
-                const spaceAvailable = elementRef.current.offsetHeight - lowestPoint;
-                const amount = requiredSpace - spaceAvailable;
-
-                if (spaceAvailable < requiredSpace) {
-                    setChatMessages((prevValue) => {
-                        prevValue.forEach((prevChat) => {
-                            if (prevChat === chat) return;
-
-                            prevChat.top -= amount;
-                        });
-
-                        return prevValue;
-                    });
-
-                    removeHiddenChats();
-                }
-
-                resolveOverlappingChats();
-            }
+            resolveOverlappingChats();
+            removeHiddenChats();
         },
-        [chatSettings, refreshChatMeasurements, removeHiddenChats, resolveOverlappingChats, setChatMessages]
+        [refreshChatMeasurements, removeHiddenChats, resolveOverlappingChats]
     );
 
     useEffect(() => {
@@ -126,7 +106,8 @@ export const ChatWidgetView: FC<{}> = (props) => {
             if (!elementRef || !elementRef.current) return;
 
             const currentHeight = elementRef.current.offsetHeight;
-            const newHeight = Math.round(document.body.offsetHeight * GetConfigurationValue<number>('chat.viewer.height.percentage'));
+            const configuredHeightPercentage = GetConfigurationValue<number>('chat.viewer.height.percentage', 0.25);
+            const newHeight = getChatViewerHeight(document.body.offsetHeight, configuredHeightPercentage);
 
             elementRef.current.style.height = `${newHeight}px`;
 
@@ -204,7 +185,15 @@ export const ChatWidgetView: FC<{}> = (props) => {
             className="absolute flex justify-center items-center w-full top-0 min-h-px z-(--chat-zindex) bg-transparent roundehidden shadow-none pointer-events-none"
         >
             {!chatWindowEnabled &&
-                chatMessages.map((chat) => <ChatWidgetMessageView key={chat.id} bubbleWidth={chatSettings.weight} chat={chat} makeRoom={makeRoom} />)}
+                chatMessages.map((chat) => (
+                    <ChatWidgetMessageView
+                        key={chat.id}
+                        bubbleWidth={chatSettings.weight}
+                        chat={chat}
+                        makeRoom={makeRoom}
+                        showPointer={false}
+                    />
+                ))}
             {chatWindowEnabled && <ChatWidgetWindowView />}
         </div>
     );

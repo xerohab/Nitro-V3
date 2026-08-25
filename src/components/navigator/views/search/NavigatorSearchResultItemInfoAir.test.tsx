@@ -1,6 +1,7 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { NavigatorSearchResultItemInfoView } from './NavigatorSearchResultItemInfoView';
+import { useNavigatorRoomInfoPopupStore } from '../../../../hooks';
+import { NavigatorRoomInfoPopupView } from './NavigatorRoomInfoPopupView';
 
 vi.mock('@nitrots/nitro-renderer', async () => {
     const actual = await vi.importActual<typeof import('@nitrots/nitro-renderer')>('@nitrots/nitro-renderer');
@@ -48,42 +49,55 @@ const room = {
     tradeMode: 0,
     maxUserCount: 50,
     userCount: 0,
-    tags: []
+    tags: [],
+    ranking: 0,
+    roomAdExpiresInMin: 0
 } as any;
 
-afterEach(() => cleanup());
+const renderPopup = (roomData = room) => {
+    useNavigatorRoomInfoPopupStore.setState({
+        room: roomData,
+        visible: true,
+        x: 10,
+        y: 20,
+        hovered: false
+    });
+    return render(<NavigatorRoomInfoPopupView />);
+};
+
+afterEach(() => {
+    cleanup();
+    useNavigatorRoomInfoPopupStore.getState().hide();
+});
 
 describe('AIR navigator room popover', () => {
-    it('keeps the official 360px card width so metadata and actions do not collapse', () => {
-        render(<NavigatorSearchResultItemInfoView roomData={room} isVisible={true} />);
+    it('keeps the official 374px bubble width so metadata and actions do not collapse', () => {
+        renderPopup();
 
-        expect(screen.getByRole('dialog')).toHaveStyle({ width: '360px', maxWidth: 'calc(100vw - 16px)' });
+        expect(screen.getByRole('dialog')).toHaveClass('nitro-navigator-air__room-bubble');
+        expect(screen.getByRole('dialog')).toHaveStyle({ width: '374px' });
     });
 
     it('hides the owner link when AIR marks the room owner as private', () => {
-        render(<NavigatorSearchResultItemInfoView roomData={{ ...room, showOwner: false }} isVisible={true} />);
+        renderPopup({ ...room, showOwner: false });
 
         expect(screen.queryByText('fornela')).not.toBeInTheDocument();
     });
 
     it('shows AIR room-ad details only while the room event is active', () => {
-        render(
-            <NavigatorSearchResultItemInfoView
-                roomData={{ ...room, roomAdExpiresInMin: 15, roomAdName: 'Pizza party', roomAdDescription: 'Come join us' }}
-                isVisible={true}
-            />
-        );
+        renderPopup({ ...room, roomAdExpiresInMin: 15, roomAdName: 'Pizza party', roomAdDescription: 'Come join us' });
 
         expect(screen.getByText(/Pizza party/)).toBeInTheDocument();
         expect(screen.getByText(/Come join us/)).toBeInTheDocument();
     });
 
     it('uses all three AIR room trading levels', () => {
-        const { rerender } = render(<NavigatorSearchResultItemInfoView roomData={{ ...room, tradeMode: 1 }} isVisible={true} />);
+        const { rerender } = renderPopup({ ...room, tradeMode: 1 });
 
         expect(screen.getByText('trading.mode.controller')).toBeInTheDocument();
 
-        rerender(<NavigatorSearchResultItemInfoView roomData={{ ...room, tradeMode: 2 }} isVisible={true} />);
+        useNavigatorRoomInfoPopupStore.setState({ room: { ...room, tradeMode: 2 } });
+        rerender(<NavigatorRoomInfoPopupView />);
 
         expect(screen.getByText('trading.mode.free')).toBeInTheDocument();
     });

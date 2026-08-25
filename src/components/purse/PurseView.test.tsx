@@ -53,7 +53,7 @@ describe('PurseView', () => {
         expect(screen.getByRole('tooltip')).toHaveTextContent('3 692');
     });
 
-    it('shows Translate above Help in the action column', () => {
+    it('keeps official Help / Logout / Settings inside the 77px purse and Translate in the settings menu', () => {
         const { container } = render(<PurseView />);
 
         const actionColumn = container.querySelector('.nitro-purse__col--actions');
@@ -61,7 +61,6 @@ describe('PurseView', () => {
 
         const actionButtons = within(actionColumn as HTMLElement).getAllByRole('button');
         expect(actionButtons.map((button) => button.textContent?.trim() || button.getAttribute('title'))).toEqual([
-            'Translate',
             'Help',
             'Log out',
             'widget.memenu.settings.title'
@@ -74,7 +73,6 @@ describe('PurseView', () => {
 
         const settingsMenu = container.querySelector('.nitro-purse-menu');
         expect(settingsMenu).toBeTruthy();
-        expect(within(settingsMenu as HTMLElement).queryByRole('button', { name: 'Translate' })).not.toBeInTheDocument();
-        expect(screen.getByRole('button', { name: 'Translate' })).toBe(actionButtons[0]);
+        expect(within(settingsMenu as HTMLElement).getByRole('button', { name: 'Translate' })).toBeInTheDocument();
     });
 });

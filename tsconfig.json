@@ -31,16 +31,16 @@
                 "./src/*"
             ],
             "pixi.js": [
-                "../renderer/node_modules/pixi.js",
-                "../Nitro_Render_V3/node_modules/pixi.js"
+                "../octane-renderer/node_modules/pixi.js",
+                "../renderer/node_modules/pixi.js"
             ],
             "@nitrots/nitro-renderer": [
-                "../renderer/index.ts",
-                "../Nitro_Render_V3/index.ts"
+                "../octane-renderer/index.ts",
+                "../renderer/index.ts"
             ],
             "@nitrots/*": [
-                "../renderer/packages/*/src/index.ts",
-                "../Nitro_Render_V3/packages/*/src/index.ts"
+                "../octane-renderer/packages/*/src/index.ts",
+                "../renderer/packages/*/src/index.ts"
             ]
         }
     },

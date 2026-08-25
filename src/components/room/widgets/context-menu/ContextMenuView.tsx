@@ -11,6 +11,11 @@ interface ContextMenuViewProps extends BaseProps<HTMLDivElement> {
     fades?: boolean;
     onClose: () => void;
     collapsable?: boolean;
+    tallAvatarOffset?: number;
+    maximumVerticalLeadRatio?: number;
+    freezePositionOnHover?: boolean;
+    repositionKey?: string | number;
+    showCaretIcon?: boolean;
 }
 
 const LOCATION_STACK_SIZE = 25;
@@ -29,30 +34,51 @@ export const ContextMenuView: FC<ContextMenuViewProps> = ({
     style = {},
     children = null,
     collapsable = false,
+    tallAvatarOffset = 15,
+    maximumVerticalLeadRatio = null,
+    freezePositionOnHover = false,
+    repositionKey = null,
+    showCaretIcon = true,
+    onMouseEnter = null,
+    onMouseLeave = null,
     ...rest
-}) => {
+}) =>
+{
     const [pos, setPos] = useState<{ x: number; y: number }>({ x: null, y: null });
     const [opacity, setOpacity] = useState(1);
     const [isFading, setIsFading] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(false);
     const elementRef = useRef<HTMLDivElement>(null);
+    const isPointerOverRef = useRef(false);
+    const forcePositionUpdateRef = useRef(false);
     const stackRef = useRef<FixedSizeStack>(new FixedSizeStack(LOCATION_STACK_SIZE));
     const maxStackRef = useRef(-1000000);
 
     const updatePosition = useCallback(
-        (bounds: NitroRectangle, location: { x: number; y: number }) => {
-            if (!bounds || !location || !elementRef.current) return;
+        (bounds: NitroRectangle, location: { x: number; y: number }) =>
+        {
+            if (
+                !bounds ||
+                !location ||
+                !elementRef.current ||
+                (freezePositionOnHover && isPointerOverRef.current && !forcePositionUpdateRef.current)
+            )
+                return;
 
             let offset = -elementRef.current.offsetHeight;
-            if (userType > -1 && [RoomObjectType.USER, RoomObjectType.BOT, RoomObjectType.RENTABLE_BOT].includes(userType)) {
-                offset += bounds.height > 50 ? 15 : 0;
-            } else {
+            if (userType > -1 && [RoomObjectType.USER, RoomObjectType.BOT, RoomObjectType.RENTABLE_BOT].includes(userType))
+            {
+                offset += bounds.height > 50 ? tallAvatarOffset : 0;
+            }
+            else
+            {
                 offset -= 14;
             }
 
             stackRef.current.addValue(location.y - bounds.top);
             let maxStack = stackRef.current.getMax();
-            if (maxStack < maxStackRef.current - BUBBLE_DROP_SPEED) {
+            if (maxStack < maxStackRef.current - BUBBLE_DROP_SPEED)
+            {
                 maxStack = maxStackRef.current - BUBBLE_DROP_SPEED;
             }
             maxStackRef.current = maxStack;
@@ -60,6 +86,14 @@ export const ContextMenuView: FC<ContextMenuViewProps> = ({
             const deltaY = location.y - maxStack;
             let x = Math.round(location.x - elementRef.current.offsetWidth / 2);
             let y = Math.round(deltaY + offset);
+
+            if (maximumVerticalLeadRatio !== null)
+            {
+                const maximumVerticalLead = Math.trunc(bounds.height * maximumVerticalLeadRatio);
+                const minimumY = Math.trunc(bounds.top + offset) - maximumVerticalLead;
+
+                y = Math.max(y, minimumY);
+            }
 
             const stage = GetStage();
             const maxLeft = stage.width - elementRef.current.offsetWidth - SPACE_AROUND_EDGES;
@@ -69,15 +103,14 @@ export const ContextMenuView: FC<ContextMenuViewProps> = ({
             y = Math.max(SPACE_AROUND_EDGES, Math.min(y, maxTop));
 
             setPos({ x, y });
+            forcePositionUpdateRef.current = false;
         },
-        [userType]
+        [freezePositionOnHover, maximumVerticalLeadRatio, tallAvatarOffset, userType]
     );
 
-    const getClassNames = useMemo(() => {
-        const classes = [
-            'nitro-context-menu',
-            pos.x !== null ? 'visible' : 'invisible'
-        ];
+    const getClassNames = useMemo(() =>
+    {
+        const classes = ['nitro-context-menu', pos.x !== null ? 'visible' : 'invisible'];
         if (isCollapsed) classes.push('menu-hidden');
         return [...classes, ...classNames];
     }, [pos.x, isCollapsed, classNames]);
@@ -93,14 +126,17 @@ export const ContextMenuView: FC<ContextMenuViewProps> = ({
         [pos, opacity, isFading, style]
     );
 
-    useEffect(() => {
+    useEffect(() =>
+    {
         if (!elementRef.current) return;
 
-        const update = () => {
+        const update = () =>
+        {
             if (!elementRef.current) return;
             const roomSession = GetRoomSession();
 
-            if (!roomSession) {
+            if (!roomSession)
+            {
                 onClose();
                 return;
             }
@@ -113,15 +149,18 @@ export const ContextMenuView: FC<ContextMenuViewProps> = ({
         const ticker = GetTicker();
         ticker.add(update);
 
-        return () => {
+        return () =>
+        {
             ticker.remove(update);
         };
     }, [objectId, category, updatePosition, onClose]);
 
-    useEffect(() => {
+    useEffect(() =>
+    {
         if (!fades) return;
 
-        const timeout = setTimeout(() => {
+        const timeout = setTimeout(() =>
+        {
             setIsFading(true);
             setTimeout(onClose, FADE_LENGTH);
         }, FADE_DELAY);
@@ -129,15 +168,51 @@ export const ContextMenuView: FC<ContextMenuViewProps> = ({
         return () => clearTimeout(timeout);
     }, [fades, onClose]);
 
-    useEffect(() => {
+    useEffect(() =>
+    {
         if (!isFading) return;
-        setOpacity(0);
+
+        const frame = requestAnimationFrame(() => setOpacity(0));
+
+        return () => cancelAnimationFrame(frame);
     }, [isFading]);
 
+    useEffect(() =>
+    {
+        forcePositionUpdateRef.current = true;
+    }, [repositionKey]);
+
     return (
-        <div ref={elementRef} className={getClassNames.join(' ')} style={getStyle} {...rest}>
+        <div
+            ref={elementRef}
+            className={getClassNames.join(' ')}
+            style={getStyle}
+            onMouseEnter={(event) =>
+            {
+                isPointerOverRef.current = true;
+                onMouseEnter?.(event);
+            }}
+            onMouseLeave={(event) =>
+            {
+                isPointerOverRef.current = false;
+                onMouseLeave?.(event);
+            }}
+            {...rest}
+        >
             {!(collapsable && isCollapsed) && children}
-            {collapsable && <ContextMenuCaretView collapsed={isCollapsed} onClick={() => setIsCollapsed((prev) => !prev)} />}
+            {collapsable && (
+                <ContextMenuCaretView
+                    collapsed={isCollapsed}
+                    showIcon={showCaretIcon}
+                    onClick={() =>
+                    {
+                        // AIR swaps to a separate 45x35 minimized bubble and explicitly
+                        // forces a position update even while the pointer is hovering it.
+                        forcePositionUpdateRef.current = true;
+                        setIsCollapsed((prev) => !prev);
+                    }}
+                />
+            )}
         </div>
     );
 };

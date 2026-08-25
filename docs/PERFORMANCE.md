@@ -55,15 +55,15 @@ manualChunks: id => {
     const norm = id.replace(/\\/g, '/');
 
     // Vendors first — pixi.js / howler / emoji-mart / jodit are aliased
-    // to ../Nitro_Render_V3/node_modules, so they would otherwise be
-    // swallowed by the `Nitro_Render_V3` branch lower down and pulled
+    // to ../octane-renderer/node_modules, so they would otherwise be
+    // swallowed by the `octane-renderer` branch lower down and pulled
     // into the renderer chunk.
     if(norm.includes('pixi.js') || norm.includes('pixi-filters')) return 'vendor-pixi';
     if(norm.includes('howler'))      return 'vendor-audio';
     if(norm.includes('@emoji-mart')) return 'vendor-emoji';
     if(norm.includes('jodit') || norm.includes('@react-page')) return 'vendor-editor';
 
-    if(id.includes('Nitro_Render_V3') || id.includes(`${ rendererRoot }`)) {
+    if(id.includes('octane-renderer') || id.includes(`${ rendererRoot }`)) {
         if(id.includes('/packages/avatar/'))        return 'nitro-renderer-avatar';
         if(id.includes('/packages/communication/')) return 'nitro-renderer-comm';
         if(id.includes('/packages/room/'))          return 'nitro-renderer-room';
@@ -87,8 +87,8 @@ manualChunks: id => {
 Two practical points the comments don't make obvious:
 
 - **Vendor checks come first.** Pixi.js, howler, emoji-mart and jodit
-  are pulled in via an alias to `../Nitro_Render_V3/node_modules`,
-  so their `id` matches `Nitro_Render_V3`. If the renderer branch
+  are pulled in via an alias to `../octane-renderer/node_modules`,
+  so their `id` matches `octane-renderer`. If the renderer branch
   runs before the vendor one, those modules end up bundled into the
   renderer chunk instead of their own — defeating the whole point.
 

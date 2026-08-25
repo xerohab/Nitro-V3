@@ -27,6 +27,7 @@ const sounds: DisplaySoundboardSound[] = Array.from({ length: 11 }, (_, index) =
     id: index + 1,
     name: index === 1 ? 'Applauso' : `Sound ${index + 1}`,
     url: `/${index + 1}.mp3`,
+    classname: '',
     categoryId: index < 2 ? 'reactions' : 'effects',
     tone: index % 2 ? 'green' : 'blue',
     keywords: index === 1 ? ['cláp'] : []

@@ -6,12 +6,15 @@ import {
     CatalogType,
     DispatchUiEvent,
     GetClubMemberLevel,
+    GetConfigurationValue,
     LocalizeText,
     NotificationBubbleType,
     Offer,
+    OpenUrl,
     ProductTypeEnum,
     SendMessageComposer
 } from '../../../../../api';
+import { getCatalogBundlePrice } from '../../../../../api/catalog/CatalogBundleDiscount';
 import { Button, LayoutLoadingSpinnerView, Text } from '../../../../../common';
 import {
     CatalogEvent,
@@ -23,6 +26,7 @@ import {
 } from '../../../../../events';
 import {
     useCatalogActions,
+    useCatalogBundleDiscountRuleset,
     useCatalogData,
     useCatalogSkipPurchaseConfirmation,
     useCatalogUiState,
@@ -45,14 +49,23 @@ export const CatalogPurchaseWidgetView: FC<CatalogPurchaseWidgetViewProps> = (pr
     const [purchaseWillBeGift, setPurchaseWillBeGift] = useState(false);
     const [purchaseState, setPurchaseState] = useState(CatalogPurchaseState.NONE);
     const purchasePendingRef = useRef(false);
+    const ownsPurchaseOutcomeRef = useRef(false);
+    const confirmationOpenRef = useRef(false);
     const purchaseGuardTimeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
     const inventoryRefreshTimeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
     const [catalogSkipPurchaseConfirmation] = useCatalogSkipPurchaseConfirmation();
+    const { data: bundleDiscountRuleset = null } = useCatalogBundleDiscountRuleset();
     const { currentOffer = null, currentPage = null } = useCatalogData();
-    const { currentType = CatalogType.NORMAL, purchaseOptions = null, setPurchaseOptions = null, setCatalogPlaceMultipleObjects = null } = useCatalogUiState();
-    const { requestOfferToMover = null, getBuilderFurniPlaceableStatus = null, getNodesByOfferId = null } = useCatalogActions();
+    const {
+        currentType = CatalogType.NORMAL,
+        giftReceiver = null,
+        purchaseOptions = null,
+        setPurchaseOptions = null,
+        setCatalogPlaceMultipleObjects = null
+    } = useCatalogUiState();
+    const { requestOfferToMover = null, getBuilderFurniPlaceableStatus = null, getNodesByOfferId = null, resetPlacedOfferData = null } = useCatalogActions();
     const { getCurrencyAmount = null } = usePurse();
-    const { showSingleBubble = null } = useNotification();
+    const { showConfirm = null, showSingleBubble = null, simpleAlert = null } = useNotification();
 
     // Ensure purchaseOptions is always populated even for direct search results
     useEffect(() => {
@@ -72,17 +85,111 @@ export const CatalogPurchaseWidgetView: FC<CatalogPurchaseWidgetViewProps> = (pr
 
     const resetPurchaseGuard = useCallback(() => {
         purchasePendingRef.current = false;
+        ownsPurchaseOutcomeRef.current = false;
+        confirmationOpenRef.current = false;
 
         if (purchaseGuardTimeoutRef.current) clearTimeout(purchaseGuardTimeoutRef.current);
 
         purchaseGuardTimeoutRef.current = null;
     }, []);
 
+    const showInsufficientBalanceAlert = useCallback(() => {
+        if (!currentOffer || !purchaseOptions || !getCurrencyAmount) return false;
+
+        const quantity = purchaseOptions.quantity;
+        const creditPrice = getCatalogBundlePrice(currentOffer.priceInCredits, quantity, currentOffer.bundlePurchaseAllowed, bundleDiscountRuleset).price;
+        const activityPointPrice = getCatalogBundlePrice(
+            currentOffer.priceInActivityPoints,
+            quantity,
+            currentOffer.bundlePurchaseAllowed,
+            bundleDiscountRuleset
+        ).price;
+
+        if (creditPrice > getCurrencyAmount(-1)) {
+            const description = LocalizeText('catalog.alert.notenough.credits.description');
+            const title = LocalizeText('catalog.alert.notenough.title');
+
+            if (showConfirm) {
+                const settle = () => resetPlacedOfferData?.();
+
+                showConfirm(
+                    description,
+                    () => {
+                        settle();
+
+                        const shopUrl = GetConfigurationValue<string>('web.shop.relativeUrl', '');
+
+                        if (shopUrl) OpenUrl(shopUrl);
+                    },
+                    settle,
+                    null,
+                    null,
+                    title
+                );
+            } else {
+                simpleAlert?.(description, null, null, null, title);
+            }
+
+            return true;
+        }
+
+        if (activityPointPrice > getCurrencyAmount(currentOffer.activityPointType)) {
+            const currencyLocalization = GetConfigurationValue<string>(
+                `activitypoint.name.${currentOffer.activityPointType}`,
+                currentOffer.activityPointType === 0 ? 'tooltip.duckets' : ''
+            );
+
+            if (currencyLocalization) {
+                const currencyName = LocalizeText(currencyLocalization);
+                const description = LocalizeText('catalog.alert.notenough.activitypoints.description', ['currencyname'], [currencyName]);
+                const title = LocalizeText('catalog.alert.notenough.activitypoints.title', ['currencyname'], [currencyName]);
+
+                if (currentOffer.activityPointType === 0 && showConfirm) {
+                    const settle = () => resetPlacedOfferData?.();
+
+                    showConfirm(
+                        description,
+                        () => {
+                            settle();
+
+                            const ducketsUrl = GetConfigurationValue<string>('link.format.duckets', '');
+
+                            if (ducketsUrl) OpenUrl(ducketsUrl);
+                        },
+                        settle,
+                        null,
+                        null,
+                        title
+                    );
+                } else {
+                    simpleAlert?.(description, null, null, null, title);
+                }
+            } else {
+                simpleAlert?.(
+                    LocalizeText('catalog.alert.notenough.activitypoints.description'),
+                    null,
+                    null,
+                    null,
+                    LocalizeText(`catalog.alert.notenough.activitypoints.title.${currentOffer.activityPointType}`)
+                );
+            }
+
+            return true;
+        }
+
+        return false;
+    }, [bundleDiscountRuleset, currentOffer, getCurrencyAmount, purchaseOptions, resetPlacedOfferData, showConfirm, simpleAlert]);
+
     const onCatalogEvent = useCallback(
         (event: CatalogEvent) => {
+            if (!ownsPurchaseOutcomeRef.current) return;
+
+            ownsPurchaseOutcomeRef.current = false;
+
             switch (event.type) {
                 case CatalogPurchasedEvent.PURCHASE_SUCCESS:
                     resetPurchaseGuard();
+                    setPurchaseWillBeGift(false);
                     setPurchaseState(CatalogPurchaseState.NONE);
 
                     // Some emulator builds acknowledge the catalogue purchase before
@@ -99,14 +206,17 @@ export const CatalogPurchaseWidgetView: FC<CatalogPurchaseWidgetViewProps> = (pr
                     return;
                 case CatalogPurchaseFailureEvent.PURCHASE_FAILED:
                     resetPurchaseGuard();
+                    setPurchaseWillBeGift(false);
                     setPurchaseState(CatalogPurchaseState.FAILED);
                     return;
                 case CatalogPurchaseNotAllowedEvent.NOT_ALLOWED:
                     resetPurchaseGuard();
+                    setPurchaseWillBeGift(false);
                     setPurchaseState(CatalogPurchaseState.FAILED);
                     return;
                 case CatalogPurchaseSoldOutEvent.SOLD_OUT:
                     resetPurchaseGuard();
+                    setPurchaseWillBeGift(false);
                     setPurchaseState(CatalogPurchaseState.SOLD_OUT);
                     return;
             }
@@ -142,25 +252,8 @@ export const CatalogPurchaseWidgetView: FC<CatalogPurchaseWidgetViewProps> = (pr
         const quantity = purchaseOptions?.quantity ?? 1;
         const extraData = purchaseOptions?.extraData ?? '';
 
-        if (isGift) {
-            DispatchUiEvent(new CatalogInitGiftEvent(currentOffer.page?.pageId ?? -1, currentOffer.offerId, extraData));
-            return;
-        }
-
-        purchasePendingRef.current = true;
-        setPurchaseState(CatalogPurchaseState.PURCHASE);
-
-        purchaseGuardTimeoutRef.current = setTimeout(resetPurchaseGuard, 10000);
-
-        if (purchaseCallback) {
-            purchaseCallback();
-            return;
-        }
-
-        // Search results are virtual UI offers, but they carry the exact real
-        // catalogue page/offer pair generated from the supplied catalog_items SQL.
-        // Never fall back to furnitureData.id/productClassId: those are base item ids
-        // and can point at a completely different catalogue offer.
+        // Search results are virtual UI offers. They carry the exact real catalogue
+        // page/offer pair generated from catalog_items; never substitute furniture ids.
         let pageId = (currentOffer as any).__searchCatalogPageId ?? currentOffer.page?.pageId ?? -1;
         const offerId = (currentOffer as any).__searchCatalogOfferId ?? currentOffer.offerId;
 
@@ -169,8 +262,41 @@ export const CatalogPurchaseWidgetView: FC<CatalogPurchaseWidgetViewProps> = (pr
             if (nodes && nodes.length > 0) pageId = nodes[0].pageId;
         }
 
+        if (isGift) {
+            confirmationOpenRef.current = false;
+            setPurchaseWillBeGift(false);
+            setPurchaseState(CatalogPurchaseState.NONE);
+            DispatchUiEvent(new CatalogInitGiftEvent(pageId, offerId, extraData, giftReceiver ?? ''));
+
+            return;
+        }
+
+        if (showInsufficientBalanceAlert()) {
+            confirmationOpenRef.current = false;
+            setPurchaseState(CatalogPurchaseState.NONE);
+
+            return;
+        }
+
+        purchasePendingRef.current = true;
+        ownsPurchaseOutcomeRef.current = true;
+        setPurchaseState(CatalogPurchaseState.PURCHASE);
+
+        purchaseGuardTimeoutRef.current = setTimeout(() => {
+            resetPurchaseGuard();
+            setPurchaseWillBeGift(false);
+            setPurchaseState(CatalogPurchaseState.NONE);
+        }, 10000);
+
+        if (purchaseCallback) {
+            purchaseCallback();
+
+            return;
+        }
+
         if (pageId <= 0 || offerId <= 0) {
             resetPurchaseGuard();
+            setPurchaseWillBeGift(false);
             setPurchaseState(CatalogPurchaseState.FAILED);
             return;
         }
@@ -182,6 +308,8 @@ export const CatalogPurchaseWidgetView: FC<CatalogPurchaseWidgetViewProps> = (pr
         if (!currentOffer) return;
 
         resetPurchaseGuard();
+        ownsPurchaseOutcomeRef.current = false;
+        setPurchaseWillBeGift(false);
         setPurchaseState(CatalogPurchaseState.NONE);
     }, [currentOffer, resetPurchaseGuard, setPurchaseOptions]);
 
@@ -242,7 +370,7 @@ export const CatalogPurchaseWidgetView: FC<CatalogPurchaseWidgetViewProps> = (pr
 
     const PurchaseButton = () => {
         const standardButtonClassNames = ['nitro-catalog-standard-button'];
-        const currentQuantity = purchaseOptions?.quantity ?? 1;
+        const purchaseButtonClassNames = [...standardButtonClassNames, 'nitro-catalog-standard-buy-button'];
 
         if (isBuildersClubPlaceable) {
             const isBlockedByVisitors = builderPlaceableStatus === BuilderFurniPlaceableStatus.VISITORS_IN_ROOM;
@@ -293,13 +421,10 @@ export const CatalogPurchaseWidgetView: FC<CatalogPurchaseWidgetViewProps> = (pr
             );
         }
 
-        const priceCredits = (currentOffer.priceInCredits ?? 0) * currentQuantity;
-        const pricePoints = (currentOffer.priceInActivityPoints ?? 0) * currentQuantity;
-
         if (isOfferUnavailable)
             return (
-                <Button classNames={standardButtonClassNames} disabled>
-                    {LocalizeText('catalog.alert.not_available')}
+                <Button classNames={purchaseButtonClassNames} disabled>
+                    {currentOffer.isLazy ? LocalizeText('generic.loading') : LocalizeText('catalog.alert.not_available')}
                 </Button>
             );
 
@@ -307,47 +432,33 @@ export const CatalogPurchaseWidgetView: FC<CatalogPurchaseWidgetViewProps> = (pr
 
         if (isLimitedSoldOut)
             return (
-                <Button classNames={standardButtonClassNames} disabled variant="danger">
+                <Button classNames={purchaseButtonClassNames} disabled variant="danger">
                     {LocalizeText('catalog.alert.limited_edition_sold_out.title')}
-                </Button>
-            );
-
-        if (priceCredits > 0 && priceCredits > getCurrencyAmount(-1))
-            return (
-                <Button classNames={standardButtonClassNames} disabled variant="danger">
-                    {LocalizeText('catalog.alert.notenough.title')}
-                </Button>
-            );
-
-        if (pricePoints > 0 && pricePoints > getCurrencyAmount(currentOffer.activityPointType))
-            return (
-                <Button classNames={standardButtonClassNames} disabled variant="danger">
-                    {LocalizeText('catalog.alert.notenough.activitypoints.title.' + currentOffer.activityPointType)}
                 </Button>
             );
 
         switch (purchaseState) {
             case CatalogPurchaseState.CONFIRM:
                 return (
-                    <Button classNames={[...standardButtonClassNames, 'pointer-events-none']} variant="success">
+                    <Button classNames={[...purchaseButtonClassNames, 'pointer-events-none']} variant="success">
                         {LocalizeText('catalog.purchase_confirmation.' + (currentOffer.isRentOffer ? 'rent' : 'buy'))}
                     </Button>
                 );
             case CatalogPurchaseState.PURCHASE:
                 return (
-                    <Button classNames={standardButtonClassNames} disabled>
+                    <Button classNames={purchaseButtonClassNames} disabled>
                         <LayoutLoadingSpinnerView />
                     </Button>
                 );
             case CatalogPurchaseState.FAILED:
                 return (
-                    <Button classNames={standardButtonClassNames} variant="danger">
+                    <Button classNames={purchaseButtonClassNames} variant="danger">
                         {LocalizeText('generic.failed')}
                     </Button>
                 );
             case CatalogPurchaseState.SOLD_OUT:
                 return (
-                    <Button classNames={standardButtonClassNames} variant="danger">
+                    <Button classNames={purchaseButtonClassNames} variant="danger">
                         {LocalizeText('generic.failed') + ' - ' + LocalizeText('catalog.alert.limited_edition_sold_out.title')}
                     </Button>
                 );
@@ -355,12 +466,24 @@ export const CatalogPurchaseWidgetView: FC<CatalogPurchaseWidgetViewProps> = (pr
             default:
                 return (
                     <Button
-                        classNames={[...standardButtonClassNames, 'nitro-catalog-standard-buy-button']}
+                        classNames={purchaseButtonClassNames}
                         variant="success"
-                        disabled={false}
-                        onClick={(event) =>
-                            catalogSkipPurchaseConfirmation && !isLimitedEditionOffer ? purchase() : setPurchaseState(CatalogPurchaseState.CONFIRM)
-                        }
+                        disabled={!!purchaseOptions?.extraParamRequired && (!purchaseOptions?.extraData || !purchaseOptions.extraData.length)}
+                        onClick={() => {
+                            if (catalogSkipPurchaseConfirmation && !isLimitedEditionOffer) {
+                                confirmationOpenRef.current = false;
+                                setPurchaseWillBeGift(false);
+                                purchase();
+
+                                return;
+                            }
+
+                            if (!showInsufficientBalanceAlert()) {
+                                confirmationOpenRef.current = true;
+                                setPurchaseWillBeGift(false);
+                                setPurchaseState(CatalogPurchaseState.CONFIRM);
+                            }
+                        }}
                     >
                         {LocalizeText('catalog.purchase_confirmation.' + (currentOffer.isRentOffer ? 'rent' : 'buy'))}
                     </Button>
@@ -372,6 +495,7 @@ export const CatalogPurchaseWidgetView: FC<CatalogPurchaseWidgetViewProps> = (pr
         <>
             {!isBuildersClubOffer && !noGiftOption && !currentOffer.isRentOffer && (
                 <Button
+                    variant="secondary"
                     classNames={['nitro-catalog-standard-button', 'nitro-catalog-standard-gift-button']}
                     disabled={
                         (purchaseOptions?.quantity ?? 1) > 1 ||
@@ -379,18 +503,32 @@ export const CatalogPurchaseWidgetView: FC<CatalogPurchaseWidgetViewProps> = (pr
                         !currentOffer.giftable ||
                         isLimitedSoldOut
                     }
-                    onClick={(event) => purchase(true)}
+                    onClick={() => {
+                        if (showInsufficientBalanceAlert()) return;
+
+                        confirmationOpenRef.current = true;
+                        setPurchaseWillBeGift(true);
+                        setPurchaseState(CatalogPurchaseState.CONFIRM);
+                    }}
                 >
                     {LocalizeText('catalog.purchase_confirmation.gift')}
                 </Button>
             )}
             <PurchaseButton />
-            {purchaseState === CatalogPurchaseState.CONFIRM && (
+            {confirmationOpenRef.current && (purchaseState === CatalogPurchaseState.CONFIRM || purchaseState === CatalogPurchaseState.PURCHASE) && (
                 <CatalogPurchaseConfirmView
+                    isGift={purchaseWillBeGift}
+                    isSubmitting={purchaseState === CatalogPurchaseState.PURCHASE}
+                    bundleDiscountRuleset={bundleDiscountRuleset}
                     offer={currentOffer}
                     quantity={purchaseOptions?.quantity ?? 1}
-                    onCancel={() => setPurchaseState(CatalogPurchaseState.NONE)}
-                    onConfirm={() => purchase()}
+                    onCancel={() => {
+                        confirmationOpenRef.current = false;
+                        resetPlacedOfferData?.();
+                        setPurchaseWillBeGift(false);
+                        setPurchaseState(CatalogPurchaseState.NONE);
+                    }}
+                    onConfirm={() => purchase(purchaseWillBeGift)}
                 />
             )}
         </>

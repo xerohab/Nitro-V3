@@ -2,14 +2,20 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-const badgeOverlayClasses = 'absolute! bottom-0 left-1/2 z-10 mb-1 -translate-x-1/2';
 const searchViewPath = 'src/components/navigator/views/search';
 
 describe('navigator room group badge overlay', () => {
-    it.each(['NavigatorSearchResultItemView.tsx', 'NavigatorSearchResultItemInfoView.tsx'])('keeps the badge over the bottom center in %s', (fileName) => {
-        const source = readFileSync(join(process.cwd(), searchViewPath, fileName), 'utf8');
+    it('places the search-result tile badge at the AIR top-left slot', () => {
+        const source = readFileSync(join(process.cwd(), searchViewPath, 'NavigatorSearchResultItemView.tsx'), 'utf8');
 
-        expect(source).toContain(`className="${badgeOverlayClasses}"`);
-        expect(source).not.toContain('className="absolute top-0 inset-s-0 m-1"');
+        expect(source).toContain('nitro-navigator-air__tile-badge');
+        expect(source).not.toContain('absolute! bottom-0 left-1/2');
+    });
+
+    it('places the room-info bubble badge at the AIR top-left 48x48 slot', () => {
+        const source = readFileSync(join(process.cwd(), searchViewPath, 'NavigatorRoomInfoPopupView.tsx'), 'utf8');
+
+        expect(source).toContain('nitro-navigator-air__room-badge');
+        expect(source).not.toContain('absolute! bottom-0 left-1/2');
     });
 });

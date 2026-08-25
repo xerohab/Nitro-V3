@@ -16,11 +16,22 @@ const NitroCardRoot = ({
     handleSelector = '.drag-handler',
     windowPosition = DraggableWindowPosition.CENTER,
     disableDrag = false,
+    dragStyle = {},
+    offsetLeft = 0,
+    offsetTop = 0,
     className = null,
     ...rest
 }: NitroCardRootProps) => {
     return (
-        <DraggableWindow disableDrag={disableDrag} handleSelector={handleSelector} uniqueKey={uniqueKey} windowPosition={windowPosition}>
+        <DraggableWindow
+            disableDrag={disableDrag}
+            dragStyle={dragStyle}
+            handleSelector={handleSelector}
+            offsetLeft={offsetLeft}
+            offsetTop={offsetTop}
+            uniqueKey={uniqueKey}
+            windowPosition={windowPosition}
+        >
             <div
                 ref={ref}
                 className={classNames('nitro-card-shell flex flex-col overflow-hidden min-w-full min-h-full max-w-full max-h-full', className)}

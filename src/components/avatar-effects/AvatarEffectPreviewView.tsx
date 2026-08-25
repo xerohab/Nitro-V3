@@ -23,21 +23,32 @@ export const AvatarEffectPreviewView: FC<AvatarEffectPreviewViewProps> = (props)
 
         return () => {
             previewer.dispose();
-            setRoomPreviewer(null);
         };
     }, []);
 
     useEffect(() => {
         if (!roomPreviewer || !figure) return;
 
-        roomPreviewer.addAvatarIntoRoom(figure, effect);
-        roomPreviewer.updateObjectUserFigure(figure, gender);
-    }, [roomPreviewer, figure, gender, effect]);
+        roomPreviewer.addAvatarIntoRoom(figure, 0);
+    }, [roomPreviewer, figure]);
 
     useEffect(() => {
-        if (!roomPreviewer) return;
+        if (!roomPreviewer || !figure) return;
+
+        roomPreviewer.updateObjectUserFigure(figure, gender);
+    }, [roomPreviewer, figure, gender]);
+
+    useEffect(() => {
+        if (!roomPreviewer || !figure) return;
+
+        roomPreviewer.updateUserEffect(effect);
+    }, [roomPreviewer, figure, effect]);
+
+    useEffect(() => {
+        if (!roomPreviewer || !figure) return;
+
         roomPreviewer.updateAvatarDirection(direction, direction);
-    }, [roomPreviewer, direction]);
+    }, [roomPreviewer, figure, direction]);
 
     if (!roomPreviewer) return null;
 

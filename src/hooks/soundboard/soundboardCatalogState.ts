@@ -3,6 +3,7 @@ export type SoundboardCatalogFilter = 'all' | 'enabled' | 'disabled';
 export interface SoundboardCatalogSoundLike {
     id: number;
     name: string;
+    classname?: string;
     url: string;
     enabled: boolean;
     sortOrder: number;
@@ -12,6 +13,7 @@ export interface SoundboardCatalogSoundLike {
 export interface SoundboardCatalogDraft {
     id: number;
     name: string;
+    classname: string;
     url: string;
     enabled: boolean;
     minRank: number;
@@ -37,6 +39,11 @@ export const filterCatalogSounds = <T extends SoundboardCatalogSoundLike>(
     });
 };
 
+/** Mirrors SoundboardClassnamePolicy on the emulator side. */
+const CLASSNAME_PATTERN = /^[a-z0-9_-]{1,64}$/;
+
+export const isAllowedCatalogClassname = (value: string): boolean => CLASSNAME_PATTERN.test(value?.trim().toLowerCase() ?? '');
+
 const isAllowedCatalogUrl = (value: string): boolean => {
     const url = value?.trim() ?? '';
     if (!url || url.length > 255 || /[\u0000-\u0020]/.test(url)) return false;
@@ -55,7 +62,16 @@ export const validateCatalogDraft = (draft: SoundboardCatalogDraft): SoundboardC
     const name = draft.name?.trim() ?? '';
 
     if (!name || name.length > 64) errors.name = 'invalid_name';
-    if (!isAllowedCatalogUrl(draft.url)) errors.url = 'invalid_url';
+
+    // A pad resolves through the asset manifest (classname) or through an
+    // explicit URL. Requiring both would block the normal case, where the
+    // audio lives in nitro-assets and has no URL of its own.
+    const classname = draft.classname?.trim() ?? '';
+    const url = draft.url?.trim() ?? '';
+
+    if (classname ? !isAllowedCatalogClassname(classname) : !isAllowedCatalogUrl(url)) {
+        errors.url = 'invalid_url';
+    }
     if (!Number.isInteger(draft.minRank) || draft.minRank < 1) errors.minRank = 'invalid_rank';
 
     return { valid: Object.keys(errors).length === 0, errors };

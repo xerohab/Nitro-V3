@@ -1,3 +1,24 @@
+@font-face {
+    font-family: HabboAirUbuntu;
+    src: url("../../assets/webfonts/Ubuntu.ttf");
+    font-style: normal;
+    font-weight: 400;
+}
+
+@font-face {
+    font-family: HabboAirUbuntu;
+    src: url("../../assets/webfonts/Ubuntu-b.ttf");
+    font-style: normal;
+    font-weight: 700;
+}
+
+@font-face {
+    font-family: HabboAirUbuntu;
+    src: url("../../assets/webfonts/Ubuntu-i.ttf");
+    font-style: italic;
+    font-weight: 400;
+}
+
 :root {
     --nitro-card-border: var(--habbo-frame-border, #283f5d);
     --nitro-card-frame: #376275;
@@ -123,6 +144,112 @@
     .nitro-card-close-button::after {
         transform: rotate(-45deg);
     }
+}
+
+/* WIN63 habbo_window_layout_frame_3 / Ubuntu skin. Feature windows opt in
+   through NitroCardView frameStyle={3}; the shared frame coordinate plane is
+   x=6/y=6 for the 27px titlebar and x=3/y=36 for generic content. */
+.nitro-card-shell.nitro-card-frame-3 {
+    --nitro-card-frame-3: url("../../assets/images/habbo-skin/slices/frame-ubuntu-3.png");
+    --nitro-card-close-3: url("../../assets/images/habbo-skin/slices/close-3-default.png");
+    --nitro-card-close-3-hover: url("../../assets/images/habbo-skin/slices/close-3-hover.png");
+    --nitro-card-close-3-pressed: url("../../assets/images/habbo-skin/slices/close-3-pressed.png");
+
+    isolation: isolate;
+    overflow: visible !important;
+    border-color: transparent !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    filter: drop-shadow(2.828px 2.828px 4px rgba(0, 0, 0, 0.349)) !important;
+}
+
+.nitro-card-shell.nitro-card-frame-3::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    z-index: 0;
+    border: solid transparent;
+    border-width: 33px 10px 10px;
+    border-image-source: var(--nitro-card-frame-3);
+    border-image-slice: 33 10 10 10 fill;
+    border-image-width: 33px 10px 10px;
+    border-image-repeat: stretch;
+    image-rendering: pixelated;
+    pointer-events: none;
+}
+
+.nitro-card-shell.nitro-card-frame-3 > * {
+    z-index: 1;
+}
+
+.nitro-card-shell.nitro-card-frame-3 > .nitro-card-header-shell {
+    position: absolute !important;
+    top: 5px !important;
+    left: 5px !important;
+    z-index: 2;
+    width: calc(100% - 10px) !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: 27px !important;
+    min-height: 27px !important;
+    max-height: 27px !important;
+    margin: 0 !important;
+    padding: 0 25px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+.nitro-card-shell.nitro-card-frame-3 > .nitro-card-header-shell::before {
+    display: none !important;
+}
+
+.nitro-card-shell.nitro-card-frame-3 > .nitro-card-header-shell .nitro-card-title {
+    position: absolute !important;
+    top: 2px !important;
+    right: 4px !important;
+    left: 4px !important;
+    width: auto !important;
+    height: 15px !important;
+    min-height: 15px !important;
+    margin: 0 !important;
+    color: #ffffff !important;
+    font-family: HabboAirUbuntu, UbuntuRegular, sans-serif !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    line-height: 15px !important;
+    text-align: center;
+    text-shadow: none !important;
+}
+
+.nitro-card-shell.nitro-card-frame-3 > .nitro-card-header-shell .nitro-card-close-button {
+    top: 2px !important;
+    right: 0 !important;
+    width: 19px !important;
+    height: 20px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: var(--nitro-card-close-3) 0 0 / 19px 20px no-repeat !important;
+    box-shadow: none !important;
+    filter: none !important;
+    transform: none !important;
+}
+
+.nitro-card-shell.nitro-card-frame-3 > .nitro-card-header-shell .nitro-card-close-button:hover {
+    background-image: var(--nitro-card-close-3-hover) !important;
+    filter: none !important;
+}
+
+.nitro-card-shell.nitro-card-frame-3 > .nitro-card-header-shell .nitro-card-close-button:active {
+    background-image: var(--nitro-card-close-3-pressed) !important;
+    filter: none !important;
+}
+
+.nitro-card-shell.nitro-card-frame-3 > .nitro-card-header-shell .nitro-card-close-button::before,
+.nitro-card-shell.nitro-card-frame-3 > .nitro-card-header-shell .nitro-card-close-button::after {
+    display: none !important;
 }
 
 .nitro-card-header-shell.builders-club-card-header {

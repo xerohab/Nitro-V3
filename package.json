@@ -3,7 +3,11 @@
     "version": "3.5.0",
     "homepage": ".",
     "private": true,
+    "license": "GPL-3.0",
     "packageManager": "yarn@4.18.0",
+    "engines": {
+        "node": ">=22.12.0"
+    },
     "scripts": {
         "configure": "node scripts/configure-json.mjs",
         "prestart": "node scripts/configure-json.mjs --if-missing",

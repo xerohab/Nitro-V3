@@ -52,10 +52,20 @@ export const CatalogLayouGuildCustomFurniView: FC<CatalogLayoutProps> = () => {
             <Column fullHeight gap={1} overflow="hidden">
                 {!!currentOffer && (
                     <div className="relative shrink-0 overflow-hidden">
-                        <button className="nitro-catalog-preview-btn nitro-catalog-preview-rotate" onClick={() => roomPreviewer?.changeRoomObjectDirection()}>
+                        <button
+                            aria-label="Rotate preview"
+                            className="nitro-catalog-preview-btn nitro-catalog-preview-rotate"
+                            type="button"
+                            onClick={() => roomPreviewer?.changeRoomObjectDirection()}
+                        >
                             <FaSyncAlt />
                         </button>
-                        <button className="nitro-catalog-preview-btn nitro-catalog-preview-state" onClick={() => roomPreviewer?.changeRoomObjectState()}>
+                        <button
+                            aria-label="Change preview state"
+                            className="nitro-catalog-preview-btn nitro-catalog-preview-state"
+                            type="button"
+                            onClick={() => roomPreviewer?.changeRoomObjectState()}
+                        >
                             <FaExchangeAlt />
                         </button>
                         <CatalogViewProductWidgetView height={210} />

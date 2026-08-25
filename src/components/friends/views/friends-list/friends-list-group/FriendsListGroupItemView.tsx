@@ -1,9 +1,9 @@
 import { FC, MouseEvent, useEffect, useRef, useState } from 'react';
 import { LocalizeText, MessengerFriend, OpenMessengerChat } from '../../../../../api';
-import staffChatFrankIcon from '../../../../../assets/images/friends/staff-chat-frank.svg';
 import { LayoutAvatarImageView, UserProfileIconView } from '../../../../../common';
 import { useFriends } from '../../../../../hooks';
 import { isStaffChatIdentity } from '../../../staffChatIdentity';
+import { StaffChatFrankIconView } from '../../../StaffChatFrankIconView';
 import { resolveAvatarFigure } from '../resolveAvatarFigure';
 import { resolveAvatarGender } from '../resolveAvatarGender';
 import { canFollowFriendListEntry } from './friendsListActions.helpers';
@@ -63,7 +63,7 @@ export const FriendsListGroupItemView: FC<{ friend: MessengerFriend; selected: b
         >
             <div className="hfl-friend-avatar">
                 {isStaffChat ? (
-                    <img className="hfl-staff-chat-frank" src={staffChatFrankIcon} alt="" />
+                    <StaffChatFrankIconView size={20} />
                 ) : (
                     <LayoutAvatarImageView
                         figure={resolveAvatarFigure(friend.figure, friend.gender)}

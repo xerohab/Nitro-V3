@@ -1,4 +1,5 @@
 export * from './BuilderFurniPlaceableStatus';
+export * from './CatalogBundleDiscount';
 export * from './CatalogNode';
 export * from './CatalogPage';
 export * from './CatalogPageName';

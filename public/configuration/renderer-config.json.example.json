@@ -10,10 +10,15 @@
     "images.url": "https://hotel.example.com/client/nitro/images",
     "gamedata.url": "https://nitro.example.com:2096/nitro-sec/file?kind=gamedata&file=",
     "sounds.url": "${asset.url}/sounds/%sample%.mp3",
+    "soundboard.asset.url": "${asset.url}/sounds/soundboard/%file%",
+    "soundboard.manifest.url": "${gamedata.url}/SoundData.json?t=%timestamp%",
     "external.texts.url": [
         "${gamedata.url}/ExternalTexts.json?t=%timestamp%",
         "${gamedata.url}/UITexts.jsonc?t=%timestamp%"
     ],
+	  "base.locale": "en",
+	// Leave this blank if you’re not using a CMS. If you are, enter the URL of your logout page.
+	"logout.redirect.url": "", 
     "external.texts.translation.url": "${gamedata.url}/text_translate/ExternalTexts_%locale%.json?t=%timestamp%",
     "external.samples.url": "${hof.furni.url}/mp3/sound_machine_sample_%sample%.mp3",
     "furnidata.url": "${gamedata.url}/FurnitureData.json?t=%timestamp%",

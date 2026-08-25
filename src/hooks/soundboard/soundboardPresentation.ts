@@ -1,4 +1,5 @@
 import { ISoundboardSound } from '@nitrots/nitro-renderer';
+import { EMPTY_SOUNDBOARD_MANIFEST, SoundboardManifest } from './soundboardManifest';
 
 export const SOUNDBOARD_TONES = ['blue', 'green', 'gold', 'purple'] as const;
 
@@ -22,6 +23,7 @@ export interface SoundboardLayout {
 }
 
 export interface DisplaySoundboardSound extends ISoundboardSound {
+    classname: string;
     categoryId: string | null;
     tone: SoundboardTone;
     keywords: string[];
@@ -81,22 +83,37 @@ export const normalizeSoundboardLayout = (input: unknown): SoundboardLayout => {
     return { categories, sounds };
 };
 
+/**
+ * Presentation comes from two places, in this order:
+ *
+ * 1. the asset manifest, keyed by classname — the pad's own metadata, which
+ *    travels with the file and survives a database reseed;
+ * 2. `soundboard-layout.jsonc`, keyed by the numeric database id — the hotel's
+ *    explicit override, which therefore wins.
+ *
+ * Keeping the id-keyed layout working is deliberate: existing installs have
+ * one, and their ids are whatever their emulator assigned.
+ */
 export const mergeSoundboardPresentation = (
     serverSounds: ISoundboardSound[],
-    layout: SoundboardLayout
+    layout: SoundboardLayout,
+    manifest: SoundboardManifest = EMPTY_SOUNDBOARD_MANIFEST
 ): DisplaySoundboardSound[] => {
     const presentationById = new Map(layout.sounds.map((sound) => [sound.id, sound]));
 
     return serverSounds.map((sound) => {
-        const presentation = presentationById.get(sound.id);
+        const override = presentationById.get(sound.id);
+        const classname = sound.classname?.trim().toLowerCase() ?? '';
+        const asset = classname ? manifest.byClassname.get(classname) : null;
 
         return {
             id: sound.id,
-            name: sound.name,
+            name: sound.name || asset?.name || '',
             url: sound.url,
-            categoryId: presentation?.categoryId ?? null,
-            tone: presentation?.tone ?? 'blue',
-            keywords: presentation?.keywords ?? []
+            classname,
+            categoryId: override?.categoryId ?? asset?.categoryId ?? null,
+            tone: override?.tone ?? asset?.tone ?? 'blue',
+            keywords: override?.keywords?.length ? override.keywords : (asset?.keywords ?? [])
         };
     });
 };

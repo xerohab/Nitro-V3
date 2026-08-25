@@ -1,6 +1,5 @@
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { FaPlus } from 'react-icons/fa';
 import { GetConfigurationValue, LocalizeText } from '../../../../../api';
 import { LayoutBadgeImageView } from '../../../../../common';
 import { useInventoryBadges } from '../../../../../hooks';
@@ -182,14 +181,12 @@ export const InfoStandBadgeSlotView: FC<InfoStandBadgeSlotProps> = ({ slotIndex,
         <div className="relative">
             <div
                 ref={slotRef}
-                className={`flex items-center justify-center relative w-[40px] h-[40px] bg-no-repeat bg-center transition-all duration-150
+                className={`nitro-infostand__badge-slot flex items-center justify-center relative h-[42px] w-[42px] bg-no-repeat bg-center
                     ${isOwnUser && badgeCode ? 'cursor-grab active:cursor-grabbing' : ''}
-                    ${isOwnUser && !badgeCode ? 'cursor-pointer' : ''}
-                    ${isDragging ? 'opacity-30 scale-90' : ''}
-                    ${isOwnUser && !isDragging ? 'hover:scale-110 hover:brightness-125 hover:drop-shadow-[0_0_6px_rgba(255,255,255,0.3)]' : ''}
-                    ${isDragOver ? 'scale-110 ring-2 ring-blue-400/60 rounded-sm bg-blue-400/15 animate-pulse-glow' : ''}
-                    ${justDropped ? 'animate-drop-settle' : ''}
-                    ${isOwnUser && !badgeCode ? 'opacity-40 hover:opacity-70 border border-dashed border-white/20 rounded-sm' : ''}`}
+                    ${isOwnUser && !badgeCode ? 'is-empty cursor-pointer' : ''}
+                    ${isDragging ? 'opacity-30' : ''}
+                    ${isDragOver ? 'is-drag-over' : ''}
+                    ${justDropped ? 'animate-drop-settle' : ''}`}
                 draggable={isOwnUser && !!badgeCode}
                 onDragEnd={onDragEnd}
                 onDragLeave={onDragLeave}
@@ -202,7 +199,11 @@ export const InfoStandBadgeSlotView: FC<InfoStandBadgeSlotProps> = ({ slotIndex,
                 {badgeCode ? (
                     <LayoutBadgeImageView badgeCode={badgeCode} showInfo={true} showRarityInfo={true} highlightRarity={true} />
                 ) : (
-                    isOwnUser && <FaPlus className="text-white/30 text-[10px]" />
+                    isOwnUser && (
+                        <span className="nitro-infostand__badge-slot-plus" aria-hidden="true">
+                            +
+                        </span>
+                    )
                 )}
             </div>
             {showPicker && (

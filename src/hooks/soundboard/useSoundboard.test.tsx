@@ -53,6 +53,14 @@ vi.mock('../../api', () => ({
     setSoundboardRoomEnabled: vi.fn()
 }));
 
+// The manifest is its own shared source; this suite renders the soundboard
+// hook directly, without a SharedHookRegistry host to mount it.
+vi.mock('./useSoundboardManifest', () => {
+    const manifest = { categories: [], byClassname: new Map() };
+
+    return { useSoundboardManifest: () => ({ manifest, manifestRef: { current: manifest }, classnames: [], loaded: true }) };
+});
+
 vi.mock('../events', () => ({
     useMessageEvent: (type: unknown, handler: (event: any) => void) => mocks.handlers.set(type, handler)
 }));

@@ -2,12 +2,12 @@ import { FC, useCallback, useEffect, useRef } from 'react';
 import { FaCubes, FaSave, FaSpinner, FaTrash, FaUndo } from 'react-icons/fa';
 import { CatalogType, GetConfigurationValue, IPurchasableOffer, LocalizeText, localizeWithFallback, ProductTypeEnum } from '../../../../api';
 import { useCatalogData, useCatalogUiState, usePurse } from '../../../../hooks';
+import { CatalogStudioOfferSnapshot } from '../../admin/studio/CatalogStudioTypes';
+import { useCatalogStudio } from '../../admin/studio/useCatalogStudio';
 import { IEditingOfferDetails, IOfferEditData, useCatalogAdmin } from '../../CatalogAdminContext';
+import { claimCatalogAdminHydration } from './CatalogAdminFormHydration';
 import { CatalogAdminModalView } from './CatalogAdminModalView';
 import { CatalogAdminOfferPriceView } from './CatalogAdminOfferPriceView';
-import { useCatalogStudio } from '../../admin/studio/useCatalogStudio';
-import { claimCatalogAdminHydration } from './CatalogAdminFormHydration';
-import { CatalogStudioOfferSnapshot } from '../../admin/studio/CatalogStudioTypes';
 import { useCatalogAdminSmartSave } from './useCatalogAdminSmartSave';
 
 export const isCatalogAdminNewOffer = (offer: IPurchasableOffer | null): boolean =>
@@ -123,10 +123,6 @@ export const CatalogAdminOfferEditView: FC<{}> = () => {
     const lastError = catalogAdmin?.lastError ?? null;
     const lastMutationResult = catalogAdmin?.lastMutationResult ?? null;
     const studioSessionReady = catalogAdmin?.studioSessionReady ?? false;
-    const ensurePageLock = catalogAdmin?.ensurePageLock;
-    const hasPageLock = catalogAdmin?.hasPageLock;
-    const ensureOfferLock = catalogAdmin?.ensureOfferLock;
-    const hasOfferLock = catalogAdmin?.hasOfferLock;
 
     const initializationClaimRef = useRef({ current: null as string | null });
     const detailsClaimRef = useRef({ current: null as string | null });
@@ -146,10 +142,7 @@ export const CatalogAdminOfferEditView: FC<{}> = () => {
         canSubmit: draft => {
             const builderCatalog = currentType === CatalogType.BUILDER;
             const sold = draft.offerId == null ? 0 : editingOfferDetails?.limitedSells || 0;
-            const hasLock = draft.offerId == null
-                ? (hasPageLock?.(draft.pageId) ?? false)
-                : (hasOfferLock?.(draft.offerId) ?? false);
-            return studioSessionReady && hasLock && !validateCatalogAdminOfferForm(draft, builderCatalog, sold);
+            return studioSessionReady && !validateCatalogAdminOfferForm(draft, builderCatalog, sold);
         },
         toCommitted: acknowledgement => {
             if(!acknowledgement.entity) return null;
@@ -246,12 +239,6 @@ export const CatalogAdminOfferEditView: FC<{}> = () => {
     }, [editingOffer, editingOfferDetails, formTargetKey, smartSave.hydrate]);
 
     useEffect(() => {
-        if(!editingOffer) return;
-        if(isNewOffer && smartSave.draft.pageId > 0) ensurePageLock?.(smartSave.draft.pageId);
-        else if(effectiveOfferId > 0) ensureOfferLock?.(effectiveOfferId);
-    }, [editingOffer, effectiveOfferId, ensureOfferLock, ensurePageLock, isNewOffer, smartSave.draft.pageId]);
-
-    useEffect(() => {
         if(smartSave.fieldErrors.catalogName) catalogNameInputRef.current?.focus();
         else if(smartSave.fieldErrors.itemIds) itemIdsInputRef.current?.focus();
         else if(smartSave.fieldErrors.limitedStack) limitedStackInputRef.current?.focus();
@@ -260,9 +247,6 @@ export const CatalogAdminOfferEditView: FC<{}> = () => {
     if (!editingOffer) return null;
 
     const detailsReady = isNewOffer || editingOfferDetails?.offerId === effectiveOfferId;
-    const lockReady = isNewOffer
-        ? (hasPageLock?.(smartSave.draft.pageId) ?? false)
-        : effectiveOfferId > 0 && (hasOfferLock?.(effectiveOfferId) ?? false);
     const smartSaveError = lastMutationResult?.success === false ? null : lastError;
     const interaction = resolveCatalogAdminOfferInteraction(
         studioSessionReady, detailsReady, loading && smartSave.status !== 'saving', smartSaveError);
@@ -284,10 +268,10 @@ export const CatalogAdminOfferEditView: FC<{}> = () => {
               : smartSave.lastSavedAt
                 ? `Saved · ${new Date(smartSave.lastSavedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
                 : 'Saved';
-    const canSubmit = interaction.canSave && lockReady && !validationError && (smartSave.isDirty || !!smartSave.inFlight);
+    const canSubmit = interaction.canSave && !validationError && (smartSave.isDirty || !!smartSave.inFlight);
 
     const handleSave = (closeAfter = false) => {
-        if (!saveOffer || !createOffer || !interaction.canSave || !lockReady) return;
+        if (!saveOffer || !createOffer || !interaction.canSave) return;
         if (validationError) return;
         smartSave.save(closeAfter);
     };
@@ -517,7 +501,7 @@ export const CatalogAdminOfferEditView: FC<{}> = () => {
 
                     <div className={`nitro-catalog-admin-savebar is-${smartSave.status}`}>
                         <div className="nitro-catalog-admin-savebar-status" aria-live="polite">
-                            <span>{validationError || smartSave.message || interaction.message || (!lockReady ? 'Waiting for the edit lock...' : saveStatusText)}</span>
+                            <span>{validationError || smartSave.message || interaction.message || saveStatusText}</span>
                             <small>Ctrl+S</small>
                         </div>
                         <div className="nitro-catalog-admin-savebar-actions">

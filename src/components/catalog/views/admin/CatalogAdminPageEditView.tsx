@@ -2,15 +2,15 @@ import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { FaLanguage, FaSave, FaSpinner, FaTrash, FaUndo } from 'react-icons/fa';
 import { CatalogType, LocalizeText, localizeWithFallback } from '../../../../api';
 import { useCatalogData, useCatalogUiState, useTranslationActions, useTranslationState } from '../../../../hooks';
-import { CATALOG_ROOT_LOCK_ID, IEditingPageDetails, IPageEditData, useCatalogAdmin } from '../../CatalogAdminContext';
+import { useCatalogStudio } from '../../admin/studio/useCatalogStudio';
+import { IEditingPageDetails, IPageEditData, useCatalogAdmin } from '../../CatalogAdminContext';
 import { parseCatalogTabLabel } from '../../useCatalogWindowWidth';
 import { CatalogIconView } from '../catalog-icon/CatalogIconView';
-import { CatalogAdminModalView } from './CatalogAdminModalView';
-import { useCatalogStudio } from '../../admin/studio/useCatalogStudio';
+import { CATALOG_STUDIO_LAYOUT_CODES, isCatalogStudioLayoutCode } from '../page/layout/catalogLayoutRegistry';
 import { claimCatalogAdminHydration } from './CatalogAdminFormHydration';
+import { CatalogAdminModalView } from './CatalogAdminModalView';
 import { createCatalogAdminPageDetailsFromSnapshot } from './CatalogAdminPageState';
 import { useCatalogAdminSmartSave } from './useCatalogAdminSmartSave';
-import { CATALOG_STUDIO_LAYOUT_CODES, isCatalogStudioLayoutCode } from '../page/layout/catalogLayoutRegistry';
 
 const MODE_OPTIONS = [
     { value: 'NORMAL', label: 'Normal' },
@@ -29,14 +29,14 @@ export const resolveCatalogAdminPageDisplayName = (
 export const resolveCatalogAdminPageInteraction = (
     sessionReady: boolean,
     detailsReady: boolean,
-    lockReady: boolean,
+    editReady: boolean,
     loading: boolean,
     error: string | null
 ) => {
     if (error) return { canSave: false, message: error };
     if (!sessionReady) return { canSave: false, message: 'Connecting to Catalog Studio...' };
     if (!detailsReady) return { canSave: false, message: 'Loading page details...' };
-    if (!lockReady) return { canSave: false, message: 'Waiting for the edit lock...' };
+    if (!editReady) return { canSave: false, message: 'Waiting for the live catalog revision...' };
     if (loading) return { canSave: false, message: 'Saving page...' };
     return { canSave: true, message: null };
 };
@@ -123,8 +123,6 @@ export const CatalogAdminPageEditView: FC<{}> = () => {
     const lastError = catalogAdmin?.lastError ?? null;
     const lastMutationResult = catalogAdmin?.lastMutationResult ?? null;
     const studioSessionReady = catalogAdmin?.studioSessionReady ?? false;
-    const ensurePageLock = catalogAdmin?.ensurePageLock;
-    const hasPageLock = catalogAdmin?.hasPageLock;
 
     const [showTranslate, setShowTranslate] = useState(false);
     const [translateTargetLanguage, setTranslateTargetLanguage] = useState('en');
@@ -152,10 +150,7 @@ export const CatalogAdminPageEditView: FC<{}> = () => {
         initial: createCatalogAdminNewPageFormState(-1, pageCatalogMode),
         acknowledgement: lastMutationResult,
         submit: (draft) => (draft.pageId == null ? (catalogAdmin?.createPage(draft) ?? null) : (catalogAdmin?.savePage(draft) ?? null)),
-        canSubmit: (draft) => {
-            const draftLockId = draft.pageId ?? (targetNode && targetNode.pageId > 0 ? targetNode.pageId : CATALOG_ROOT_LOCK_ID);
-            return studioSessionReady && (hasPageLock?.(draftLockId) ?? false) && !validateCatalogAdminPageForm(draft);
-        },
+        canSubmit: (draft) => studioSessionReady && !validateCatalogAdminPageForm(draft),
         toCommitted: (acknowledgement) =>
             acknowledgement.entity ? createCatalogAdminPageFormState(createCatalogAdminPageDetailsFromSnapshot(acknowledgement.entity as any)) : null,
         onClose: closeForm
@@ -211,7 +206,6 @@ export const CatalogAdminPageEditView: FC<{}> = () => {
     const isNewPage = creatingPage && smartSave.baseline.pageId == null;
     const formTargetKey =
         editingPageData && targetNode ? `page:${pageCatalogMode}:${creatingPage ? 'new' : 'edit'}:${creatingPage ? targetNode.pageId : targetPageId}` : null;
-    const lockPageId = isNewPage ? (targetNode && targetNode.pageId > 0 ? targetNode.pageId : CATALOG_ROOT_LOCK_ID) : effectivePageId;
 
     useEffect(() => {
         if (!editingPageData || !targetNode) {
@@ -275,11 +269,6 @@ export const CatalogAdminPageEditView: FC<{}> = () => {
     }, [creatingPage, editingPageData, pageCatalogMode, requestPageDetails, studio.session, targetPageId]);
 
     useEffect(() => {
-        if (!editingPageData || lockPageId == null || lockPageId < 0) return;
-        ensurePageLock?.(lockPageId);
-    }, [editingPageData, lockPageId, ensurePageLock]);
-
-    useEffect(() => {
         if (!editingPageDetails) return;
         if (targetPageId != null && editingPageDetails.pageId !== targetPageId) return;
         if (!claimCatalogAdminHydration(detailsClaimRef.current, `${formTargetKey}:details`)) return;
@@ -303,12 +292,11 @@ export const CatalogAdminPageEditView: FC<{}> = () => {
         localizeWithFallback('catalog.admin.page.untitled', 'Untitled page')
     );
     const detailsReady = isNewPage || editingPageDetails?.pageId === effectivePageId;
-    const lockReady = lockPageId != null && lockPageId >= 0 && (hasPageLock?.(lockPageId) ?? false);
     const smartSaveError = lastMutationResult?.success === false ? null : lastError;
     const interaction = resolveCatalogAdminPageInteraction(
         studioSessionReady,
         detailsReady,
-        lockReady,
+        studioSessionReady,
         loading && smartSave.status !== 'saving',
         smartSaveError
     );

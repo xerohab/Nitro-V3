@@ -5,8 +5,8 @@ import { CatalogType, GetConfigurationValue, LocalizeShortNumber, LocalizeText, 
 import { LayoutCurrencyIcon, NitroCardContentView, NitroCardHeaderView, NitroCardTabsItemView, NitroCardTabsView, NitroCardView } from '../../common';
 import { useCatalogActions, useCatalogData, useCatalogUiState, useHasPermission, usePurse } from '../../hooks';
 import { CatalogStudioProvider } from './admin/studio/CatalogStudioProvider';
-import { getCatalogHeaderDescription } from './catalogLocalization.helpers';
 import { CatalogAdminProvider, useCatalogAdmin } from './CatalogAdminContext';
+import { getCatalogHeaderDescription } from './catalogLocalization.helpers';
 import { parseCatalogTabLabel, useCatalogWindowWidth } from './useCatalogWindowWidth';
 import { CatalogAdminManagerView } from './views/admin/CatalogAdminManagerView';
 import { CatalogAdminOfferEditView } from './views/admin/CatalogAdminOfferEditView';
@@ -234,7 +234,7 @@ const CatalogViewInner: FC<{}> = () => {
                             </NitroCardTabsItemView>
                         )}
                     </NitroCardTabsView>
-                    <div className="nitro-catalog-standard-header">
+                    <div className={`nitro-catalog-standard-header ${currentType === CatalogType.BUILDER ? 'is-builder' : ''}`}>
                         <div
                             className="nitro-catalog-standard-header-bg"
                             style={currentPage?.localization?.getImage(0) ? { backgroundImage: `url(${currentPage.localization.getImage(0)})` } : undefined}
@@ -251,22 +251,29 @@ const CatalogViewInner: FC<{}> = () => {
                                       : getSwfTabLabel(activeCatalogNode?.localization ?? LocalizeText('catalog.title'))}
                             </div>
                             {currentType === CatalogType.BUILDER ? (
-                                <div className="nitro-catalog-standard-header-description">{LocalizeText('builder.header.status.membership')}</div>
+                                <CatalogBuildersClubStatusView />
                             ) : (
-                                <div
-                                    className="nitro-catalog-standard-header-description"
-                                    dangerouslySetInnerHTML={{
-                                        __html: SanitizeHtml(
-                                            searchResult
-                                                ? LocalizeText(
-                                                      'catalog.search.results',
-                                                      ['count', 'needle'],
-                                                      [String(searchResult.offers.length), searchResult.searchValue]
-                                                  )
-                                                : getCatalogHeaderDescription(currentPage?.layoutCode, currentPage?.localization)
-                                        )
-                                    }}
-                                />
+                                <>
+                                    <div className="nitro-catalog-standard-header-title">
+                                        {searchResult
+                                            ? LocalizeText('catalog.search.header')
+                                            : getSwfTabLabel(activeCatalogNode?.localization ?? LocalizeText('catalog.title'))}
+                                    </div>
+                                    <div
+                                        className="nitro-catalog-standard-header-description"
+                                        dangerouslySetInnerHTML={{
+                                            __html: SanitizeHtml(
+                                                searchResult
+                                                    ? LocalizeText(
+                                                          'catalog.search.results',
+                                                          ['count', 'needle'],
+                                                          [String(searchResult.offers.length), searchResult.searchValue]
+                                                      )
+                                                    : getCatalogHeaderDescription(currentPage?.layoutCode, currentPage?.localization)
+                                            )
+                                        }}
+                                    />
+                                </>
                             )}
                         </div>
                     </div>

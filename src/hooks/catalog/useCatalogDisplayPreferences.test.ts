@@ -14,11 +14,11 @@ describe('catalog grid personalization', () => {
         expect(getCatalogGridMetrics('invalid' as any)).toEqual({ columnCount: 6, columnMinHeight: 74, columnMinWidth: 53 });
     });
 
-    it('keeps the standard tile width while allowing the React density variants', () => {
+    it('keeps each density tile width while allowing responsive column counts', () => {
         const css = readFileSync(resolve(process.cwd(), 'src/css/catalog/CatalogExperience.css'), 'utf8');
 
-        expect(css).toContain('grid-template-columns: repeat(6, 53px)');
-        expect(css).toContain('nitro-catalog-grid-density-compact');
-        expect(css).toContain('nitro-catalog-grid-density-large');
+        expect(css).toContain('--nitro-grid-column-min-width: 53px');
+        expect(css).toContain('--nitro-grid-column-min-width: 45px');
+        expect(css).toContain('--nitro-grid-column-min-width: 68px');
     });
 });

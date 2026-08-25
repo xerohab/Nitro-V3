@@ -94,11 +94,16 @@ export const awaitNitroResponse = <TParser extends IMessageEvent, TData>(
             if (accept && !accept(event)) return;
             settled = true;
 
-            cleanup();
-
             try {
-                resolve(select ? select(event) : (event as unknown as TData));
+                // Removing a message event disposes it and clears its parser.
+                // Read the response payload before cleanup so selectors such
+                // as event.getParser() still receive the parsed message.
+                const data = select ? select(event) : (event as unknown as TData);
+
+                cleanup();
+                resolve(data);
             } catch (err) {
+                cleanup();
                 reject(err instanceof Error ? err : new Error(String(err)));
             }
         });

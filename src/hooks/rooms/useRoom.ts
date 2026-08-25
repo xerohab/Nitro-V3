@@ -1,5 +1,6 @@
 import {
     ColorConverter,
+    GetDesiredResolution,
     GetRenderer,
     GetRoomEngine,
     GetStage,
@@ -320,7 +321,7 @@ const useRoomState = () => {
             const offsetX = canvas.screenOffsetX - (newWidth - canvas.width) / 2;
             const offsetY = canvas.screenOffsetY - (newHeight - canvas.height) / 2;
 
-            renderer.resize(newWidth, newHeight, window.devicePixelRatio);
+            renderer.resize(newWidth, newHeight, GetDesiredResolution());
 
             background.width = newWidth;
             background.height = newHeight;

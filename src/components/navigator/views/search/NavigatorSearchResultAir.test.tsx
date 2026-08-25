@@ -3,6 +3,32 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { useNavigatorUiStore } from '../../../../hooks';
 import { NavigatorSearchResultView } from './NavigatorSearchResultView';
 
+vi.mock('@nitrots/nitro-renderer', async () => {
+    const actual = await vi.importActual<typeof import('@nitrots/nitro-renderer')>('@nitrots/nitro-renderer');
+
+    return {
+        ...actual,
+        NavigatorSearchCloseComposer: class {
+            constructor(_code?: string) {}
+        },
+        NavigatorSearchOpenComposer: class {
+            constructor(_code?: string) {}
+        },
+        NavigatorCategoryListModeComposer: class {
+            constructor(_code?: string, _mode?: number) {}
+        }
+    };
+});
+
+vi.mock('../../../../api', async () => {
+    const actual = await vi.importActual<typeof import('../../../../api')>('../../../../api');
+
+    return {
+        ...actual,
+        SendMessageComposer: vi.fn()
+    };
+});
+
 vi.mock('../../../../hooks', async () => {
     const actual = await vi.importActual<typeof import('../../../../hooks')>('../../../../hooks');
 

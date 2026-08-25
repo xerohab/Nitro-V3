@@ -1,6 +1,5 @@
-import { FC, useEffect } from 'react';
+import { FC, useLayoutEffect } from 'react';
 import { AchievementCategory } from '../../api';
-import { Column } from '../../common';
 import { useAchievements } from '../../hooks';
 import { AchievementDetailsView } from './AchievementDetailsView';
 import { AchievementListView } from './achievement-list';
@@ -13,7 +12,7 @@ export const AchievementCategoryView: FC<AchievementCategoryViewProps> = (props)
     const { category = null } = props;
     const { selectedAchievement = null, setSelectedAchievementId = null } = useAchievements();
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (!category) return;
 
         if (!selectedAchievement) {
@@ -24,9 +23,9 @@ export const AchievementCategoryView: FC<AchievementCategoryViewProps> = (props)
     if (!category) return null;
 
     return (
-        <Column fullHeight justifyContent="between">
+        <div className="air-achievements-category-body">
             <AchievementListView achievements={category.achievements} />
             {!!selectedAchievement && <AchievementDetailsView achievement={selectedAchievement} />}
-        </Column>
+        </div>
     );
 };

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { BuilderFurniPlaceableStatus } from '../../api/catalog/BuilderFurniPlaceableStatus';
 import { CatalogType } from '../../api/catalog/CatalogType';
+import * as catalogHelpers from './useCatalog.helpers';
 import {
     buildCatalogNodeTree,
     createCatalogPageRequestCorrelation,
@@ -12,6 +13,117 @@ import {
     normalizeCatalogType,
     resolveBuilderFurniPlaceableStatus
 } from './useCatalog.helpers';
+
+describe('catalog index request coordinator', () => {
+    it('sends the first request and suppresses a duplicate while it is in flight', () => {
+        const sentTypes: string[] = [];
+        const coordinator = (catalogHelpers.createCatalogIndexRequestCoordinator as any)((type: string) => sentTypes.push(type), 10_000, () => 1_000);
+
+        expect(coordinator).toBeDefined();
+        if (!coordinator) return;
+
+        expect(coordinator.request(CatalogType.NORMAL)).toBe(true);
+        expect(coordinator.request(CatalogType.NORMAL)).toBe(false);
+        expect(sentTypes).toEqual([CatalogType.NORMAL]);
+    });
+
+    it('allows another request after the matching response completes', () => {
+        const sentTypes: string[] = [];
+        const coordinator = (catalogHelpers.createCatalogIndexRequestCoordinator as any)((type: string) => sentTypes.push(type), 10_000, () => 1_000);
+
+        expect(coordinator).toBeDefined();
+        if (!coordinator) return;
+
+        coordinator.request(CatalogType.NORMAL);
+        coordinator.complete(CatalogType.NORMAL);
+
+        expect(coordinator.request(CatalogType.NORMAL)).toBe(true);
+        expect(sentTypes).toEqual([CatalogType.NORMAL, CatalogType.NORMAL]);
+    });
+
+    it('retries an index request after the in-flight timeout', () => {
+        let now = 1_000;
+        const sentTypes: string[] = [];
+        const coordinator = (catalogHelpers.createCatalogIndexRequestCoordinator as any)((type: string) => sentTypes.push(type), 10_000, () => now);
+
+        expect(coordinator).toBeDefined();
+        if (!coordinator) return;
+
+        coordinator.request(CatalogType.NORMAL);
+        now = 11_000;
+
+        expect(coordinator.request(CatalogType.NORMAL)).toBe(true);
+        expect(sentTypes).toEqual([CatalogType.NORMAL, CatalogType.NORMAL]);
+    });
+});
+
+describe('catalog index prewarm controller', () => {
+    it('requests the current catalog once when the connection becomes authenticated', () => {
+        const requestedTypes: string[] = [];
+        const controller = (catalogHelpers as any).createCatalogIndexPrewarmController((type: string) => requestedTypes.push(type));
+
+        expect(controller).toBeDefined();
+        if (!controller) return;
+
+        controller.update({ authenticated: false, visible: false, hasIndex: false, catalogType: CatalogType.NORMAL });
+        controller.update({ authenticated: true, visible: false, hasIndex: false, catalogType: CatalogType.NORMAL });
+        controller.update({ authenticated: true, visible: false, hasIndex: true, catalogType: CatalogType.NORMAL });
+
+        expect(requestedTypes).toEqual([CatalogType.NORMAL]);
+    });
+
+    it('refreshes once on each opening even when the prewarmed index is available', () => {
+        const requestedTypes: string[] = [];
+        const controller = (catalogHelpers as any).createCatalogIndexPrewarmController((type: string) => requestedTypes.push(type));
+
+        expect(controller).toBeDefined();
+        if (!controller) return;
+
+        controller.update({ authenticated: true, visible: false, hasIndex: false, catalogType: CatalogType.NORMAL });
+        requestedTypes.length = 0;
+        controller.update({ authenticated: true, visible: true, hasIndex: true, catalogType: CatalogType.NORMAL });
+        controller.update({ authenticated: true, visible: true, hasIndex: true, catalogType: CatalogType.NORMAL });
+        controller.update({ authenticated: true, visible: false, hasIndex: true, catalogType: CatalogType.NORMAL });
+        controller.update({ authenticated: true, visible: true, hasIndex: true, catalogType: CatalogType.NORMAL });
+
+        expect(requestedTypes).toEqual([CatalogType.NORMAL, CatalogType.NORMAL]);
+    });
+
+    it('prewarms again after reconnecting', () => {
+        const requestedTypes: string[] = [];
+        const controller = (catalogHelpers as any).createCatalogIndexPrewarmController((type: string) => requestedTypes.push(type));
+
+        expect(controller).toBeDefined();
+        if (!controller) return;
+
+        controller.update({ authenticated: true, visible: false, hasIndex: false, catalogType: CatalogType.NORMAL });
+        controller.update({ authenticated: false, visible: false, hasIndex: false, catalogType: CatalogType.NORMAL });
+        controller.update({ authenticated: true, visible: false, hasIndex: false, catalogType: CatalogType.NORMAL });
+
+        expect(requestedTypes).toEqual([CatalogType.NORMAL, CatalogType.NORMAL]);
+    });
+});
+
+describe('restoreCatalogActivePath', () => {
+    it('rebinds the active path to nodes from a refreshed catalog tree', () => {
+        const restore = (catalogHelpers as any).restoreCatalogActivePath;
+        expect(restore).toBeTypeOf('function');
+        if (!restore) return;
+
+        const root: any = { pageId: -1, pageName: 'root', children: [] };
+        const parent: any = { pageId: 10, pageName: 'parent', parent: root, children: [], activate: vi.fn(), open: vi.fn() };
+        const child: any = { pageId: 11, pageName: 'child', parent, children: [], activate: vi.fn(), open: vi.fn() };
+        root.children = [parent];
+        parent.children = [child];
+
+        const restored = restore(root, 11);
+
+        expect(restored).toEqual([parent, child]);
+        expect(parent.activate).toHaveBeenCalledOnce();
+        expect(child.activate).toHaveBeenCalledOnce();
+        expect(parent.open).toHaveBeenCalledOnce();
+    });
+});
 
 describe('catalog page request correlation', () => {
     afterEach(() => vi.useRealTimers());

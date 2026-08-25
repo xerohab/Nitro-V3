@@ -46,8 +46,11 @@ import {
     TradingNotificationType
 } from '../../api';
 import { useMessageEvent } from '../events';
+import { useHotelAlertToastStore } from './hotelAlertToastStore';
 
 const cleanText = (text: string) => (text && text.length ? text.replace(/\\r/g, '\r') : '');
+
+const HOTEL_ALERT_TOAST_MAX_LENGTH = 240;
 
 const getTimeZeroPadded = (time: number) => {
     const text = '0' + time;
@@ -128,9 +131,6 @@ const useNotificationStore = () => {
     );
 
     const showMentionBubble = useCallback((mention: IMentionEntry) => {
-        // Mentions always surface: they have their own `mentions_ui.enabled` gate
-        // (checked in useMentionMessages) and are intentionally independent of the
-        // generic info-feed toggle, so EVERY received mention shows a bubble.
         const item = new MentionNotificationBubbleItem(mention);
 
         setBubbleAlerts((prevValue) => [item, ...prevValue]);
@@ -287,6 +287,11 @@ const useNotificationStore = () => {
             return;
         }
 
+        if (GetConfigurationValue<boolean>('hotel_alert_animated', false) && raw.length <= HOTEL_ALERT_TOAST_MAX_LENGTH) {
+            useHotelAlertToastStore.getState().pushToast(raw);
+            return;
+        }
+
         simpleAlert(raw, null, null, LocalizeText('notifications.broadcast.title'));
     });
 
@@ -334,6 +339,11 @@ const useNotificationStore = () => {
 
     useMessageEvent<ModeratorMessageEvent>(ModeratorMessageEvent, (event) => {
         const parser = event.getParser();
+
+        if (GetConfigurationValue<boolean>('hotel_alert_animated', false) && !parser.url && parser.message.length <= HOTEL_ALERT_TOAST_MAX_LENGTH) {
+            useHotelAlertToastStore.getState().pushToast(cleanText(parser.message), LocalizeText('mod.alert.title'), 'staff');
+            return;
+        }
 
         showModeratorMessage(parser.message, parser.url, false);
     });

@@ -1,7 +1,9 @@
-import { NavigatorSearchResultSet } from '@nitrots/nitro-renderer';
-import { FC, useEffect, useState } from 'react';
-import { FaSearch } from 'react-icons/fa';
-import { INavigatorSearchFilter, LocalizeText, SearchFilterOptions } from '../../../../api';
+import { NavigatorSearchComposer, NavigatorSearchResultSet } from '@nitrots/nitro-renderer';
+import { FC, FormEvent, useEffect, useState } from 'react';
+import { INavigatorSearchFilter, LocalizeText, SearchFilterOptions, SendMessageComposer } from '../../../../api';
+import refreshIcon from '../../../../assets/images/navigator/air/refresh-search.png';
+import searchCloseIcon from '../../../../assets/images/navigator/air/search-close.png';
+import searchPenIcon from '../../../../assets/images/navigator/air/search-pen.png';
 import { useNavigatorData, useNavigatorUiStore } from '../../../../hooks';
 import { NavigatorFilterChipsView } from './NavigatorFilterChipsView';
 
@@ -9,14 +11,22 @@ interface NavigatorSearchViewProps {
     searchResult: NavigatorSearchResultSet | null;
 }
 
+const buildQuery = (filterIndex: number, value: string) => {
+    const searchFilter: INavigatorSearchFilter = SearchFilterOptions[filterIndex] ?? SearchFilterOptions[0];
+
+    return (searchFilter.query ? searchFilter.query + ':' : '') + value;
+};
+
 export const NavigatorSearchView: FC<NavigatorSearchViewProps> = (props) => {
     const { searchResult } = props;
     const [searchFilterIndex, setSearchFilterIndex] = useState(0);
     const [inputText, setInputText] = useState('');
     const { topLevelContext } = useNavigatorData();
+    const tabCode = useNavigatorUiStore((state) => state.currentTabCode);
+    const currentFilter = useNavigatorUiStore((state) => state.currentFilter);
+    const placeholder = LocalizeText('navigator.filter.input.placeholder');
+    const hasQuery = inputText.length > 0;
 
-    // Sync the input text display when a server result arrives (e.g. on tab switch
-    // or deep-link navigation that sets the filter through the store directly).
     useEffect(() => {
         if (!searchResult) return;
 
@@ -40,50 +50,51 @@ export const NavigatorSearchView: FC<NavigatorSearchViewProps> = (props) => {
         setInputText(value);
     }, [searchResult]);
 
-    // Debounced filter — 300ms after the user stops typing, push to the store
-    // which updates the query key and triggers a refetch.
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            const searchFilter = SearchFilterOptions[searchFilterIndex] ?? SearchFilterOptions[0];
-            const searchQuery = (searchFilter.query ? searchFilter.query + ':' : '') + inputText;
-            useNavigatorUiStore.getState().setFilter(searchQuery);
-        }, 300);
-
-        return () => clearTimeout(timer);
-    }, [inputText, searchFilterIndex]);
-
-    // React 19 form action — fires on Enter or the submit button, skipping the
-    // debounce timer for an immediate search.
-    const submitSearch = (formData: FormData) => {
+    const submitSearch = (value = inputText) => {
         if (!topLevelContext) return;
-        const raw = formData.get('q');
-        const value = typeof raw === 'string' ? raw : inputText;
-        const searchFilter = SearchFilterOptions[searchFilterIndex] ?? SearchFilterOptions[0];
-        const searchQuery = (searchFilter.query ? searchFilter.query + ':' : '') + value;
-        useNavigatorUiStore.getState().setFilter(searchQuery);
+        useNavigatorUiStore.getState().setFilter(buildQuery(searchFilterIndex, value));
+    };
+
+    const onSubmit = (event: FormEvent) => {
+        event.preventDefault();
+        submitSearch();
+    };
+
+    const refreshSearch = () => {
+        if (!tabCode) return;
+        SendMessageComposer(new NavigatorSearchComposer(tabCode, currentFilter || buildQuery(searchFilterIndex, inputText)));
+    };
+
+    const clearSearch = () => {
+        setInputText('');
     };
 
     return (
-        <form action={submitSearch} className="nitro-navigator-air__search flex w-full gap-2">
+        <form onSubmit={onSubmit} className="nitro-navigator-air__search">
             <NavigatorFilterChipsView value={searchFilterIndex} onChange={setSearchFilterIndex} />
-            <div className="nitro-navigator-air__search-field">
+            <div className={`nitro-navigator-air__search-field${hasQuery ? '' : ' is-placeholder'}`}>
                 <input
-                    className="w-full form-control nitro-navigator-air__search-input"
+                    className="nitro-navigator-air__search-input"
                     name="q"
-                    placeholder={LocalizeText('navigator.filter.input.placeholder')}
+                    placeholder={placeholder}
                     type="text"
                     value={inputText}
                     onChange={(event) => setInputText(event.target.value)}
                 />
                 <button
-                    type="submit"
-                    className="nitro-navigator-air__search-submit"
-                    aria-label={LocalizeText('navigator.filter.input.placeholder')}
-                    title={LocalizeText('navigator.filter.input.placeholder')}
+                    type={hasQuery ? 'button' : 'submit'}
+                    className="nitro-navigator-air__search-clear"
+                    aria-label={hasQuery ? LocalizeText('generic.clear') : placeholder}
+                    onClick={hasQuery ? clearSearch : undefined}
                 >
-                    <FaSearch className="fa-icon" />
+                    <img src={hasQuery ? searchCloseIcon : searchPenIcon} alt="" />
                 </button>
             </div>
+            {hasQuery && (
+                <button type="button" className="nitro-navigator-air__search-refresh" aria-label={LocalizeText('generic.refresh')} onClick={refreshSearch}>
+                    <img src={refreshIcon} alt="" />
+                </button>
+            )}
         </form>
     );
 };

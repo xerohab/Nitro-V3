@@ -4,6 +4,8 @@ export class ChatBubbleMessage {
     public id: number = -1;
     public width: number = 0;
     public height: number = 0;
+    public visualOffsetTop: number = 0;
+    public visualOffsetBottom: number = 0;
     public elementRef: HTMLDivElement = null;
     public skipMovement: boolean = false;
     public prefixText: string = '';

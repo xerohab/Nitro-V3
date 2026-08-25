@@ -46,7 +46,7 @@ describe('useSoundboardCatalog', () => {
 
     it('stores the full catalog and explicitly refreshes after a successful mutation', () => {
         const { result } = renderHook(() => useSoundboardCatalog());
-        const sounds = [{ id: 7, name: 'Bell', url: '/bell.mp3', enabled: true, sortOrder: 10, minRank: 1 }];
+        const sounds = [{ id: 7, name: 'Bell', classname: '', url: '/bell.mp3', enabled: true, sortOrder: 10, minRank: 1 }];
 
         act(() => mocks.handlers.get(SoundboardCatalogEvent)?.({ getParser: () => ({ sounds }) }));
         expect(result.current.sounds).toEqual(sounds);
@@ -63,7 +63,7 @@ describe('useSoundboardCatalog', () => {
 
     it('blocks duplicate mutations until the server responds', () => {
         const { result } = renderHook(() => useSoundboardCatalog());
-        const draft = { id: 0, name: 'Bell', url: '/bell.mp3', minRank: 1, enabled: true };
+        const draft = { id: 0, name: 'Bell', classname: '', url: '/bell.mp3', minRank: 1, enabled: true };
 
         act(() => {
             expect(result.current.upsert(draft)).toBe(true);

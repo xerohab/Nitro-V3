@@ -4,25 +4,26 @@ import {
     CreateLinkEvent,
     RoomControllerLevel,
     RoomObjectCategory,
+    RoomObjectVariable,
     RoomUnitDropHandItemComposer
 } from '@nitrots/nitro-renderer';
-import { Dispatch, FC, SetStateAction, useState } from 'react';
-import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { Dispatch, FC, ReactNode, SetStateAction, useState } from 'react';
 import {
     AvatarInfoUser,
     DispatchUiEvent,
     GetCanStandUp,
-    GetCanUseExpression,
+    GetConfigurationValue,
     GetOwnPosture,
+    GetOwnRoomObject,
     GetUserProfile,
     HasHabboClub,
     HasHabboVip,
     IsRidingHorse,
     LocalizeText,
+    localizeWithFallback,
     PostureTypeEnum,
     SendMessageComposer
 } from '../../../../../api';
-import { LayoutCurrencyIcon } from '../../../../../common';
 import { HelpNameChangeEvent } from '../../../../../events';
 import { useRoom, useWiredTools } from '../../../../../hooks';
 import { ContextMenuHeaderView } from '../../context-menu/ContextMenuHeaderView';
@@ -36,28 +37,94 @@ interface AvatarInfoWidgetOwnAvatarViewProps {
     onClose: () => void;
 }
 
+interface AirMenuLabelProps {
+    children: ReactNode;
+    direction?: 'left' | 'right';
+}
+
+interface AirSign {
+    id: number;
+    label?: string;
+    icon?: string;
+}
+
 const MODE_NORMAL = 0;
 const MODE_CLUB_DANCES = 1;
-const MODE_NAME_CHANGE = 2;
 const MODE_EXPRESSIONS = 3;
 const MODE_SIGNS = 4;
 
-export const AvatarInfoWidgetOwnAvatarView: FC<AvatarInfoWidgetOwnAvatarViewProps> = (props) => {
+const AIR_SIGNS: AirSign[] = [
+    { id: 1, label: '1' },
+    { id: 2, label: '2' },
+    { id: 3, label: '3' },
+    { id: 4, label: '4' },
+    { id: 5, label: '5' },
+    { id: 6, label: '6' },
+    { id: 7, label: '7' },
+    { id: 8, label: '8' },
+    { id: 9, label: '9' },
+    { id: 10, label: '10' },
+    { id: 11, icon: 'heart' },
+    { id: 12, icon: 'skull' },
+    { id: 0, label: '0' },
+    { id: 13, icon: 'exclamation' },
+    { id: 15, icon: 'smile' },
+    { id: 14, icon: 'soccer' },
+    { id: 17, icon: 'yellow' },
+    { id: 16, icon: 'red' }
+];
+
+const AirMenuLabel: FC<AirMenuLabelProps> = ({ children, direction = null }) => (
+    <span className="air-avatar-menu-label">
+        {direction === 'left' && <i className="air-avatar-menu-arrow air-avatar-menu-arrow--left" aria-hidden="true" />}
+        {children}
+        {direction === 'right' && <i className="air-avatar-menu-arrow air-avatar-menu-arrow--right" aria-hidden="true" />}
+    </span>
+);
+
+export const AvatarInfoWidgetOwnAvatarView: FC<AvatarInfoWidgetOwnAvatarViewProps> = (props) =>
+{
     const { avatarInfo = null, isDancing = false, setIsDecorating = null, onClose = null } = props;
-    const [mode, setMode] = useState(isDancing && HasHabboClub() ? MODE_CLUB_DANCES : MODE_NORMAL);
+    const hasClub = HasHabboClub();
+    const hasVip = HasHabboVip();
+    const ownPosture = GetOwnPosture();
+    const ownRoomObject = GetOwnRoomObject();
+    const activeEffectId = ownRoomObject?.model.getValue<number>(RoomObjectVariable.FIGURE_EFFECT) ?? 0;
+    const hasActiveEffect = activeEffectId > 0;
+    const isRidingHorse = IsRidingHorse();
+    const isSwimming = ownPosture === AvatarAction.POSTURE_SWIM;
+    const [mode, setMode] = useState(isDancing && hasClub && !hasActiveEffect ? MODE_CLUB_DANCES : MODE_NORMAL);
     const { roomSession = null } = useRoom();
     const { openInspectionForUser, showInspectButton } = useWiredTools();
 
-    const processAction = (name: string) => {
+    const expressionsMenuEnabled = GetConfigurationValue('avatar.expressions_menu.enabled', true);
+    const signsEnabled = GetConfigurationValue('avatar.signs.enabled', true);
+    const effectsEnabled = !GetConfigurationValue('memenu.effects.widget.disabled', false);
+    const handItemDropEnabled = GetConfigurationValue('handitem.drop.enabled', true);
+    const sittingEnabled = GetConfigurationValue('avatar.sitting.enabled', true);
+    const expression67Enabled = GetConfigurationValue('avatar.expression.67.enabled', false);
+
+    const processAction = (name: string) =>
+    {
         let hideMenu = true;
 
-        if (name) {
-            if (name.startsWith('sign_')) {
+        if (name)
+        {
+            if (!hasVip && ['blow', 'expression_67', 'laugh'].includes(name))
+            {
+                CreateLinkEvent('habboUI/open/hccenter');
+                hideMenu = false;
+            }
+            else if (name.startsWith('sign_'))
+            {
                 const sign = parseInt(name.split('_')[1]);
 
                 roomSession.sendSignMessage(sign);
-            } else {
-                switch (name) {
+            }
+            else
+            {
+                switch (name)
+                {
                     case 'decorate':
                         setIsDecorating(true);
                         break;
@@ -91,6 +158,9 @@ export const AvatarInfoWidgetOwnAvatarView: FC<AvatarInfoWidgetOwnAvatarViewProp
                         break;
                     case 'blow':
                         roomSession.sendExpressionMessage(AvatarExpressionEnum.BLOW.ordinal);
+                        break;
+                    case 'expression_67':
+                        roomSession.sendExpressionMessage(67);
                         break;
                     case 'laugh':
                         roomSession.sendExpressionMessage(AvatarExpressionEnum.LAUGH.ordinal);
@@ -128,6 +198,12 @@ export const AvatarInfoWidgetOwnAvatarView: FC<AvatarInfoWidgetOwnAvatarViewProp
                     case 'inspect':
                         openInspectionForUser(avatarInfo.roomIndex);
                         break;
+                    case 'customize_nick':
+                        CreateLinkEvent('customize/show');
+                        break;
+                    case 'badge_leaderboard':
+                        CreateLinkEvent('badge-leaderboard/show');
+                        break;
                 }
             }
         }
@@ -135,171 +211,177 @@ export const AvatarInfoWidgetOwnAvatarView: FC<AvatarInfoWidgetOwnAvatarViewProp
         if (hideMenu) onClose();
     };
 
-    const isShowDecorate = () => avatarInfo.amIOwner || avatarInfo.amIAnyRoomController || avatarInfo.roomControllerLevel > RoomControllerLevel.GUEST;
-
-    const isRidingHorse = IsRidingHorse();
+    const isShowDecorate = () =>
+        hasClub && (avatarInfo.amIOwner || avatarInfo.amIAnyRoomController || avatarInfo.roomControllerLevel > RoomControllerLevel.GUEST);
+    const canUsePremiumExpression = !hasActiveEffect && !isSwimming;
+    const premiumExpressionClassNames = hasVip ? [] : ['air-avatar-menu-item--locked'];
 
     return (
         <ContextMenuView
             category={RoomObjectCategory.UNIT}
-            classNames={['nitro-avatar-action-menu']}
+            classNames={['nitro-avatar-action-menu', 'nitro-avatar-action-menu--own']}
             collapsable={true}
+            freezePositionOnHover={true}
+            maximumVerticalLeadRatio={0.05}
             objectId={avatarInfo.roomIndex}
+            repositionKey={mode}
+            showCaretIcon={false}
+            tallAvatarOffset={25}
             userType={avatarInfo.userType}
             onClose={onClose}
         >
-            <ContextMenuHeaderView className="cursor-pointer" onClick={(event) => GetUserProfile(avatarInfo.webID)}>
+            <ContextMenuHeaderView className="cursor-pointer" onClick={() => GetUserProfile(avatarInfo.webID)}>
                 {avatarInfo.name}
             </ContextMenuHeaderView>
-            {mode === MODE_NORMAL && (
-                <>
-                    {avatarInfo.allowNameChange && (
-                        <ContextMenuListItemView onClick={(event) => processAction('change_name')}>
-                            {LocalizeText('widget.avatar.change_name')}
+            <div className="air-avatar-menu-buttons">
+                {mode === MODE_NORMAL && (
+                    <>
+                        {avatarInfo.allowNameChange && (
+                            <ContextMenuListItemView classNames={['air-avatar-menu-item--link']} onClick={() => processAction('change_name')}>
+                                {LocalizeText('widget.avatar.change_name')}
+                            </ContextMenuListItemView>
+                        )}
+                        {isShowDecorate() && (
+                            <ContextMenuListItemView onClick={() => processAction('decorate')}>
+                                {LocalizeText('widget.avatar.decorate')}
+                            </ContextMenuListItemView>
+                        )}
+                        <ContextMenuListItemView classNames={['air-avatar-menu-item--link']} onClick={() => processAction('change_looks')}>
+                            {LocalizeText('widget.memenu.myclothes')}
                         </ContextMenuListItemView>
-                    )}
-                    {isShowDecorate() && (
-                        <ContextMenuListItemView onClick={(event) => processAction('decorate')}>
-                            {LocalizeText('widget.avatar.decorate')}
+                        {expressionsMenuEnabled ? (
+                            <ContextMenuListItemView onClick={() => processAction('expressions')}>
+                                <AirMenuLabel direction="right">{LocalizeText('infostand.link.expressions')}</AirMenuLabel>
+                            </ContextMenuListItemView>
+                        ) : (
+                            <ContextMenuListItemView onClick={() => processAction('wave')}>{LocalizeText('widget.memenu.wave')}</ContextMenuListItemView>
+                        )}
+                        {hasClub && !isRidingHorse && (
+                            <ContextMenuListItemView disabled={hasActiveEffect} onClick={() => processAction('dance_menu')}>
+                                <AirMenuLabel direction="right">{LocalizeText('widget.memenu.dance')}</AirMenuLabel>
+                            </ContextMenuListItemView>
+                        )}
+                        {!isDancing && !hasClub && !isRidingHorse && (
+                            <ContextMenuListItemView disabled={hasActiveEffect} onClick={() => processAction('dance')}>
+                                {LocalizeText('widget.memenu.dance')}
+                            </ContextMenuListItemView>
+                        )}
+                        {isDancing && !hasClub && !isRidingHorse && (
+                            <ContextMenuListItemView onClick={() => processAction('dance_stop')}>
+                                {LocalizeText('widget.memenu.dance.stop')}
+                            </ContextMenuListItemView>
+                        )}
+                        {signsEnabled && (
+                            <ContextMenuListItemView onClick={() => processAction('signs')}>
+                                <AirMenuLabel direction="right">{LocalizeText('infostand.show.signs')}</AirMenuLabel>
+                            </ContextMenuListItemView>
+                        )}
+                        {avatarInfo.carryItem > 0 && avatarInfo.carryItem < 999999 && handItemDropEnabled && (
+                            <ContextMenuListItemView onClick={() => processAction('drop_carry_item')}>
+                                {LocalizeText('avatar.widget.drop_hand_item')}
+                            </ContextMenuListItemView>
+                        )}
+                        {effectsEnabled && !isRidingHorse && (
+                            <ContextMenuListItemView classNames={['air-avatar-menu-item--link']} onClick={() => processAction('avatar_effect')}>
+                                {LocalizeText('widget.memenu.effects')}
+                            </ContextMenuListItemView>
+                        )}
+                        {showInspectButton && (
+                            <ContextMenuListItemView onClick={() => processAction('inspect')}>
+                                {LocalizeText('infostand.button.wired_inspect')}
+                            </ContextMenuListItemView>
+                        )}
+
+                        {/* Polaris-only actions are appended after the official AIR rows. */}
+                        <ContextMenuListItemView onClick={() => processAction('customize_nick')}>
+                            <span className="air-avatar-menu-extra-label">
+                                {localizeWithFallback('widget.memenu.customize_nick', 'Custom nickname')}
+                            </span>
                         </ContextMenuListItemView>
-                    )}
-                    <ContextMenuListItemView onClick={(event) => processAction('change_looks')}>
-                        {LocalizeText('widget.memenu.myclothes')}
-                    </ContextMenuListItemView>
-                    <ContextMenuListItemView onClick={(event) => processAction('avatar_effect')}>{LocalizeText('product.type.effect')}</ContextMenuListItemView>
-                    <ContextMenuListItemView onClick={(event) => processAction('customize_nick')}>Nick Custom</ContextMenuListItemView>
-                    <ContextMenuListItemView onClick={(event) => processAction('badge_leaderboard')}>
-                        {LocalizeText('badge_leaderboard.title.total_badges')}
-                    </ContextMenuListItemView>
-                    {HasHabboClub() && !isRidingHorse && (
-                        <ContextMenuListItemView onClick={(event) => processAction('dance_menu')}>
-                            <FaChevronRight className="right fa-icon" />
-                            {LocalizeText('widget.memenu.dance')}
+                        <ContextMenuListItemView onClick={() => processAction('badge_leaderboard')}>
+                            <span className="air-avatar-menu-extra-label">
+                                {localizeWithFallback('badge_leaderboard.title.total_badges', 'Badge leaderboard')}
+                            </span>
                         </ContextMenuListItemView>
-                    )}
-                    {!isDancing && !HasHabboClub() && !isRidingHorse && (
-                        <ContextMenuListItemView onClick={(event) => processAction('dance')}>{LocalizeText('widget.memenu.dance')}</ContextMenuListItemView>
-                    )}
-                    {isDancing && !HasHabboClub() && !isRidingHorse && (
-                        <ContextMenuListItemView onClick={(event) => processAction('dance_stop')}>
+                    </>
+                )}
+                {mode === MODE_CLUB_DANCES && (
+                    <>
+                        <ContextMenuListItemView disabled={!isDancing} onClick={() => processAction('dance_stop')}>
                             {LocalizeText('widget.memenu.dance.stop')}
                         </ContextMenuListItemView>
-                    )}
-                    <ContextMenuListItemView onClick={(event) => processAction('expressions')}>
-                        <FaChevronRight className="right fa-icon" />
-                        {LocalizeText('infostand.link.expressions')}
-                    </ContextMenuListItemView>
-                    <ContextMenuListItemView onClick={(event) => processAction('signs')}>
-                        <FaChevronRight className="right fa-icon" />
-                        {LocalizeText('infostand.show.signs')}
-                    </ContextMenuListItemView>
-                    {avatarInfo.carryItem > 0 && (
-                        <ContextMenuListItemView onClick={(event) => processAction('drop_carry_item')}>
-                            {LocalizeText('avatar.widget.drop_hand_item')}
+                        <ContextMenuListItemView onClick={() => processAction('dance_1')}>{LocalizeText('widget.memenu.dance1')}</ContextMenuListItemView>
+                        <ContextMenuListItemView onClick={() => processAction('dance_2')}>{LocalizeText('widget.memenu.dance2')}</ContextMenuListItemView>
+                        <ContextMenuListItemView onClick={() => processAction('dance_3')}>{LocalizeText('widget.memenu.dance3')}</ContextMenuListItemView>
+                        <ContextMenuListItemView onClick={() => processAction('dance_4')}>{LocalizeText('widget.memenu.dance4')}</ContextMenuListItemView>
+                        <ContextMenuListItemView onClick={() => processAction('back')}>
+                            <AirMenuLabel direction="left">{LocalizeText('generic.back')}</AirMenuLabel>
                         </ContextMenuListItemView>
-                    )}
-                    {showInspectButton && <ContextMenuListItemView onClick={(event) => processAction('inspect')}>Inspect</ContextMenuListItemView>}
-                </>
-            )}
-            {mode === MODE_CLUB_DANCES && (
-                <>
-                    {isDancing && (
-                        <ContextMenuListItemView onClick={(event) => processAction('dance_stop')}>
-                            {LocalizeText('widget.memenu.dance.stop')}
+                    </>
+                )}
+                {mode === MODE_EXPRESSIONS && (
+                    <>
+                        {sittingEnabled && !isSwimming && !isRidingHorse && ownPosture === AvatarAction.POSTURE_STAND && (
+                            <ContextMenuListItemView onClick={() => processAction('sit')}>{LocalizeText('widget.memenu.sit')}</ContextMenuListItemView>
+                        )}
+                        {sittingEnabled && !isSwimming && !isRidingHorse && GetCanStandUp() && (
+                            <ContextMenuListItemView onClick={() => processAction('stand')}>{LocalizeText('widget.memenu.stand')}</ContextMenuListItemView>
+                        )}
+                        <ContextMenuListItemView disabled={isSwimming} onClick={() => processAction('wave')}>
+                            {LocalizeText('widget.memenu.wave')}
                         </ContextMenuListItemView>
-                    )}
-                    <ContextMenuListItemView onClick={(event) => processAction('dance_1')}>{LocalizeText('widget.memenu.dance1')}</ContextMenuListItemView>
-                    <ContextMenuListItemView onClick={(event) => processAction('dance_2')}>{LocalizeText('widget.memenu.dance2')}</ContextMenuListItemView>
-                    <ContextMenuListItemView onClick={(event) => processAction('dance_3')}>{LocalizeText('widget.memenu.dance3')}</ContextMenuListItemView>
-                    <ContextMenuListItemView onClick={(event) => processAction('dance_4')}>{LocalizeText('widget.memenu.dance4')}</ContextMenuListItemView>
-                    <ContextMenuListItemView onClick={(event) => processAction('back')}>
-                        <FaChevronLeft className="left fa-icon" />
-                        {LocalizeText('generic.back')}
-                    </ContextMenuListItemView>
-                </>
-            )}
-            {mode === MODE_EXPRESSIONS && (
-                <>
-                    {GetOwnPosture() === AvatarAction.POSTURE_STAND && (
-                        <ContextMenuListItemView onClick={(event) => processAction('sit')}>{LocalizeText('widget.memenu.sit')}</ContextMenuListItemView>
-                    )}
-                    {GetCanStandUp() && (
-                        <ContextMenuListItemView onClick={(event) => processAction('stand')}>{LocalizeText('widget.memenu.stand')}</ContextMenuListItemView>
-                    )}
-                    {GetCanUseExpression() && (
-                        <ContextMenuListItemView onClick={(event) => processAction('wave')}>{LocalizeText('widget.memenu.wave')}</ContextMenuListItemView>
-                    )}
-                    {GetCanUseExpression() && (
-                        <ContextMenuListItemView disabled={!HasHabboVip()} onClick={(event) => processAction('laugh')}>
-                            {!HasHabboVip() && <LayoutCurrencyIcon type="hc" />}
-                            {LocalizeText('widget.memenu.laugh')}
-                        </ContextMenuListItemView>
-                    )}
-                    {GetCanUseExpression() && (
-                        <ContextMenuListItemView disabled={!HasHabboVip()} onClick={(event) => processAction('blow')}>
-                            {!HasHabboVip() && <LayoutCurrencyIcon type="hc" />}
+                        <ContextMenuListItemView
+                            classNames={premiumExpressionClassNames}
+                            disabled={hasVip && !canUsePremiumExpression}
+                            onClick={() => processAction('blow')}
+                        >
+                            {!hasVip && <i className="air-avatar-menu-vip" aria-hidden="true" />}
                             {LocalizeText('widget.memenu.blow')}
                         </ContextMenuListItemView>
-                    )}
-                    <ContextMenuListItemView onClick={(event) => processAction('idle')}>{LocalizeText('widget.memenu.idle')}</ContextMenuListItemView>
-                    <ContextMenuListItemView onClick={(event) => processAction('back')}>
-                        <FaChevronLeft className="left fa-icon" />
-                        {LocalizeText('generic.back')}
-                    </ContextMenuListItemView>
-                </>
-            )}
-            {mode === MODE_SIGNS && (
-                <>
-                    <div className="flex menu-list-split-3">
-                        <ContextMenuListItemView onClick={(event) => processAction('sign_1')}>1</ContextMenuListItemView>
-                        <ContextMenuListItemView onClick={(event) => processAction('sign_2')}>2</ContextMenuListItemView>
-                        <ContextMenuListItemView onClick={(event) => processAction('sign_3')}>3</ContextMenuListItemView>
-                    </div>
-                    <div className="flex menu-list-split-3">
-                        <ContextMenuListItemView onClick={(event) => processAction('sign_4')}>4</ContextMenuListItemView>
-                        <ContextMenuListItemView onClick={(event) => processAction('sign_5')}>5</ContextMenuListItemView>
-                        <ContextMenuListItemView onClick={(event) => processAction('sign_6')}>6</ContextMenuListItemView>
-                    </div>
-                    <div className="flex menu-list-split-3">
-                        <ContextMenuListItemView onClick={(event) => processAction('sign_7')}>7</ContextMenuListItemView>
-                        <ContextMenuListItemView onClick={(event) => processAction('sign_8')}>8</ContextMenuListItemView>
-                        <ContextMenuListItemView onClick={(event) => processAction('sign_9')}>9</ContextMenuListItemView>
-                    </div>
-                    <div className="flex menu-list-split-3">
-                        <ContextMenuListItemView onClick={(event) => processAction('sign_10')}>10</ContextMenuListItemView>
-                        <ContextMenuListItemView onClick={(event) => processAction('sign_11')}>
-                            <i className="nitro-icon icon-sign-heart" />
+                        {expression67Enabled && (
+                            <ContextMenuListItemView
+                                classNames={premiumExpressionClassNames}
+                                disabled={hasVip && !canUsePremiumExpression}
+                                onClick={() => processAction('expression_67')}
+                            >
+                                {!hasVip && <i className="air-avatar-menu-vip" aria-hidden="true" />}
+                                {LocalizeText('widget.memenu.expression_67')}
+                            </ContextMenuListItemView>
+                        )}
+                        <ContextMenuListItemView
+                            classNames={premiumExpressionClassNames}
+                            disabled={hasVip && !canUsePremiumExpression}
+                            onClick={() => processAction('laugh')}
+                        >
+                            {!hasVip && <i className="air-avatar-menu-vip" aria-hidden="true" />}
+                            {LocalizeText('widget.memenu.laugh')}
                         </ContextMenuListItemView>
-                        <ContextMenuListItemView onClick={(event) => processAction('sign_12')}>
-                            <i className="nitro-icon icon-sign-skull" />
+                        <ContextMenuListItemView onClick={() => processAction('idle')}>{LocalizeText('widget.memenu.idle')}</ContextMenuListItemView>
+                        <ContextMenuListItemView onClick={() => processAction('back')}>
+                            <AirMenuLabel direction="left">{LocalizeText('generic.back')}</AirMenuLabel>
                         </ContextMenuListItemView>
-                    </div>
-                    <div className="flex menu-list-split-3">
-                        <ContextMenuListItemView onClick={(event) => processAction('sign_0')}>0</ContextMenuListItemView>
-                        <ContextMenuListItemView onClick={(event) => processAction('sign_13')}>
-                            <i className="nitro-icon icon-sign-exclamation" />
+                    </>
+                )}
+                {mode === MODE_SIGNS && (
+                    <>
+                        <div className="air-avatar-menu-signs-grid">
+                            {AIR_SIGNS.map((sign) => (
+                                <ContextMenuListItemView
+                                    key={sign.id}
+                                    classNames={['air-avatar-menu-sign-cell']}
+                                    onClick={() => processAction(`sign_${sign.id}`)}
+                                >
+                                    {sign.label}
+                                    {sign.icon && <i className={`air-avatar-menu-sign-icon air-avatar-menu-sign-icon--${sign.icon}`} aria-hidden="true" />}
+                                </ContextMenuListItemView>
+                            ))}
+                        </div>
+                        <ContextMenuListItemView onClick={() => processAction('back')}>
+                            <AirMenuLabel direction="left">{LocalizeText('generic.back')}</AirMenuLabel>
                         </ContextMenuListItemView>
-                        <ContextMenuListItemView onClick={(event) => processAction('sign_15')}>
-                            <i className="nitro-icon icon-sign-smile" />
-                        </ContextMenuListItemView>
-                    </div>
-                    <div className="flex menu-list-split-3">
-                        <ContextMenuListItemView onClick={(event) => processAction('sign_14')}>
-                            <i className="nitro-icon icon-sign-soccer" />
-                        </ContextMenuListItemView>
-                        <ContextMenuListItemView onClick={(event) => processAction('sign_17')}>
-                            <i className="nitro-icon icon-sign-yellow" />
-                        </ContextMenuListItemView>
-                        <ContextMenuListItemView onClick={(event) => processAction('sign_16')}>
-                            <i className="nitro-icon icon-sign-red" />
-                        </ContextMenuListItemView>
-                    </div>
-                    <ContextMenuListItemView onClick={(event) => processAction('back')}>
-                        <FaChevronLeft className="left fa-icon" />
-                        {LocalizeText('generic.back')}
-                    </ContextMenuListItemView>
-                </>
-            )}
+                    </>
+                )}
+            </div>
         </ContextMenuView>
     );
 };

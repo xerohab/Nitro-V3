@@ -1,5 +1,7 @@
 export type { DoorStateSnapshot } from '../rooms/widgets/useDoorState';
 export { useDoorState } from '../rooms/widgets/useDoorState';
+export type { NavigatorRoomInfoAnchorKind, NavigatorRoomInfoPopupActions, NavigatorRoomInfoPopupState } from './navigatorRoomInfoPopupStore';
+export { useNavigatorRoomInfoPopupStore } from './navigatorRoomInfoPopupStore';
 export type { NavigatorUiActions, NavigatorUiState } from './navigatorUiStore';
 export { useNavigatorUiStore } from './navigatorUiStore';
 export { useNavigatorData } from './useNavigatorData';

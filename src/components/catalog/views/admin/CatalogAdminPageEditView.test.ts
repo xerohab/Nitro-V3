@@ -22,7 +22,7 @@ describe('catalog admin page form state', () => {
         });
         expect(resolveInteraction(true, true, false, false, null)).toMatchObject({
             canSave: false,
-            message: 'Waiting for the edit lock...'
+            message: 'Waiting for the live catalog revision...'
         });
         expect(resolveInteraction(true, true, true, false, null)).toMatchObject({
             canSave: true,

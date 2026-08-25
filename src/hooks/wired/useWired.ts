@@ -23,14 +23,15 @@ import { registerSharedHook, useSharedHook } from '@/state/useSharedHook';
 import { GetRoomSession, IsOwnerOfFloorFurniture, LocalizeText, SendMessageComposer, WiredFurniType, WiredSelectionVisualizer } from '../../api';
 import { useMessageEvent } from '../events';
 import { useNotification } from '../notification';
+import { useLiveState } from '../useLiveState';
 import { useWiredTools } from '../wired-tools/useWiredTools';
 
 const useWiredState = () => {
-    const [trigger, setTrigger] = useState<Triggerable>(null);
-    const [intParams, setIntParams] = useState<number[]>([]);
-    const [stringParam, setStringParam] = useState<string>('');
-    const [furniIds, setFurniIds] = useState<number[]>([]);
-    const [actionDelay, setActionDelay] = useState<number>(0);
+    const [trigger, setTrigger, triggerRef] = useLiveState<Triggerable>(null);
+    const [intParams, setIntParams, intParamsRef] = useLiveState<number[]>([]);
+    const [stringParam, setStringParam, stringParamRef] = useLiveState<string>('');
+    const [furniIds, setFurniIds, furniIdsRef] = useLiveState<number[]>([]);
+    const [actionDelay, setActionDelay, actionDelayRef] = useLiveState<number>(0);
     const [allowsFurni, setAllowsFurni] = useState<number>(WiredFurniType.STUFF_SELECTION_OPTION_NONE);
     const selectByType = false;
     const [neighborhoodTiles, setNeighborhoodTiles] = useState<{ x: number; y: number }[] | null>(null);
@@ -44,6 +45,11 @@ const useWiredState = () => {
         const save = (trigger: Triggerable) => {
             if (!trigger) return;
 
+            const intParams = intParamsRef.current;
+            const stringParam = stringParamRef.current;
+            const furniIds = furniIdsRef.current;
+            const actionDelay = actionDelayRef.current;
+
             if (trigger instanceof WiredActionDefinition) {
                 SendMessageComposer(new UpdateActionMessageComposer(trigger.id, intParams, stringParam, furniIds, actionDelay, trigger.stuffTypeSelectionCode));
             } else if (trigger instanceof TriggerDefinition) {
@@ -52,6 +58,8 @@ const useWiredState = () => {
                 SendMessageComposer(new UpdateConditionMessageComposer(trigger.id, intParams, stringParam, furniIds, trigger.stuffTypeSelectionCode));
             }
         };
+
+        const trigger = triggerRef.current;
 
         if (!IsOwnerOfFloorFurniture(trigger.id)) {
             showConfirm(

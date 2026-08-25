@@ -162,6 +162,7 @@
     "housekeeping.soundboard.filter.enabled": "Attivi",
     "housekeeping.soundboard.filter.disabled": "Disattivati",
     "housekeeping.soundboard.name": "Nome",
+    "housekeeping.soundboard.classname": "Suono (classname)",
     "housekeeping.soundboard.url": "URL",
     "housekeeping.soundboard.min_rank": "Rank minimo",
     "housekeeping.soundboard.enabled": "Attivo",

@@ -317,18 +317,6 @@
     image-rendering: auto !important;
 }
 
-.hfl-staff-chat-frank {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 20px;
-    height: 18px;
-    max-width: none;
-    object-fit: contain;
-    image-rendering: pixelated;
-    transform: translate(-50%, -50%);
-}
-
 .hfl-friend-profile,
 .hfl-search-profile,
 .hfl-request-profile {

@@ -2,6 +2,7 @@ import { MouseEventType } from '@nitrots/nitro-renderer';
 import { FC, KeyboardEvent, MouseEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { CatalogType, GetConfigurationValue, GetFurnitureData, IPurchasableOffer, Offer, ProductTypeEnum } from '../../../../../api';
 import { LayoutAvatarImageView, LayoutGridItem, LayoutGridItemProps } from '../../../../../common';
+import { isAirBaseCatalogOffer } from './catalogAirGrid.helpers';
 
 export interface CatalogOfferTileViewProps extends LayoutGridItemProps {
     offer: IPurchasableOffer;
@@ -92,6 +93,11 @@ export const CatalogOfferTileView: FC<CatalogOfferTileViewProps> = (props) => {
     }, [offer]);
 
     const getCurrencyIconUrl = (type: number) => (GetConfigurationValue<string>('currency.asset.icon.url', '') || '').replace('%type%', type.toString());
+    const priceTemplateClassName = isAirBaseCatalogOffer(offer, currentType)
+        ? 'uses-base-grid-template'
+        : prices.length > 1
+          ? 'uses-multi-price-template'
+          : 'uses-single-price-template';
 
     const onMouseEvent = (event: MouseEvent) => {
         switch (event.type) {
@@ -132,9 +138,8 @@ export const CatalogOfferTileView: FC<CatalogOfferTileViewProps> = (props) => {
             onKeyDown={onKeyDown}
         >
             <LayoutGridItem
-                className={`group/tile relative ${itemActive ? 'is-active' : ''}`}
+                className={`group/tile relative ${itemActive ? 'is-active' : ''} ${priceTemplateClassName}`.trim()}
                 gap={1}
-                itemActive={itemActive}
                 itemCount={offer.pricingModel === Offer.PRICING_MODEL_MULTI ? product.productCount : 1}
                 itemUniqueNumber={product.uniqueLimitedItemSeriesSize}
                 itemUniqueSoldout={!!product.uniqueLimitedItemSeriesSize && !product.uniqueLimitedItemsLeft}
@@ -163,7 +168,7 @@ export const CatalogOfferTileView: FC<CatalogOfferTileViewProps> = (props) => {
                         <i aria-hidden="true" className="nitro-icon icon-catalogue-hc_small" />
                     </span>
                 )}
-                {showPrices && prices.length > 0 && (
+                {showPrices && currentType !== CatalogType.BUILDER && prices.length > 0 && (
                     <span className={`nitro-catalog-grid-price ${prices.length > 1 ? 'is-multi-price' : 'is-single-price'}`}>
                         {prices.map((price, index) => (
                             <span key={`${price.type}-${index}`} className="nitro-catalog-grid-price-entry">

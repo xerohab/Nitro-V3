@@ -8,21 +8,27 @@ export class AchievementUtilities {
 
         let badgeId = achievement.badgeId;
 
-        if (!achievement.finalLevel) badgeId = GetLocalizationManager().getPreviousLevelBadgeId(badgeId);
+        if (achievement.levelCount > 1 && !achievement.finalLevel) badgeId = GetLocalizationManager().getPreviousLevelBadgeId(badgeId);
 
         return badgeId;
     }
 
-    public static getAchievementCategoryImageUrl(category: IAchievementCategory, progress: number = null, icon: boolean = false): string {
-        const imageUrl = GetConfigurationValue<string>('achievements.images.url');
+    public static getAchievementImageUrl(imageName: string): string {
+        const imageUrl = GetConfigurationValue<string>('achievements.images.url', '');
 
+        if (!imageUrl) return '';
+
+        return imageUrl.replace('%image%', imageName);
+    }
+
+    public static getAchievementCategoryImageUrl(category: IAchievementCategory, progress: number = null, icon: boolean = false): string {
         let imageName = icon ? 'achicon_' : 'achcategory_';
 
         imageName += category.code;
 
         if (progress !== null) imageName += `_${progress > 0 ? 'active' : 'inactive'}`;
 
-        return imageUrl.replace('%image%', imageName);
+        return AchievementUtilities.getAchievementImageUrl(imageName);
     }
 
     public static getAchievementCategoryMaxProgress(category: IAchievementCategory): number {

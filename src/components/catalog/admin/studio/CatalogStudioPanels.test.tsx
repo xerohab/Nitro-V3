@@ -2,7 +2,7 @@
 
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { CatalogStudioPublishReview } from './CatalogStudioPublishReview';
+import { CatalogStudioProblemsHistoryPanel } from './CatalogStudioProblemsHistoryPanel';
 import { CatalogStudioTransferPanel } from './CatalogStudioTransferPanel';
 import { useCatalogStudio } from './useCatalogStudio';
 
@@ -51,57 +51,56 @@ describe('Catalog Studio essential panels', () => {
         expect(screen.getByRole('button', { name: 'Download full catalog' })).toBeEnabled();
     });
 
-    it('shows pending changes and requires confirmation before reverting one', () => {
+    it('shows live history and requires confirmation before undoing one operation', () => {
         const undo = vi.fn();
-        render(<CatalogStudioPublishReview
-            phase="ready"
-            pendingCount={1}
-            validationCurrent
+        render(<CatalogStudioProblemsHistoryPanel
             issues={[]}
             history={[ historyGroup ]}
             loading={false}
-            publish={vi.fn()}
             undo={undo}
         />);
 
         expect(screen.getByText('Updated Furni')).toBeInTheDocument();
-        fireEvent.click(screen.getByRole('button', { name: 'Revert Updated Furni' }));
-        expect(screen.getByText('Revert “Updated Furni”?')).toBeInTheDocument();
+        fireEvent.click(screen.getByRole('button', { name: 'Undo Updated Furni' }));
+        expect(screen.getByText('Undo “Updated Furni”?')).toBeInTheDocument();
         expect(undo).not.toHaveBeenCalled();
-        fireEvent.click(screen.getByRole('button', { name: 'Revert change' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Undo operation' }));
         expect(undo).toHaveBeenCalledWith(1);
     });
 
-    it('shows publish only for pending changes and confirms before publishing', () => {
-        const publish = vi.fn();
-        const view = render(<CatalogStudioPublishReview
-            phase="clean"
-            pendingCount={0}
-            validationCurrent
-            issues={[]}
+    it('shows the exact fields that the SQL dry-run would change', () => {
+        vi.mocked(useCatalogStudio).mockReturnValue({
+            ...studio,
+            documentResult: {
+                operationId: 'dry-1', success: true, code: 'DRY_RUN_READY', message: 'Dry-run ready',
+                revision: 7, format: 'SQL', document: '', fingerprint: 'abc', changedEntities: 1,
+                changes: [ {
+                    entityType: 'PAGE', catalogType: 'NORMAL', entityId: 17,
+                    operation: 'UPDATE', fields: [ 'caption', 'visible' ]
+                } ]
+            }
+        } as any);
+
+        render(<CatalogStudioTransferPanel />);
+
+        expect(screen.getByText('UPDATE PAGE #17')).toBeInTheDocument();
+        expect(screen.getByText('NORMAL · caption, visible')).toBeInTheDocument();
+    });
+
+    it('shows current live problems with their exact entity and field', () => {
+        render(<CatalogStudioProblemsHistoryPanel
+            issues={[ {
+                code: 'OFFER_PAGE_MISSING', entityType: 'OFFER', entityId: 77,
+                field: 'pageId', message: 'Offer page 999 does not exist'
+            } ]}
             history={[]}
             loading={false}
-            publish={publish}
             undo={vi.fn()}
         />);
 
-        expect(screen.queryByRole('button', { name: /Publish/ })).not.toBeInTheDocument();
-
-        view.rerender(<CatalogStudioPublishReview
-            phase="ready"
-            pendingCount={3}
-            validationCurrent
-            issues={[]}
-            history={[ historyGroup ]}
-            loading={false}
-            publish={publish}
-            undo={vi.fn()}
-        />);
-
-        fireEvent.click(screen.getByRole('button', { name: 'Publish 3 changes' }));
-        expect(screen.getByText('Publish 3 changes?')).toBeInTheDocument();
-        expect(publish).not.toHaveBeenCalled();
-        fireEvent.click(screen.getByRole('button', { name: 'Publish now' }));
-        expect(publish).toHaveBeenCalledTimes(1);
+        expect(screen.getByText('Offer page 999 does not exist')).toBeInTheDocument();
+        expect(screen.getByText('OFFER #77 · pageId')).toBeInTheDocument();
+        expect(screen.queryByText(/publish/i)).not.toBeInTheDocument();
+        expect(screen.queryByText(/draft/i)).not.toBeInTheDocument();
     });
 });

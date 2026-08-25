@@ -1,20 +1,25 @@
-import { render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { useCatalogProductMetadata } from '../../../../../hooks';
+import { cleanup, render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { useCatalogProductMetadata, useCatalogUiState } from '../../../../../hooks';
 import { CatalogProductDetailsView } from './CatalogProductDetailsView';
 
 vi.mock('../../../../../api', () => ({
-    LocalizeText: (key: string) => key
+    CatalogType: { BUILDER: 'BUILDERS_CLUB' },
+    LocalizeText: (key: string) => key,
+    ProductTypeEnum: { FLOOR: 's', WALL: 'i' }
 }));
 
 vi.mock('../../../../../hooks', () => ({
     useCatalogProductMetadata: vi.fn(),
-    useCatalogUiState: () => ({ currentType: 'NORMAL' })
+    useCatalogUiState: vi.fn()
 }));
 
 beforeEach(() => {
     vi.mocked(useCatalogProductMetadata).mockReturnValue(null);
+    vi.mocked(useCatalogUiState).mockReturnValue({ currentType: 'NORMAL' } as any);
 });
+
+afterEach(cleanup);
 
 describe('catalog product details', () => {
     it('shows the localized identity and useful purchase capabilities', () => {
@@ -42,21 +47,24 @@ describe('catalog product details', () => {
         expect(screen.queryByRole('list')).not.toBeInTheDocument();
     });
 
-    it('shows capabilities only after optional DB metadata is available', () => {
-        vi.mocked(useCatalogProductMetadata).mockReturnValue([
-            { itemBaseId: 4, offerId: 71, productClassId: 9, recyclable: true, tradeable: false }
-        ]);
+    it('shows only the AIR negative capability bitmaps', () => {
+        vi.mocked(useCatalogProductMetadata).mockReturnValue([{ itemBaseId: 4, offerId: 71, productClassId: 9, recyclable: true, tradeable: false }]);
         const offer = {
             localizationDescription: '',
             localizationName: 'Sedia',
             offerId: 71,
             page: { pageId: 17 },
-            product: { productData: { name: 'Sedia' } }
+            product: { furnitureData: { id: 4 }, productClassId: 9, productData: { name: 'Sedia' }, productType: 's' }
         } as any;
 
         render(<CatalogProductDetailsView offer={offer} />);
 
-        expect(screen.getByRole('listitem', { name: 'shop.marketplace.item.not.tradeable' })).toHaveClass('is-disabled');
-        expect(screen.getByRole('listitem', { name: 'inventory.furni.preview.recyclable_amount' })).not.toHaveClass('is-disabled');
+        const noTrade = screen.getByRole('listitem', { name: 'shop.marketplace.item.not.tradeable' });
+        const noRecycle = screen.getByRole('listitem', { name: 'recycler.alert.non.recyclable' });
+
+        expect(noTrade).toHaveClass('is-no-trade');
+        expect(noTrade.querySelector('img')).toHaveAttribute('src', expect.stringContaining('inventory-furni-no-trade'));
+        expect(noRecycle).toHaveClass('is-no-recycle');
+        expect(noRecycle.querySelector('img')).toHaveAttribute('src', expect.stringContaining('inventory-furni-no-recycle'));
     });
 });

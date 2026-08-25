@@ -1,6 +1,8 @@
 import { RoomPreviewer } from '@nitrots/nitro-renderer';
 import { FC, MouseEvent, useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { ProductTypeEnum } from '../../../../../api';
+import previewArrowLeft from '../../../../../assets/images/catalog/air/preview-arrow-left.png';
+import previewArrowRight from '../../../../../assets/images/catalog/air/preview-arrow-right.png';
 
 interface CatalogPreviewControlsProps {
     productType: string;
@@ -24,12 +26,13 @@ interface PreviewCapabilities {
 }
 
 const CatalogPreviewArrowIcon: FC<{ direction: 'left' | 'right' }> = ({ direction }) => (
-    <svg aria-hidden="true" className="nitro-catalog-preview-arrow" shapeRendering="crispEdges" viewBox="0 0 13 13">
-        <path
-            d="M6 0h1v4h6v5H7v4H6v-1H5v-1H4v-1H3V9H2V8H1V7H0V6h1V5h1V4h1V3h1V2h1V1h1Z"
-            transform={direction === 'right' ? 'translate(13 0) scale(-1 1)' : undefined}
-        />
-    </svg>
+    <img
+        alt=""
+        aria-hidden="true"
+        className="nitro-catalog-preview-arrow"
+        draggable={false}
+        src={direction === 'left' ? previewArrowLeft : previewArrowRight}
+    />
 );
 
 const getFallbackCapabilities = (productType: string): PreviewCapabilities => {
@@ -113,7 +116,7 @@ const CatalogPreviewControlsContent: FC<Required<CatalogPreviewControlsProps>> =
                         className="nitro-catalog-preview-btn is-left"
                         disabled={!capabilities.canRotate}
                         type="button"
-                        onClick={(event) => runPreviewAction(event, () => directionalPreviewer.changeRoomObjectDirection(false))}
+                        onClick={(event) => runPreviewAction(event, () => directionalPreviewer.changeRoomObjectDirection(true))}
                     >
                         <CatalogPreviewArrowIcon direction="left" />
                     </button>
@@ -122,7 +125,7 @@ const CatalogPreviewControlsContent: FC<Required<CatalogPreviewControlsProps>> =
                         className="nitro-catalog-preview-btn is-right"
                         disabled={!capabilities.canRotate}
                         type="button"
-                        onClick={(event) => runPreviewAction(event, () => directionalPreviewer.changeRoomObjectDirection(true))}
+                        onClick={(event) => runPreviewAction(event, () => directionalPreviewer.changeRoomObjectDirection(false))}
                     >
                         <CatalogPreviewArrowIcon direction="right" />
                     </button>

@@ -1,6 +1,7 @@
 import { FC } from 'react';
-import { FaExchangeAlt, FaRecycle } from 'react-icons/fa';
-import { IPurchasableOffer, LocalizeText } from '../../../../../api';
+import { CatalogType, IPurchasableOffer, LocalizeText, ProductTypeEnum } from '../../../../../api';
+import noRecycleIcon from '../../../../../assets/images/catalog/air/inventory-furni-no-recycle.png';
+import noTradeIcon from '../../../../../assets/images/catalog/air/inventory-furni-no-trade.png';
 import { useCatalogProductMetadata, useCatalogUiState } from '../../../../../hooks';
 
 export const CatalogProductDetailsView: FC<{ offer: IPurchasableOffer }> = ({ offer }) => {
@@ -12,41 +13,47 @@ export const CatalogProductDetailsView: FC<{ offer: IPurchasableOffer }> = ({ of
     const product = offer.product;
     const name = offer.localizationName || product?.productData?.name || '';
     const description = offer.localizationDescription || product?.productData?.description || '';
+    const isFurniture = product?.productType === ProductTypeEnum.FLOOR || product?.productType === ProductTypeEnum.WALL;
     const offerMetadata = metadata?.filter((entry) => entry.offerId === offer.offerId) ?? [];
-    const hasMetadata = offerMetadata.length > 0;
-    const tradeable = hasMetadata && offerMetadata.every((entry) => entry.tradeable);
-    const recyclable = hasMetadata && offerMetadata.every((entry) => entry.recyclable);
-    const tradeableLabel = LocalizeText(
-        tradeable ? 'inventory.furni.preview.tradeable_amount' : 'shop.marketplace.item.not.tradeable'
-    );
-    const recyclableLabel = LocalizeText(
-        recyclable ? 'inventory.furni.preview.recyclable_amount' : 'recycler.alert.non.recyclable'
-    );
+    const productMetadata =
+        offerMetadata.find((entry) => entry.itemBaseId === product?.furnitureData?.id) ??
+        offerMetadata.find((entry) => entry.productClassId === product?.productClassId);
+    const hasMetadata = currentType !== CatalogType.BUILDER && isFurniture && !!productMetadata;
+    const tradeable = hasMetadata && productMetadata.tradeable;
+    const recyclable = hasMetadata && productMetadata.recyclable;
+    const showNoTrade = hasMetadata && !tradeable;
+    const showNoRecycle = hasMetadata && (!recyclable || !tradeable);
+    const tradeableLabel = LocalizeText('shop.marketplace.item.not.tradeable');
+    const recyclableLabel = LocalizeText('recycler.alert.non.recyclable');
 
     return (
         <div aria-label={name} className="nitro-catalog-product-details" role="group">
             <strong className="nitro-catalog-product-details-name">{name}</strong>
-            {!!description && <span className="nitro-catalog-product-details-description">{description}</span>}
-            {hasMetadata && (
+            <span className="nitro-catalog-product-details-description">{description}</span>
+            {(showNoTrade || showNoRecycle) && (
                 <div className="nitro-catalog-product-details-badges" role="list">
-                    <span
-                        aria-label={tradeableLabel}
-                        className={`nitro-catalog-product-capability${tradeable ? '' : ' is-disabled'}`}
-                        data-capability="tradeable"
-                        role="listitem"
-                        title={tradeableLabel}
-                    >
-                        <FaExchangeAlt aria-hidden />
-                    </span>
-                    <span
-                        aria-label={recyclableLabel}
-                        className={`nitro-catalog-product-capability${recyclable ? '' : ' is-disabled'}`}
-                        data-capability="recyclable"
-                        role="listitem"
-                        title={recyclableLabel}
-                    >
-                        <FaRecycle aria-hidden />
-                    </span>
+                    {showNoTrade && (
+                        <span
+                            aria-label={tradeableLabel}
+                            className="nitro-catalog-product-capability is-no-trade"
+                            data-capability="tradeable"
+                            role="listitem"
+                            title={tradeableLabel}
+                        >
+                            <img alt="" aria-hidden="true" src={noTradeIcon} />
+                        </span>
+                    )}
+                    {showNoRecycle && (
+                        <span
+                            aria-label={recyclableLabel}
+                            className="nitro-catalog-product-capability is-no-recycle"
+                            data-capability="recyclable"
+                            role="listitem"
+                            title={recyclableLabel}
+                        >
+                            <img alt="" aria-hidden="true" src={noRecycleIcon} />
+                        </span>
+                    )}
                 </div>
             )}
         </div>

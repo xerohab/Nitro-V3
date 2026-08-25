@@ -1,5 +1,5 @@
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { DetailedHTMLProps, Fragment, HTMLAttributes, ReactElement, Ref, RefObject, useEffect, useRef, useState } from 'react';
+import { DetailedHTMLProps, Fragment, HTMLAttributes, ReactElement, Ref, RefObject, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ClassicScrollAreaView } from '../common/scroll-area/ClassicScrollAreaView';
 import { classNames } from './classNames';
 import { NitroLimitedEditionStyledNumberView } from './limited-edition';
@@ -13,25 +13,39 @@ type Props<T> = {
     squareItems?: boolean;
     itemMinWidth?: number;
     rowGap?: number;
+    columnGap?: number;
     classicScrollbar?: boolean;
+    airColumnAdmission?: boolean;
+    onColumnCountChange?: (columnCount: number) => void;
     itemRender?: (item: T, index?: number) => ReactElement;
 };
 
 const GRID_GAP_PX = 4;
 
-const useColumnMeasure = (itemMinWidth: number | null, columnCountProp: number): { parentRef: RefObject<HTMLDivElement | null>; columnCount: number } => {
+const useColumnMeasure = (
+    itemMinWidth: number | null,
+    columnCountProp: number,
+    columnGap: number = GRID_GAP_PX,
+    airColumnAdmission: boolean = false,
+    onColumnCountChange?: (columnCount: number) => void
+): { parentRef: RefObject<HTMLDivElement | null>; columnCount: number } => {
     const parentRef = useRef<HTMLDivElement>(null);
     const [measuredColumnCount, setMeasuredColumnCount] = useState<number>(columnCountProp);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (!itemMinWidth || itemMinWidth <= 0) return;
 
         const element = parentRef.current;
         if (!element) return;
 
         const recompute = () => {
-            const width = element.clientWidth;
-            const cols = Math.max(1, Math.floor((width + GRID_GAP_PX) / (itemMinWidth + GRID_GAP_PX)));
+            const computedStyle = window.getComputedStyle(element);
+            const parsedLeft = Number.parseFloat(computedStyle.paddingLeft);
+            const parsedRight = Number.parseFloat(computedStyle.paddingRight);
+            const horizontalPadding = (Number.isFinite(parsedLeft) ? parsedLeft : 0) + (Number.isFinite(parsedRight) ? parsedRight : 0);
+            const width = element.clientWidth - horizontalPadding;
+            const admissionAllowance = airColumnAdmission ? columnGap * 2 : columnGap;
+            const cols = Math.max(1, Math.floor((width + admissionAllowance) / (itemMinWidth + columnGap)));
             setMeasuredColumnCount((prev) => (prev === cols ? prev : cols));
         };
 
@@ -41,18 +55,30 @@ const useColumnMeasure = (itemMinWidth: number | null, columnCountProp: number):
         observer.observe(element);
 
         return () => observer.disconnect();
-    }, [itemMinWidth]);
+    }, [airColumnAdmission, columnGap, itemMinWidth]);
 
     const columnCount = itemMinWidth && itemMinWidth > 0 ? measuredColumnCount : columnCountProp;
+
+    useLayoutEffect(() => onColumnCountChange?.(columnCount), [columnCount, onColumnCountChange]);
 
     return { parentRef, columnCount };
 };
 
 const InfiniteGridSquare = <T,>(props: Props<T>) => {
-    const { items = [], columnCount: columnCountProp = 4, itemMinWidth = null, itemRender = null, classicScrollbar = false } = props;
-    const { parentRef } = useColumnMeasure(itemMinWidth, columnCountProp);
+    const {
+        items = [],
+        columnCount: columnCountProp = 4,
+        itemMinWidth = null,
+        columnGap = GRID_GAP_PX,
+        airColumnAdmission = false,
+        onColumnCountChange,
+        itemRender = null,
+        classicScrollbar = false
+    } = props;
+    const { parentRef } = useColumnMeasure(itemMinWidth, columnCountProp, columnGap, airColumnAdmission, onColumnCountChange);
 
-    const autoFillStyle = itemMinWidth && itemMinWidth > 0 ? { gridTemplateColumns: `repeat(auto-fill, ${itemMinWidth}px)` } : null;
+    const autoFillStyle =
+        itemMinWidth && itemMinWidth > 0 ? { columnGap, gridTemplateColumns: `repeat(auto-fill, minmax(${itemMinWidth}px, 1fr))` } : { columnGap };
     const fixedColsClass = itemMinWidth && itemMinWidth > 0 ? '' : `grid-cols-${columnCountProp}`;
 
     const content = (
@@ -88,14 +114,17 @@ const InfiniteGridVirtualized = <T,>(props: Props<T>) => {
         estimateSize = 45,
         itemMinWidth = null,
         rowGap = null,
+        columnGap = GRID_GAP_PX,
+        airColumnAdmission = false,
+        onColumnCountChange,
         itemRender = null,
         classicScrollbar = false
     } = props;
-    const { parentRef, columnCount } = useColumnMeasure(itemMinWidth, columnCountProp);
+    const { parentRef, columnCount } = useColumnMeasure(itemMinWidth, columnCountProp, columnGap, airColumnAdmission, onColumnCountChange);
 
     const rowsContainerClassName = rowGap !== null ? 'flex flex-col w-full relative' : 'flex flex-col w-full *:pb-1 relative';
 
-    const autoFillStyle = itemMinWidth && itemMinWidth > 0 ? { gridTemplateColumns: `repeat(auto-fill, ${itemMinWidth}px)` } : null;
+    const autoFillStyle = itemMinWidth && itemMinWidth > 0 ? { gridTemplateColumns: `repeat(auto-fill, minmax(${itemMinWidth}px, 1fr))` } : null;
     const fixedColsClass = itemMinWidth && itemMinWidth > 0 ? '' : `grid-cols-${columnCountProp}`;
 
     const virtualizer = useVirtualizer({
@@ -110,6 +139,11 @@ const InfiniteGridVirtualized = <T,>(props: Props<T>) => {
 
         if (!element || !items) return;
 
+        if (classicScrollbar) {
+            element.style.removeProperty('padding-right');
+            return;
+        }
+
         const checkAndApplyPadding = () => {
             if (!element) return;
 
@@ -123,11 +157,12 @@ const InfiniteGridVirtualized = <T,>(props: Props<T>) => {
         return () => {
             window.removeEventListener('resize', checkAndApplyPadding);
         };
-    }, [items, parentRef]);
+    }, [items, parentRef, classicScrollbar]);
 
     useEffect(() => {
         if (!items || !items.length) return;
 
+        if (parentRef.current) parentRef.current.scrollLeft = 0;
         virtualizer.scrollToIndex(0);
     }, [items, virtualizer]);
 
@@ -143,6 +178,7 @@ const InfiniteGridVirtualized = <T,>(props: Props<T>) => {
                 ...(rowGap === null && { height: virtualRow.size }),
                 ...(autoFillStyle ?? {}),
                 ...(rowGap !== null && { paddingBottom: `${rowGap}px` }),
+                columnGap,
                 transform: `translateY(${virtualRow.start}px)`
             }}
         >

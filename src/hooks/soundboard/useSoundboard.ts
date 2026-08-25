@@ -26,7 +26,8 @@ import {
     SoundboardLayout
 } from './soundboardPresentation';
 import { getRemainingCooldownSeconds, shouldStartOwnCooldown } from './soundboardUi.helpers';
-import { resolveSoundboardUrl } from './soundboardUrl';
+import { resolveSoundboardSoundUrl } from './soundboardUrl';
+import { useSoundboardManifest } from './useSoundboardManifest';
 
 export type ClientSoundboardSound = DisplaySoundboardSound & { local?: boolean };
 
@@ -41,6 +42,7 @@ export const useSoundboardState = () => {
     const cooldownUntilRef = useRef(0);
     const legacyLoadStartedRef = useRef(false);
     const { showSingleBubble } = useNotificationActions();
+    const { manifest, manifestRef } = useSoundboardManifest();
 
     const showCooldownBubble = useCallback(
         (remainingSeconds: number) => {
@@ -85,7 +87,7 @@ export const useSoundboardState = () => {
         (event: SoundboardPlayEvent) => {
             const parser = event.getParser();
             void GetSoundManager()
-                .playSoundboard(resolveSoundboardUrl(parser.url))
+                .playSoundboard(resolveSoundboardSoundUrl({ classname: parser.classname, url: parser.url }, manifestRef.current))
                 .then((played) => {
                     if (!played) showSingleBubble(LocalizeText('soundboard.error.audio'), NotificationBubbleType.SOUNDBOARD);
                 });
@@ -158,11 +160,18 @@ export const useSoundboardState = () => {
     }, [enabled, serverSounds.length]);
 
     const sounds = useMemo<ClientSoundboardSound[]>(() => {
-        if (serverSounds.length) return mergeSoundboardPresentation(serverSounds, layout);
+        if (serverSounds.length) return mergeSoundboardPresentation(serverSounds, layout, manifest);
 
-        return mergeSoundboardPresentation(legacySounds, layout).map((sound) => ({ ...sound, local: true }));
-    }, [serverSounds, legacySounds, layout]);
-    const categories = layout.categories as SoundboardCategory[];
+        return mergeSoundboardPresentation(legacySounds, layout, manifest).map((sound) => ({ ...sound, local: true }));
+    }, [serverSounds, legacySounds, layout, manifest]);
+
+    // Categories declared in the layout file win on label; the manifest fills
+    // in any the hotel has not named.
+    const categories = useMemo<SoundboardCategory[]>(() => {
+        const seen = new Set(layout.categories.map((category) => category.id));
+
+        return [...layout.categories, ...manifest.categories.filter((category) => !seen.has(category.id))];
+    }, [layout.categories, manifest.categories]);
 
     const play = useCallback(
         (sound: ClientSoundboardSound) => {
@@ -170,7 +179,7 @@ export const useSoundboardState = () => {
 
             if (sound.local) {
                 void GetSoundManager()
-                    .playSoundboard(resolveSoundboardUrl(sound.url))
+                    .playSoundboard(resolveSoundboardSoundUrl(sound, manifestRef.current))
                     .then((played) => {
                         if (!played) showSingleBubble(LocalizeText('soundboard.error.audio'), NotificationBubbleType.SOUNDBOARD);
                     });

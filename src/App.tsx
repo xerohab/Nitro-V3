@@ -3,6 +3,7 @@ import {
     GetAvatarRenderManager,
     GetCommunication,
     GetConfiguration,
+    GetDesiredResolution,
     GetLocalizationManager,
     GetRoomEngine,
     GetRoomSessionManager,
@@ -26,7 +27,7 @@ import { LoadingView } from './components/loading/LoadingView';
 import { LoginView } from './components/login/LoginView';
 import { MainView } from './components/MainView';
 import { ReconnectView } from './components/reconnect/ReconnectView';
-import { ClearStoredChatHistory, getConnectionFailureAction, useConnectionState, useMessageEvent, useNitroEvent } from './hooks';
+import { ClearStoredChatHistory, getConnectionFailureAction, useConnectionState, useDevicePixelRatio, useMessageEvent, useNitroEvent } from './hooks';
 import { SharedHookRegistry } from './state/useSharedHook';
 
 NitroVersion.UI_VERSION = GetUIVersion();
@@ -81,6 +82,7 @@ const hasRememberLogin = (): boolean => !!GetRememberLogin();
 
 export const App: FC<{}> = (props) => {
     const connectionState = useConnectionState();
+    const devicePixelRatio = useDevicePixelRatio();
     const [isReady, setIsReady] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [homeUrl, setHomeUrl] = useState('');
@@ -319,7 +321,7 @@ export const App: FC<{}> = (props) => {
         rendererPromiseRef.current = PrepareRenderer({
             width: Math.floor(width),
             height: Math.floor(height),
-            resolution: window.devicePixelRatio,
+            resolution: GetDesiredResolution(),
             autoDensity: true,
             backgroundAlpha: 0,
             preference: 'webgl',
@@ -569,7 +571,7 @@ export const App: FC<{}> = (props) => {
     }, [prepareTrigger, startWarmup, startRenderer, tryRememberLogin, applySsoTicket, rotateRememberLogin, bumpProgress, taskLabel]);
 
     return (
-        <Base fit overflow="hidden" className={`nitro-app-root ${!(window.devicePixelRatio % 1) ? 'image-rendering-pixelated' : ''}`}>
+        <Base fit overflow="hidden" className={`nitro-app-root ${!(devicePixelRatio % 1) ? 'image-rendering-pixelated' : ''}`}>
             {!isReady && !showLogin && (
                 <LoadingView isError={errorMessage.length > 0} message={errorMessage} homeUrl={homeUrl} progress={loadingProgress} currentTask={loadingTask} />
             )}

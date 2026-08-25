@@ -1,114 +1,33 @@
 import { GetSessionDataManager, RoomDataParser } from '@nitrots/nitro-renderer';
-import React, { FC, KeyboardEvent, MouseEvent, useEffect, useRef } from 'react';
-import { FaUser } from 'react-icons/fa';
+import { FC, KeyboardEvent, MouseEvent } from 'react';
 import { CreateRoomSession, DoorStateType, TryVisitRoom } from '../../../../api';
-import { Column, Flex, LayoutBadgeImageView, LayoutGridItemProps, LayoutRoomThumbnailView, Text } from '../../../../common';
-import { useDoorState } from '../../../../hooks';
+import { LayoutBadgeImageView, LayoutRoomThumbnailView } from '../../../../common';
+import { useDoorState, useNavigatorRoomInfoPopupStore } from '../../../../hooks';
 import { NavigatorSearchResultItemInfoView } from './NavigatorSearchResultItemInfoView';
+import { NavigatorUserCountView } from './NavigatorUserCountView';
 
-export interface NavigatorSearchResultItemViewProps extends LayoutGridItemProps {
+export interface NavigatorSearchResultItemViewProps {
     roomData: RoomDataParser;
     thumbnail?: boolean;
-    selectedRoomId?: number | null;
-    setSelectedRoomId?: React.Dispatch<React.SetStateAction<number | null>>;
-    isPopoverActive?: boolean;
-    setIsPopoverActive?: React.Dispatch<React.SetStateAction<boolean>>;
+    eventTitle?: boolean;
+    stripe?: boolean;
 }
 
 export const NavigatorSearchResultItemView: FC<NavigatorSearchResultItemViewProps> = (props) => {
-    const { roomData = null, children = null, thumbnail = false, selectedRoomId, setSelectedRoomId, isPopoverActive, setIsPopoverActive, ...rest } = props;
+    const { roomData = null, thumbnail = false, eventTitle = false, stripe = false } = props;
     const { setSnapshot: setDoorData } = useDoorState();
-    const closeTimeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
-    const selectedRoomIdRef = useRef(selectedRoomId);
+    const title = eventTitle && roomData.roomAdName ? roomData.roomAdName : roomData.roomName;
 
-    selectedRoomIdRef.current = selectedRoomId;
+    const doorClass = () => {
+        if (roomData.doorMode === RoomDataParser.DOORBELL_STATE) return 'nitro-navigator-air__door nitro-navigator-air__door--doorbell';
+        if (roomData.doorMode === RoomDataParser.PASSWORD_STATE) return 'nitro-navigator-air__door nitro-navigator-air__door--password';
+        if (roomData.doorMode === RoomDataParser.INVISIBLE_STATE) return 'nitro-navigator-air__door nitro-navigator-air__door--invisible';
 
-    const cancelPopoverClose = () => {
-        if (!closeTimeoutRef.current) return;
-
-        clearTimeout(closeTimeoutRef.current);
-        closeTimeoutRef.current = null;
-    };
-
-    const schedulePopoverClose = () => {
-        if (!setSelectedRoomId || !setIsPopoverActive) return;
-
-        cancelPopoverClose();
-        closeTimeoutRef.current = setTimeout(() => {
-            closeTimeoutRef.current = null;
-            if (selectedRoomIdRef.current !== roomData.roomId) return;
-
-            setSelectedRoomId(null);
-            setIsPopoverActive(false);
-        }, 150);
-    };
-
-    const handleMouseEnter = () => {
-        if (!setSelectedRoomId || !setIsPopoverActive) return;
-
-        cancelPopoverClose();
-        setSelectedRoomId(roomData.roomId);
-        setIsPopoverActive(true);
-    };
-
-    const handleInfoClick = (e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        cancelPopoverClose();
-
-        if (setIsPopoverActive && setSelectedRoomId) {
-            if (!isPopoverActive) {
-                setSelectedRoomId(roomData.roomId);
-                setIsPopoverActive(true);
-            } else if (selectedRoomId === roomData.roomId) {
-                setSelectedRoomId(null);
-                setIsPopoverActive(false);
-            } else {
-                setSelectedRoomId(roomData.roomId);
-            }
-        }
-    };
-
-    useEffect(() => {
-        const handleClickOutside = (event: Event) => {
-            const target = event.target as HTMLElement;
-            const navigatorItem = target.closest('.navigator-item');
-
-            if (!navigatorItem && setIsPopoverActive && setSelectedRoomId) {
-                setIsPopoverActive(false);
-                setSelectedRoomId(null);
-            }
-        };
-
-        document.addEventListener('click', handleClickOutside);
-        const handleEscape = (event: globalThis.KeyboardEvent) => {
-            if (event.key !== 'Escape' || !setIsPopoverActive || !setSelectedRoomId) return;
-
-            setIsPopoverActive(false);
-            setSelectedRoomId(null);
-        };
-
-        document.addEventListener('keydown', handleEscape);
-        return () => {
-            if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
-            document.removeEventListener('click', handleClickOutside);
-            document.removeEventListener('keydown', handleEscape);
-        };
-    }, [setIsPopoverActive, setSelectedRoomId]);
-
-    const getUserCounterColor = () => {
-        if (roomData.maxUserCount <= 0) return roomData.userCount > 0 ? 'bg-success' : 'bg-primary';
-
-        const num: number = 100 * (roomData.userCount / roomData.maxUserCount);
-
-        if (num >= 92) return 'bg-danger';
-        if (num >= 50) return 'bg-warning';
-        if (num > 0) return 'bg-success';
-
-        return 'bg-primary';
+        return '';
     };
 
     const visitRoom = (event: MouseEvent) => {
+        event.stopPropagation();
         if (roomData.ownerId !== GetSessionDataManager().userId) {
             if (roomData.habboGroupId !== 0) {
                 TryVisitRoom(roomData.roomId);
@@ -145,136 +64,50 @@ export const NavigatorSearchResultItemView: FC<NavigatorSearchResultItemViewProp
         visitRoom(event as unknown as MouseEvent);
     };
 
+    const retargetPopup = (event: MouseEvent<HTMLElement>) => {
+        useNavigatorRoomInfoPopupStore.getState().retargetIfVisible(roomData, thumbnail ? 'tile' : 'row', event.currentTarget.getBoundingClientRect());
+    };
+
     if (thumbnail)
         return (
-            <Column
-                pointer
-                overflow="hidden"
-                alignItems="center"
-                className="navigator-item nitro-card-row p-1 small mb-1 flex-col"
+            <div
                 role="button"
                 tabIndex={0}
-                aria-label={roomData.roomName}
-                gap={0}
+                aria-label={title}
+                className={`nitro-navigator-air__tile${stripe ? ' is-stripe' : ''}`}
                 onClick={visitRoom}
                 onKeyDown={handleKeyDown}
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={schedulePopoverClose}
-                {...rest}
+                onMouseEnter={retargetPopup}
             >
-                <LayoutRoomThumbnailView
-                    className="flex flex-col items-center justify-end mb-1"
-                    customUrl={roomData.officialRoomPicRef}
-                    roomId={roomData.roomId}
-                >
+                <LayoutRoomThumbnailView className="nitro-navigator-air__tile-thumb" customUrl={roomData.officialRoomPicRef} roomId={roomData.roomId}>
                     {roomData.habboGroupId > 0 && (
-                        <LayoutBadgeImageView
-                            badgeCode={roomData.groupBadgeCode}
-                            className="absolute! bottom-0 left-1/2 z-10 mb-1 -translate-x-1/2"
-                            isGroup={true}
-                        />
+                        <LayoutBadgeImageView badgeCode={roomData.groupBadgeCode} className="nitro-navigator-air__tile-badge" isGroup={true} />
                     )}
-                    <Flex
-                        center
-                        className={
-                            'inline-block px-[.65em] py-[.35em] text-[.75em] font-bold leading-none text-white text-center whitespace-nowrap align-baseline rounded-[.25rem] p-1 absolute m-1 ' +
-                            getUserCounterColor()
-                        }
-                        gap={1}
-                    >
-                        <FaUser className="fa-icon" />
-                        {roomData.userCount}
-                    </Flex>
-                    {roomData.doorMode !== RoomDataParser.OPEN_STATE && (
-                        <i
-                            className={
-                                'absolute inset-e-0 mb-1 me-1 icon icon-navigator-room-' +
-                                (roomData.doorMode === RoomDataParser.DOORBELL_STATE
-                                    ? 'locked'
-                                    : roomData.doorMode === RoomDataParser.PASSWORD_STATE
-                                      ? 'password'
-                                      : roomData.doorMode === RoomDataParser.INVISIBLE_STATE
-                                        ? 'invisible'
-                                        : '')
-                            }
-                        />
-                    )}
+                    <NavigatorUserCountView userCount={roomData.userCount} maxUserCount={roomData.maxUserCount} />
+                    {roomData.doorMode !== RoomDataParser.OPEN_STATE && <i className={`nitro-navigator-air__tile-door ${doorClass()}`} />}
                 </LayoutRoomThumbnailView>
-                <Flex className="w-full">
-                    <Text truncate className="grow!">
-                        {roomData.roomName}
-                    </Text>
-                    <Flex reverse alignItems="center" gap={1}>
-                        <NavigatorSearchResultItemInfoView
-                            isVisible={selectedRoomId === roomData.roomId}
-                            onToggle={handleInfoClick}
-                            onHoverEnter={cancelPopoverClose}
-                            onHoverLeave={schedulePopoverClose}
-                            setIsPopoverActive={setIsPopoverActive}
-                            roomData={roomData}
-                        />
-                    </Flex>
-                    {children}
-                </Flex>
-            </Column>
+                <div className="nitro-navigator-air__tile-name">
+                    <span>{title}</span>
+                    <NavigatorSearchResultItemInfoView roomData={roomData} thumbnail={true} />
+                </div>
+            </div>
         );
 
     return (
-        <Flex
-            pointer
-            alignItems="center"
-            className="navigator-item px-2 py-1 small"
+        <div
             role="button"
             tabIndex={0}
-            aria-label={roomData.roomName}
-            gap={2}
-            overflow="hidden"
+            aria-label={title}
+            className={`nitro-navigator-air__row${stripe ? ' is-stripe' : ''}`}
             onClick={visitRoom}
             onKeyDown={handleKeyDown}
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={schedulePopoverClose}
-            {...rest}
+            onMouseEnter={retargetPopup}
         >
-            <Flex
-                center
-                className={
-                    'inline-block px-[.65em] py-[.35em] text-[.75em] font-bold leading-none text-white text-center whitespace-nowrap align-baseline rounded-[.25rem] p-1 ' +
-                    getUserCounterColor()
-                }
-                gap={1}
-            >
-                <FaUser className="fa-icon" />
-                {roomData.userCount}
-            </Flex>
-            <Text grow truncate className="min-w-0">
-                {roomData.roomName}
-            </Text>
-            <Flex reverse alignItems="center" gap={1} className="shrink-0">
-                <NavigatorSearchResultItemInfoView
-                    isVisible={selectedRoomId === roomData.roomId && isPopoverActive}
-                    onToggle={handleInfoClick}
-                    onHoverEnter={cancelPopoverClose}
-                    onHoverLeave={schedulePopoverClose}
-                    setIsPopoverActive={setIsPopoverActive}
-                    roomData={roomData}
-                />
-                {roomData.habboGroupId > 0 && <i className="nitro-icon icon-navigator-room-group" />}
-                {roomData.doorMode !== RoomDataParser.OPEN_STATE && (
-                    <i
-                        className={
-                            'nitro-icon icon-navigator-room-' +
-                            (roomData.doorMode === RoomDataParser.DOORBELL_STATE
-                                ? 'locked'
-                                : roomData.doorMode === RoomDataParser.PASSWORD_STATE
-                                  ? 'password'
-                                  : roomData.doorMode === RoomDataParser.INVISIBLE_STATE
-                                    ? 'invisible'
-                                    : '')
-                        }
-                    />
-                )}
-            </Flex>
-            {children}
-        </Flex>
+            <NavigatorUserCountView userCount={roomData.userCount} maxUserCount={roomData.maxUserCount} />
+            <span className="nitro-navigator-air__row-name">{title}</span>
+            {roomData.doorMode !== RoomDataParser.OPEN_STATE && <i className={`nitro-navigator-air__row-door ${doorClass()}`} />}
+            {roomData.habboGroupId > 0 && <i className="nitro-navigator-air__row-group nitro-navigator-air__group" />}
+            <NavigatorSearchResultItemInfoView roomData={roomData} />
+        </div>
     );
 };

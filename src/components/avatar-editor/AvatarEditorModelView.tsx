@@ -1,6 +1,6 @@
 import { AvatarEditorFigureCategory, AvatarFigurePartType, FigureDataContainer } from '@nitrots/nitro-renderer';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { CreateLinkEvent, GetClubMemberLevel, GetConfigurationValue, IAvatarEditorCategory } from '../../api';
+import { CreateLinkEvent, GetClubMemberLevel, IAvatarEditorCategory, LocalizeText } from '../../api';
 import { LayoutCurrencyIcon } from '../../common';
 import { useAvatarEditor } from '../../hooks';
 import { AvatarEditorIcon } from './AvatarEditorIcon';
@@ -12,8 +12,7 @@ export const AvatarEditorModelView: FC<{
     categories: IAvatarEditorCategory[];
 }> = (props) => {
     const { name = '', categories = [] } = props;
-    const [didChange, setDidChange] = useState<boolean>(false);
-    const [activeSetType, setActiveSetType] = useState<string>('');
+    const [activeSetType, setActiveSetType] = useState<string>(() => categories[0]?.setType ?? '');
     const [advancedColorMode, setAdvancedColorMode] = useState<boolean>(false);
     const hasHC = GetClubMemberLevel() > 0;
     const {
@@ -25,15 +24,21 @@ export const AvatarEditorModelView: FC<{
         selectEditorColor = null
     } = useAvatarEditor();
 
-    const activeCategory = useMemo(() => {
-        return categories.find((category) => category.setType === activeSetType) ?? null;
+    const resolvedSetType = useMemo(() => {
+        if (categories.some((category) => category.setType === activeSetType)) return activeSetType;
+
+        return categories[0]?.setType ?? '';
     }, [categories, activeSetType]);
+
+    const activeCategory = useMemo(() => {
+        return categories.find((category) => category.setType === resolvedSetType) ?? null;
+    }, [categories, resolvedSetType]);
 
     const selectSet = useCallback(
         (setType: string) => {
-            const selectedPalettes = selectedColorParts[setType];
+            const selectedPalettes = selectedColorParts?.[setType];
 
-            if (!selectedPalettes || !selectedPalettes.length) selectEditorColor(setType, 0, getFirstSelectableColor(setType));
+            if (!selectedPalettes || !selectedPalettes.length) selectEditorColor?.(setType, 0, getFirstSelectableColor?.(setType));
 
             setActiveSetType(setType);
         },
@@ -41,79 +46,75 @@ export const AvatarEditorModelView: FC<{
     );
 
     useEffect(() => {
-        if (!categories || !categories.length || !didChange) return;
+        if (!resolvedSetType) return;
 
-        selectSet(categories[0]?.setType);
-        setDidChange(false);
-    }, [categories, didChange, selectSet]);
+        const selectedPalettes = selectedColorParts?.[resolvedSetType];
 
-    useEffect(() => {
-        setDidChange(true);
-    }, [categories]);
+        if (resolvedSetType === activeSetType && selectedPalettes?.length) return;
+
+        selectSet(resolvedSetType);
+    }, [activeSetType, resolvedSetType, selectSet, selectedColorParts]);
 
     if (!activeCategory) return null;
 
     return (
-        <div className="flex flex-col overflow-hidden h-full gap-1">
-            <div className="flex items-center px-2 gap-3 shrink-0">
+        <div className="nitro-avatar-editor-model">
+            <div className={`nitro-avatar-editor-subcategories${name === AvatarEditorFigureCategory.GENERIC ? ' is-gender' : ''}`}>
                 {name === AvatarEditorFigureCategory.GENERIC && (
                     <>
-                        <div
-                            className="category-item flex items-center justify-center cursor-pointer"
-                            onClick={(event) => setGender(AvatarFigurePartType.MALE)}
-                        >
+                        <button type="button" className="category-item gender-category-item" onClick={() => setGender(AvatarFigurePartType.MALE)}>
                             <AvatarEditorIcon icon="male" selected={gender === FigureDataContainer.MALE} />
-                        </div>
-                        <div
-                            className="category-item flex items-center justify-center cursor-pointer"
-                            onClick={(event) => setGender(AvatarFigurePartType.FEMALE)}
-                        >
+                            <span>{LocalizeText('avatareditor.generic.boy')}</span>
+                        </button>
+                        <button type="button" className="category-item gender-category-item" onClick={() => setGender(AvatarFigurePartType.FEMALE)}>
                             <AvatarEditorIcon icon="female" selected={gender === FigureDataContainer.FEMALE} />
-                        </div>
+                            <span>{LocalizeText('avatareditor.generic.girl')}</span>
+                        </button>
                     </>
                 )}
                 {name !== AvatarEditorFigureCategory.GENERIC &&
                     categories.map((category) => (
-                        <div
+                        <button
+                            type="button"
                             key={category.setType}
-                            className="category-item flex items-center justify-center cursor-pointer"
-                            onClick={(event) => selectSet(category.setType)}
+                            className="category-item"
+                            aria-pressed={resolvedSetType === category.setType}
+                            onClick={() => selectSet(category.setType)}
                         >
-                            <AvatarEditorIcon icon={category.setType} selected={activeSetType === category.setType} />
-                        </div>
+                            <AvatarEditorIcon icon={category.setType} selected={resolvedSetType === category.setType} />
+                        </button>
                     ))}
             </div>
 
-            <div className="flex-1 min-h-0 overflow-hidden">
+            <div className="nitro-avatar-editor-parts-grid">
                 <AvatarEditorFigureSetView category={activeCategory} columnCount={6} />
             </div>
 
-            <div className="flex shrink-0 items-center justify-end px-2">
-                <button
-                    className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded border cursor-pointer transition-colors ${advancedColorMode ? 'bg-sky-400 border-sky-300 text-white' : 'bg-sky-900/30 border-sky-600/50 text-white hover:text-yellow-800'}`}
-                    onClick={() => (hasHC ? setAdvancedColorMode((prev) => !prev) : CreateLinkEvent('habboUI/open/hccenter'))}
-                >
-                    Advanced Color
-                    <LayoutCurrencyIcon type="hc" />
-                </button>
-            </div>
+            <button
+                type="button"
+                className={`nitro-avatar-editor-advanced-color${advancedColorMode ? ' is-active' : ''}`}
+                onClick={() => (hasHC ? setAdvancedColorMode((prev) => !prev) : CreateLinkEvent('habboUI/open/hccenter'))}
+            >
+                Advanced Color
+                <LayoutCurrencyIcon type="hc" />
+            </button>
 
-            <div className={`flex shrink-0 overflow-hidden gap-2 ${maxPaletteCount === 2 ? 'dual-palette' : ''}`} style={{ height: '160px' }}>
+            <div className={`nitro-avatar-editor-palettes${maxPaletteCount === 2 ? ' dual-palette' : ''}`}>
                 {maxPaletteCount >= 1 && (
-                    <div className="flex-1 min-w-0 overflow-hidden avatar-editor-palette-set-view">
+                    <div className="avatar-editor-palette-set-view">
                         {advancedColorMode ? (
                             <AvatarEditorAdvancedColorView category={activeCategory} paletteIndex={0} />
                         ) : (
-                            <AvatarEditorPaletteSetView category={activeCategory} columnCount={maxPaletteCount === 2 ? 5 : 14} paletteIndex={0} />
+                            <AvatarEditorPaletteSetView category={activeCategory} columnCount={maxPaletteCount === 2 ? 9 : 20} paletteIndex={0} />
                         )}
                     </div>
                 )}
                 {maxPaletteCount === 2 && (
-                    <div className="flex-1 min-w-0 overflow-hidden avatar-editor-palette-set-view">
+                    <div className="avatar-editor-palette-set-view">
                         {advancedColorMode ? (
                             <AvatarEditorAdvancedColorView category={activeCategory} paletteIndex={1} />
                         ) : (
-                            <AvatarEditorPaletteSetView category={activeCategory} columnCount={5} paletteIndex={1} />
+                            <AvatarEditorPaletteSetView category={activeCategory} columnCount={9} paletteIndex={1} />
                         )}
                     </div>
                 )}

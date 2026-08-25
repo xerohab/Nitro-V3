@@ -1,7 +1,6 @@
 import {
     AddLinkEventTracker,
     AvatarDirectionAngle,
-    AvatarEffectActivatedComposer,
     GetConfiguration,
     GetSessionDataManager,
     ILinkEventTracker,
@@ -10,7 +9,8 @@ import {
 } from '@nitrots/nitro-renderer';
 import { ChangeEvent, FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FaChevronLeft, FaChevronRight, FaSearch } from 'react-icons/fa';
-import { LocalizeText, SendMessageComposer } from '../../api';
+import { LocalizeText } from '../../api';
+import { useAvatarEffects } from '../../hooks';
 import { Button, Column, NitroCardContentView, NitroCardHeaderView, NitroCardView } from '../../common';
 import { AvatarEffectPreviewView } from './AvatarEffectPreviewView';
 
@@ -94,6 +94,9 @@ export const AvatarEffectsView: FC<{}> = () => {
         };
     }, [isVisible, effects.length, loadError]);
 
+    const { effects: ownedEffects, activeEffectType, activateEffect, isOwned } = useAvatarEffects();
+    const [ownedOnly, setOwnedOnly] = useState(false);
+
     const session = GetSessionDataManager();
     const figure = session?.figure ?? '';
     const gender = session?.gender ?? 'M';
@@ -109,23 +112,30 @@ export const AvatarEffectsView: FC<{}> = () => {
 
     const applySelectedEffect = useCallback(() => {
         if (!selectedId) return;
-        SendMessageComposer(new AvatarEffectActivatedComposer(selectedId));
+        activateEffect(selectedId);
         setIsVisible(false);
-    }, [selectedId]);
+    }, [selectedId, activateEffect]);
 
     const removeCurrentEffect = useCallback(() => {
-        SendMessageComposer(new AvatarEffectActivatedComposer(0));
+        activateEffect(0);
         setSelectedId(0);
         setIsVisible(false);
-    }, []);
+    }, [activateEffect]);
 
     const onClose = useCallback(() => setIsVisible(false), []);
 
+    // The server is the authority on what is currently running: follow it
+    // whenever the window is opened without an explicit pick.
+    useEffect(() => {
+        if (isVisible && !selectedId && activeEffectType) setSelectedId(activeEffectType);
+    }, [isVisible, selectedId, activeEffectType]);
+
     const filteredEffects = useMemo(() => {
         const trimmed = query.trim().toLowerCase();
-        if (!trimmed) return effects;
-        return effects.filter((e) => e.id.toLowerCase().includes(trimmed) || e.lib.toLowerCase().includes(trimmed));
-    }, [effects, query]);
+        const pool = ownedOnly ? effects.filter((e) => isOwned(parseInt(e.id, 10))) : effects;
+        if (!trimmed) return pool;
+        return pool.filter((e) => e.id.toLowerCase().includes(trimmed) || e.lib.toLowerCase().includes(trimmed));
+    }, [effects, query, ownedOnly, isOwned]);
 
     const onQueryChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
         setQuery(event.target.value);
@@ -170,7 +180,7 @@ export const AvatarEffectsView: FC<{}> = () => {
                         <div className="arrow-container absolute inset-y-0 left-0 right-0 flex items-center justify-between px-1 z-10 pointer-events-none">
                             <button
                                 type="button"
-                                className="pointer-events-auto flex items-center justify-center w-7 h-7 rounded-full bg-black/45 hover:bg-black/70 border border-white/15 text-white shadow-md backdrop-blur-sm transition-all hover:scale-110 active:scale-95"
+                                className="pointer-events-auto flex items-center justify-center w-7 h-7 rounded-full bg-black/55 hover:bg-black/75 border border-white/15 text-white shadow-md transition-all hover:scale-110 active:scale-95"
                                 onClick={() => rotateFigure(1)}
                                 aria-label="Rotate left"
                             >
@@ -178,7 +188,7 @@ export const AvatarEffectsView: FC<{}> = () => {
                             </button>
                             <button
                                 type="button"
-                                className="pointer-events-auto flex items-center justify-center w-7 h-7 rounded-full bg-black/45 hover:bg-black/70 border border-white/15 text-white shadow-md backdrop-blur-sm transition-all hover:scale-110 active:scale-95"
+                                className="pointer-events-auto flex items-center justify-center w-7 h-7 rounded-full bg-black/55 hover:bg-black/75 border border-white/15 text-white shadow-md transition-all hover:scale-110 active:scale-95"
                                 onClick={() => rotateFigure(-1)}
                                 aria-label="Rotate right"
                             >
@@ -186,7 +196,7 @@ export const AvatarEffectsView: FC<{}> = () => {
                             </button>
                         </div>
                         {selectedEffect && (
-                            <div className="absolute top-2 left-2 right-2 bg-black/55 backdrop-blur-sm rounded px-2 py-1 text-white text-xs leading-tight">
+                            <div className="absolute top-2 left-2 right-2 bg-black/65 rounded px-2 py-1 text-white text-xs leading-tight">
                                 <div className="font-mono opacity-70 text-[10px]">#{parseInt(selectedEffect.id, 10)}</div>
                                 <div className="font-semibold truncate">{selectedEffect.lib}</div>
                             </div>
@@ -216,6 +226,12 @@ export const AvatarEffectsView: FC<{}> = () => {
                         <span>
                             {filteredEffects.length === effects.length ? `${effects.length} effects` : `${filteredEffects.length} of ${effects.length}`}
                         </span>
+                        {!!ownedEffects.length && (
+                            <label className="flex cursor-pointer items-center gap-1 normal-case font-semibold text-[#3a78c4]">
+                                <input type="checkbox" checked={ownedOnly} onChange={(event) => setOwnedOnly(event.target.checked)} />
+                                {LocalizeText('inventory.effects.owned.only') || `owned (${ownedEffects.length})`}
+                            </label>
+                        )}
                         {selectedId > 0 && (
                             <button
                                 type="button"
@@ -240,6 +256,8 @@ export const AvatarEffectsView: FC<{}> = () => {
                                 {visibleEffects.map((effect, index) => {
                                     const id = parseInt(effect.id, 10);
                                     const isSelected = id === selectedId;
+                                    const owned = isOwned(id);
+                                    const isActive = id === activeEffectType;
                                     return (
                                         <li key={effect.id}>
                                             <button
@@ -257,6 +275,16 @@ export const AvatarEffectsView: FC<{}> = () => {
                                                     #{id}
                                                 </span>
                                                 <span className="truncate font-semibold">{effect.lib}</span>
+                                                {isActive && (
+                                                    <span className="ml-auto shrink-0 rounded bg-[#2f7d32] px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">
+                                                        {LocalizeText('inventory.effects.active') || 'active'}
+                                                    </span>
+                                                )}
+                                                {owned && !isActive && (
+                                                    <span className="ml-auto shrink-0 rounded bg-[#3a78c4] px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">
+                                                        {LocalizeText('inventory.effects.owned') || 'owned'}
+                                                    </span>
+                                                )}
                                             </button>
                                         </li>
                                     );

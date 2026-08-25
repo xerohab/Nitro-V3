@@ -69,10 +69,12 @@ import {
     CatalogPurchaseSoldOutEvent,
     InventoryFurniAddedEvent
 } from '../../events';
-import { useMessageEvent, useNitroEvent, useUiEvent } from '../events';
+import { useConnectionState, useMessageEvent, useNitroEvent, useUiEvent } from '../events';
 import { useNotification } from '../notification';
 import {
     buildCatalogNodeTree,
+    createCatalogIndexPrewarmController,
+    createCatalogIndexRequestCoordinator,
     createCatalogPageRequestCorrelation,
     findNodeById,
     findNodeByName,
@@ -82,9 +84,9 @@ import {
     RoomControllerLevel,
     RoomObjectCategory,
     RoomObjectType,
-    resolveBuilderFurniPlaceableStatus
+    resolveBuilderFurniPlaceableStatus,
+    restoreCatalogActivePath
 } from './useCatalog.helpers';
-import { catalogIndexRootFromSnapshot, clearCatalogIndexCache, readCatalogIndexCache, writeCatalogIndexCache } from './useCatalogIndexCache';
 import { useCatalogPlaceMultipleItems } from './useCatalogPlaceMultipleItems';
 import { useCatalogSkipPurchaseConfirmation } from './useCatalogSkipPurchaseConfirmation';
 
@@ -113,6 +115,7 @@ const useCatalogStore = () => {
         extraParamRequired: false,
         previewStuffData: null
     });
+    const [giftReceiver, setGiftReceiver] = useState<string>(null);
     const [objectMoverRequested, setObjectMoverRequested] = useState(false);
     const [catalogPlaceMultipleObjects, setCatalogPlaceMultipleObjects] = useCatalogPlaceMultipleItems();
     const [catalogSkipPurchaseConfirmation, setCatalogSkipPurchaseConfirmation] = useCatalogSkipPurchaseConfirmation();
@@ -132,6 +135,19 @@ const useCatalogStore = () => {
     const pageRequestCorrelation = useRef(createCatalogPageRequestCorrelation());
     const { simpleAlert = null, showConfirm = null } = useNotification();
     const requestedPage = useRef(new RequestedPage());
+    const connectionState = useConnectionState();
+    const catalogIndexRequests = useRef<ReturnType<typeof createCatalogIndexRequestCoordinator>>(null);
+    const catalogIndexPrewarm = useRef<ReturnType<typeof createCatalogIndexPrewarmController>>(null);
+
+    if (!catalogIndexRequests.current) {
+        catalogIndexRequests.current = createCatalogIndexRequestCoordinator((catalogType) => {
+            SendMessageComposer(new GetCatalogIndexComposer(catalogType));
+        });
+    }
+
+    if (!catalogIndexPrewarm.current) {
+        catalogIndexPrewarm.current = createCatalogIndexPrewarmController((catalogType) => catalogIndexRequests.current.request(catalogType));
+    }
 
     const resetState = useCallback(() => {
         pageRequestCorrelation.current.reset();
@@ -147,6 +163,7 @@ const useCatalogStore = () => {
         setActiveNodes([]);
         setSearchResult(null);
         setFrontPageItems([]);
+        setGiftReceiver(null);
         setIsVisible(false);
     }, []);
 
@@ -668,13 +685,16 @@ const useCatalogStore = () => {
         const parser = event.getParser();
         const parserCatalogType = normalizeCatalogType(parser.catalogType);
 
+        catalogIndexRequests.current.complete(parserCatalogType);
+
         if (parserCatalogType !== currentType) return;
 
         const { rootNode: builtRoot, offersToNodes: builtOffers } = buildCatalogNodeTree(parser.root);
+        const activePageId = activeNodes[activeNodes.length - 1]?.pageId ?? -1;
 
-        writeCatalogIndexCache(parserCatalogType, parser.root);
         setRootNode(builtRoot);
         setOffersToNodes(builtOffers);
+        if (activePageId > -1) setActiveNodes(restoreCatalogActivePath(builtRoot, activePageId));
     });
 
     useMessageEvent<CatalogPageMessageEvent>(CatalogPageMessageEvent, (event) => {
@@ -887,8 +907,10 @@ const useCatalogStore = () => {
         const wasVisible = isVisible;
 
         importedFurnidataMerged.current = false;
-        clearCatalogIndexCache();
+        catalogIndexRequests.current.reset();
         resetState();
+
+        if (connectionState.authenticated) catalogIndexRequests.current.request(currentType);
 
         if (wasVisible)
             simpleAlert(
@@ -1186,8 +1208,7 @@ const useCatalogStore = () => {
         };
 
         const refreshCatalogIndex = () => {
-            clearCatalogIndexCache();
-            SendMessageComposer(new GetCatalogIndexComposer(currentType));
+            catalogIndexRequests.current.request(currentType);
         };
 
         window.addEventListener('catalog-admin-refresh-current-page', refreshCurrentPage);
@@ -1210,24 +1231,21 @@ const useCatalogStore = () => {
     }, [secondsLeft]);
 
     useEffect(() => {
-        if (!isVisible || rootNode) return;
+        if (!connectionState.authenticated) catalogIndexRequests.current.reset();
 
-        const cachedRoot = readCatalogIndexCache(currentType);
+        catalogIndexPrewarm.current.update({
+            authenticated: connectionState.authenticated,
+            visible: isVisible,
+            hasIndex: !!rootNode,
+            catalogType: currentType
+        });
+    }, [connectionState.authenticated, isVisible, rootNode, currentType]);
 
-        if (cachedRoot) {
-            const { rootNode: builtRoot, offersToNodes: builtOffers } = buildCatalogNodeTree(catalogIndexRootFromSnapshot(cachedRoot));
+    useEffect(() => {
+        if (!isVisible) return;
 
-            setRootNode(builtRoot);
-            setOffersToNodes(builtOffers);
-
-            SendMessageComposer(new BuildersClubQueryFurniCountMessageComposer());
-
-            return;
-        }
-
-        SendMessageComposer(new GetCatalogIndexComposer(currentType));
         SendMessageComposer(new BuildersClubQueryFurniCountMessageComposer());
-    }, [isVisible, rootNode, currentType]);
+    }, [isVisible, currentType]);
 
     useEffect(() => {
         setRoomPreviewer(new RoomPreviewer(GetRoomEngine(), ++RoomPreviewer.PREVIEW_COUNTER));
@@ -1270,6 +1288,8 @@ const useCatalogStore = () => {
         setNavigationHidden,
         purchaseOptions,
         setPurchaseOptions,
+        giftReceiver,
+        setGiftReceiver,
         catalogLocalizationVersion,
         getNodeById,
         getNodeByName,
@@ -1291,6 +1311,7 @@ const useCatalogStore = () => {
         setCatalogPlaceMultipleObjects,
         getBuilderFurniPlaceableStatus,
         selectCatalogOffer,
+        resetPlacedOfferData,
         retryCurrentPage
     };
 };
@@ -1347,6 +1368,8 @@ export const useCatalogUiState = () => {
         setNavigationHidden,
         purchaseOptions,
         setPurchaseOptions,
+        giftReceiver,
+        setGiftReceiver,
         catalogPlaceMultipleObjects,
         setCatalogPlaceMultipleObjects,
         setCurrentPage,
@@ -1365,6 +1388,8 @@ export const useCatalogUiState = () => {
         setNavigationHidden,
         purchaseOptions,
         setPurchaseOptions,
+        giftReceiver,
+        setGiftReceiver,
         catalogPlaceMultipleObjects,
         setCatalogPlaceMultipleObjects,
         setCurrentPage,
@@ -1387,6 +1412,7 @@ export const useCatalogActions = () => {
         getNodeByName,
         getNodesByOfferId,
         getBuilderFurniPlaceableStatus,
+        resetPlacedOfferData,
         retryCurrentPage
     } = useSharedHook(useCatalogStore);
 
@@ -1403,6 +1429,7 @@ export const useCatalogActions = () => {
         getNodeByName,
         getNodesByOfferId,
         getBuilderFurniPlaceableStatus,
+        resetPlacedOfferData,
         retryCurrentPage
     };
 };

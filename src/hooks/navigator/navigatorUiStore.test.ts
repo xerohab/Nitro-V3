@@ -1,5 +1,34 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useNavigatorUiStore } from './navigatorUiStore';
+
+vi.mock('@nitrots/nitro-renderer', async () => {
+    const actual = await vi.importActual<typeof import('@nitrots/nitro-renderer')>('@nitrots/nitro-renderer');
+
+    return {
+        ...actual,
+        NavigatorSearchCloseComposer: class {
+            constructor(_code?: string) {}
+        },
+        NavigatorSearchOpenComposer: class {
+            constructor(_code?: string) {}
+        },
+        NavigatorCategoryListModeComposer: class {
+            constructor(_code?: string, _mode?: number) {}
+        },
+        NavigatorSettingsSaveComposer: class {
+            constructor(_x?: number, _y?: number, _w?: number, _h?: number, _open?: boolean, _mode?: number) {}
+        }
+    };
+});
+
+vi.mock('../../api', async () => {
+    const actual = await vi.importActual<typeof import('../../api')>('../../api');
+
+    return {
+        ...actual,
+        SendMessageComposer: vi.fn()
+    };
+});
 
 const INITIAL = {
     isVisible: false,

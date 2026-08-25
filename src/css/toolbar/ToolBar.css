@@ -8,13 +8,9 @@
     left: 0;
     z-index: 70;
     width: 100%;
-    height: 55px;
+    height: 46px;
     pointer-events: all;
-    border-top: 1px solid rgba(0, 0, 0, 0.3019607843);
-    background: rgba(46, 45, 44, 0.7607843137);
-    box-shadow:
-        inset 0 5px 0 -3px #53524ec2,
-        inset 0 -4px 0 -3px #494845c2;
+    background: #55534e;
 }
 
 .nitro-toolbar-mobile-hobba {
@@ -35,45 +31,161 @@
 .tb-icon {
     opacity: 1;
     cursor: pointer;
-    transition: filter 0.12s ease;
-    filter: drop-shadow(1px 1px 0 rgba(0, 0, 0, 0.65));
+    image-rendering: pixelated;
+    /* BitmapDataController draws AIR's 0x48000000 etching at (0,-1). */
+    filter: drop-shadow(0 -1px 0 rgba(0, 0, 0, 0.28));
+}
 
-    &:hover {
-        filter: brightness(1.12) drop-shadow(1px 1px 0 rgba(0, 0, 0, 0.65));
-    }
+.tb-nav-clip .nitro-icon:hover,
+.tb-nav-clip .nitro-icon:active {
+    transform: none;
+    filter: drop-shadow(0 -1px 0 rgba(0, 0, 0, 0.28));
+}
 
-    &:active {
-        filter: brightness(0.92) drop-shadow(1px 1px 0 rgba(0, 0, 0, 0.65));
-    }
+/* lifted_hover on the 45px region so me-menu bg/circle move with the head. */
+.tb-nav-clip .tb-slot:hover {
+    transform: translate(-1px, -1px);
+}
+
+.tb-nav-clip .tb-slot:active {
+    transform: translate(1px, 0);
+}
+
+.tb-nav-clip .tb-slot:active .tb-icon {
+    filter: brightness(0.7) drop-shadow(0 -1px 0 rgba(0, 0, 0, 0.28));
 }
 
 .tb-avatar-head {
-    /* LayoutAvatarImageView(headOnly) writes background-size/-position inline, so the toolbar head-crop only applies with !important. */
-    background-size: auto !important;
-    background-position: -25px -38px !important;
+    width: 50px !important;
+    height: 50px !important;
+    background-size: 50px 50px !important;
+    background-position: 0 0 !important;
+    image-rendering: pixelated !important;
 }
 
-.tb-collapse {
+.tb-slot {
+    position: relative;
     display: flex;
-    width: 15px;
-    height: 34px;
+    width: 45px;
+    height: 41px;
     flex-shrink: 0;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
-    border-radius: 6px;
-    background: rgba(46, 45, 44, 0.76);
-    border: 1px solid rgba(0, 0, 0, 0.55);
-    color: rgba(255, 255, 255, 0.70);
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.13),
-        inset 0 -1px 0 rgba(0, 0, 0, 0.35);
-    transition: color 0.15s, background 0.15s;
+    overflow: visible;
+}
 
-    &:hover {
-        color: #fff;
-        background: rgba(59, 58, 55, 0.82);
-    }
+.tb-slot-tall {
+    height: 45px;
+}
+
+.tb-slot-inventory {
+    height: 43px;
+}
+
+.tb-slot-messenger {
+    width: 31px;
+    margin-left: -6px;
+}
+
+/*
+ * AIR positions the static-bitmap windows at these x/y coordinates, then
+ * centers each source bitmap inside the declared window (pivot_point=center),
+ * truncating half-pixel offsets toward zero as BitmapDataRenderer does.
+ * Keep the XML window dimensions here: using the PNG dimensions directly
+ * shifts progression, games, builder and wired and fails to clip stories.
+ */
+.tb-nav-clip .tb-slot .icon-habbo { position: absolute; left: 8px; top: 5px; width: 28px; height: 28px; }
+.tb-nav-clip .tb-slot .icon-house { position: absolute; left: 6px; top: 5px; width: 32px; height: 30px; }
+.tb-nav-clip .tb-slot .icon-rooms { position: absolute; left: 0; top: 5px; width: 44px; height: 30px; }
+.tb-nav-clip .tb-slot .icon-progression { position: absolute; left: 0; top: 0; width: 44px; height: 37px; background-position: 6px 1px; }
+.tb-nav-clip .tb-slot .icon-game { position: absolute; left: 6px; top: 0; width: 33px; height: 43px; background-position: 4px 3px; }
+.tb-nav-clip .tb-slot .icon-stories { position: absolute; left: 5px; top: 1px; width: 35px; height: 37px; background-position: 0 -1px; }
+.tb-nav-clip .tb-slot .icon-catalog { position: absolute; left: 4px; top: 1px; width: 37px; height: 37px; }
+.tb-nav-clip .tb-slot .icon-buildersclub { position: absolute; left: 5px; top: 1px; width: 35px; height: 37px; background-position: 1px 2px; }
+.tb-nav-clip .tb-slot .icon-inventory { position: absolute; left: 0; top: 0; width: 44px; height: 41px; }
+.tb-nav-clip .tb-slot .icon-wired-tools { position: absolute; left: 3px; top: 0; width: 38px; height: 45px; background-position: -1px 2px; }
+.tb-nav-clip .tb-slot .icon-camera { position: absolute; left: 3px; top: 0; width: 38px; height: 45px; }
+.tb-nav-clip .tb-slot .icon-friendall { position: absolute; left: 0; top: 4px; width: 32px; height: 33px; }
+.tb-nav-clip .tb-slot .icon-friendsearch { position: absolute; left: 0; top: 4px; width: 29px; height: 33px; }
+.tb-nav-clip .tb-slot .icon-message { position: absolute; left: 0; top: 4px; width: 26px; height: 32px; }
+
+.tb-memenu-bg,
+.tb-memenu-circle {
+    position: absolute;
+    left: 0;
+    top: -1px;
+    width: 45px;
+    height: 45px;
+    pointer-events: none;
+    image-rendering: pixelated;
+}
+
+.tb-memenu-bg {
+    z-index: 0;
+}
+
+/* bottom_bar_left_xml icon_me_menu: x=1 y=-1 44x41 pivot_point=center */
+.tb-memenu-avatar {
+    position: absolute;
+    left: 1px;
+    top: -1px;
+    z-index: 1;
+    display: flex;
+    width: 44px;
+    height: 41px;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.tb-memenu-avatar .tb-avatar-head {
+    position: relative !important;
+    inset: auto !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    flex: 0 0 50px;
+    width: 50px !important;
+    height: 50px !important;
+    background-size: 50px 50px !important;
+    background-position: 0 0 !important;
+}
+
+.tb-memenu-circle {
+    z-index: 2;
+}
+
+.tb-divider {
+    display: block;
+    width: 1px;
+    height: 40px;
+    flex-shrink: 0;
+    align-self: flex-start;
+    image-rendering: pixelated;
+}
+
+.tb-collapse {
+    position: relative;
+    display: block;
+    width: 15px;
+    height: 46px;
+    flex-shrink: 0;
+    padding: 0;
+    cursor: pointer;
+    border: 0;
+    background: transparent;
+}
+
+.tb-collapse img {
+    position: absolute;
+    top: -1px;
+    left: 1px;
+    display: block;
+    width: 13px;
+    height: 45px;
+    image-rendering: pixelated;
 }
 
 .tb-toggle {
@@ -115,12 +227,29 @@
 }
 
 .tb-open-shell {
+    gap: 8px;
+    padding-top: 1px;
+    margin-left: 4px;
     scrollbar-width: none;
     -ms-overflow-style: none;
 
     &::-webkit-scrollbar {
         display: none;
     }
+}
+
+.tb-open-shell.tb-open-shell-right {
+    gap: 0;
+    margin-left: 0;
+}
+
+.tb-open-shell-right .tb-divider {
+    margin-top: 2px;
+    margin-right: 2px;
+}
+
+.tb-open-shell-right .tb-slot:has(.icon-friendsearch) {
+    margin-left: 1px;
 }
 
 .tbme-panel {

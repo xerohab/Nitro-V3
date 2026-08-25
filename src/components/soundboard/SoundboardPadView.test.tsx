@@ -8,7 +8,7 @@ import { SoundboardPadView } from './SoundboardPadView';
 const sound: DisplaySoundboardSound = {
     id: 1,
     name: 'Campanella',
-    url: '/sounds/campanella.mp3',
+    url: '/sounds/campanella.mp3', classname: '',
     categoryId: 'effects',
     tone: 'gold',
     keywords: []

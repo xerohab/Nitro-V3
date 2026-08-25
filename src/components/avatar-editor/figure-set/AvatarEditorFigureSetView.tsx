@@ -28,9 +28,10 @@ export const AvatarEditorFigureSetView: FC<{
 
     return (
         <InfiniteGrid<IAvatarEditorCategoryPartItem>
+            classicScrollbar
             columnCount={columnCount}
-            itemMinWidth={42}
-            rowGap={8}
+            columnGap={0}
+            rowGap={0}
             estimateSize={estimateSize}
             itemRender={(item: IAvatarEditorCategoryPartItem) => {
                 if (!item) return null;

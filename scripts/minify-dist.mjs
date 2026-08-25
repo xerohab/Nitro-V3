@@ -50,6 +50,10 @@ for(const file of walk(dist))
     if(file.endsWith('.css')) encryptFile(file);
 }
 
+const viteManifest = join(dist, '.vite', 'manifest.json');
+
+if(existsSync(viteManifest)) copyFileSync(viteManifest, join(dist, 'manifest.json'));
+
 const assetMirrorDir = join(dist, 'src', 'assets');
 mkdirSync(assetMirrorDir, { recursive: true });
 
@@ -62,6 +66,7 @@ for(const file of [ 'app.css.dat', 'app.js.dat' ])
 }
 
 const publicLoaderAssets = [
+    [ 'src/assets/images/loading/octane-logo.png', 'octane-logo.png' ],
     [ 'src/assets/images/loading/loading.gif', 'loading.gif' ],
     [ 'src/assets/images/notifications/nitro_v3.png', 'nitro_v3.png' ]
 ];

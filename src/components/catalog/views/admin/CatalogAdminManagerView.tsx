@@ -3,10 +3,9 @@ import {
     FaArrowDown,
     FaArrowsAlt,
     FaArrowUp,
+    FaCheckCircle,
     FaChevronDown,
     FaChevronRight,
-    FaCheckCircle,
-    FaCloudUploadAlt,
     FaEdit,
     FaExclamationTriangle,
     FaEye,
@@ -16,16 +15,17 @@ import {
     FaSearch,
     FaSitemap,
     FaTrash,
+    FaWrench,
 } from 'react-icons/fa';
 import { GetConfigurationValue, ICatalogNode, IPurchasableOffer, LocalizeText, ProductTypeEnum } from '../../../../api';
 import { NitroCardContentView, NitroCardHeaderView, NitroCardView } from '../../../../common';
 import { useCatalogActions, useCatalogData, useCatalogUiState } from '../../../../hooks';
 import { replaceCatalogPageOffers } from '../../../../hooks/catalog/useCatalog.helpers';
-import { CATALOG_ROOT_LOCK_ID, useCatalogAdmin } from '../../CatalogAdminContext';
 import { getCatalogStudioCommandState, getCatalogStudioWorkspaceTabs } from '../../admin/studio/CatalogStudioCommandCenter';
-import { CatalogStudioPublishReview } from '../../admin/studio/CatalogStudioPublishReview';
+import { CatalogStudioProblemsHistoryPanel } from '../../admin/studio/CatalogStudioProblemsHistoryPanel';
 import { CatalogStudioTransferPanel } from '../../admin/studio/CatalogStudioTransferPanel';
 import { useCatalogStudio } from '../../admin/studio/useCatalogStudio';
+import { useCatalogAdmin } from '../../CatalogAdminContext';
 import { parseCatalogTabLabel } from '../../useCatalogWindowWidth';
 import { CatalogIconView } from '../catalog-icon/CatalogIconView';
 import {
@@ -37,7 +37,7 @@ import {
 import { CatalogAdminOfferPriceView } from './CatalogAdminOfferPriceView';
 
 type CatalogAdminOffer = Parameters<NonNullable<ReturnType<typeof useCatalogAdmin>>['setEditingOffer']>[0];
-type ManagerTab = 'catalog' | 'transfer' | 'publish';
+type ManagerTab = 'catalog' | 'sql' | 'history';
 
 const stripSwfSuffix = (label: string) => (label || '').replace(/\s*\(\D[^)]*\)\s*$/g, '').trim();
 const nodeName = (node: ICatalogNode) => stripSwfSuffix(parseCatalogTabLabel(node.localization).name) || node.pageName;
@@ -86,8 +86,8 @@ const getOfferIconUrl = (offer: IPurchasableOffer): string | null => {
 };
 
 export const CatalogAdminManagerView: FC<{}> = () => {
-    const { rootNode = null, currentPage = null } = useCatalogData();
-    const { setCurrentPage, currentType } = useCatalogUiState();
+    const { rootNode = null, currentPage = null, currentOffer = null } = useCatalogData();
+    const { setCurrentPage, setCurrentOffer, currentType } = useCatalogUiState();
     const { activateNode = null } = useCatalogActions();
     const catalogAdmin = useCatalogAdmin();
     const studio = useCatalogStudio();
@@ -100,22 +100,19 @@ export const CatalogAdminManagerView: FC<{}> = () => {
     const [selectedPageId, setSelectedPageId] = useState(currentPage?.pageId ?? -1);
 
     const query = search.trim().toLowerCase();
-    const draftRootNode = useMemo(
+    const managerRootNode = useMemo(
         () => buildCatalogAdminDraftTree(rootNode, studio.session?.pages ?? [], currentType),
         [currentType, rootNode, studio.session?.pages]
     );
-    const selectedNode = findNodeByPageId(draftRootNode, selectedPageId);
+    const selectedNode = findNodeByPageId(managerRootNode, selectedPageId);
     const offers = currentPage?.pageId === selectedPageId ? (currentPage.offers ?? []) : [];
-    const categoryCount = draftRootNode?.children.length ?? 0;
+    const categoryCount = managerRootNode?.children.length ?? 0;
     const validationCurrent = studio.validation
         ? studio.validation.current && studio.validation.revision === studio.revision
         : studio.session?.validationCurrent ?? false;
     const validationIssueCount = studio.validation?.issues.length ?? studio.session?.validationIssueCount ?? 0;
     const commandState = getCatalogStudioCommandState({
         sessionReady: !!studio.session,
-        pendingCount: studio.pendingCount,
-        actorCount: studio.session?.actors.length ?? 0,
-        lockCount: Object.keys(studio.locks).length,
         validationCurrent,
         validationIssueCount,
         loading: studio.loading || !!catalogAdmin?.loading
@@ -127,12 +124,12 @@ export const CatalogAdminManagerView: FC<{}> = () => {
     }, [catalogAdmin?.adminMode, studio.session?.draftVersionId, studio.loadHistory]);
 
     useEffect(() => {
-        if (activeTab !== 'publish' || !commandState.canValidate) return;
+        if (activeTab !== 'history' || !commandState.canValidate) return;
         studio.validate();
     }, [activeTab, commandState.canValidate, studio.validate]);
 
     useEffect(() => {
-        if (selectedPageId < 0 && currentPage?.pageId != null) setSelectedPageId(currentPage.pageId);
+        if (currentPage?.pageId != null && currentPage.pageId !== selectedPageId) setSelectedPageId(currentPage.pageId);
     }, [currentPage?.pageId, selectedPageId]);
 
     const handlePageDragStart = useCallback((event: React.DragEvent, node: ICatalogNode) => {
@@ -161,14 +158,14 @@ export const CatalogAdminManagerView: FC<{}> = () => {
             event.stopPropagation();
             setPageDropTarget(null);
 
-            if (!catalogAdmin || !draftRootNode) return;
+            if (!catalogAdmin || !managerRootNode) return;
 
             try {
                 const data = JSON.parse(event.dataTransfer.getData('text/plain'));
-                const dragged = findNodeByPageId(draftRootNode, Number(data.pageId));
+                const dragged = findNodeByPageId(managerRootNode, Number(data.pageId));
                 const bounds = event.currentTarget.getBoundingClientRect();
                 const position = resolveCatalogAdminPageDropPosition(event.clientY, bounds.top, bounds.height);
-                const plan = planCatalogAdminPageDrop(dragged, node, position, draftRootNode);
+                const plan = planCatalogAdminPageDrop(dragged, node, position, managerRootNode);
                 if (!plan) return;
 
                 if (position === 'inside') {
@@ -184,7 +181,7 @@ export const CatalogAdminManagerView: FC<{}> = () => {
                 // Invalid drag payload
             }
         },
-        [catalogAdmin, draftRootNode]
+        [catalogAdmin, managerRootNode]
     );
 
     const handleRootDragOver = useCallback((event: React.DragEvent) => {
@@ -199,18 +196,18 @@ export const CatalogAdminManagerView: FC<{}> = () => {
         event.preventDefault();
         event.stopPropagation();
         setRootDropActive(false);
-        if (!catalogAdmin || !draftRootNode) return;
+        if (!catalogAdmin || !managerRootNode) return;
 
         try {
             const data = JSON.parse(event.dataTransfer.getData('text/plain'));
-            const dragged = findNodeByPageId(draftRootNode, Number(data.pageId));
-            const plan = planCatalogAdminPageDrop(dragged, null, 'root', draftRootNode);
+            const dragged = findNodeByPageId(managerRootNode, Number(data.pageId));
+            const plan = planCatalogAdminPageDrop(dragged, null, 'root', managerRootNode);
             if (!plan) return;
             catalogAdmin.reorderPage(plan.pageId, plan.newParentId, plan.newIndex, `Moved page #${plan.pageId} to catalog root`);
         } catch {
             // Invalid drag payload
         }
-    }, [catalogAdmin, draftRootNode]);
+    }, [catalogAdmin, managerRootNode]);
 
     const reorderOffersToIndex = useCallback(
         (fromIndex: number, toIndex: number) => {
@@ -270,8 +267,6 @@ export const CatalogAdminManagerView: FC<{}> = () => {
 
     if (!catalogAdmin?.adminMode) return null;
 
-    const hasPendingChanges = studio.pendingCount > 0;
-
     const toggleExpand = (pageId: number) => {
         setExpanded((prev) => {
             const next = new Set(prev);
@@ -284,8 +279,6 @@ export const CatalogAdminManagerView: FC<{}> = () => {
     const selectNode = (node: ICatalogNode) => {
         if (node.children.length) setExpanded((prev) => new Set(prev).add(node.pageId));
         if (node.pageId > -1) {
-            if (selectedPageId > 0 && selectedPageId !== node.pageId) studio.releaseLock('PAGE', selectedPageId, currentType === 'BUILDERS_CLUB' || currentType === 'BUILDER' ? 'BUILDER' : 'NORMAL');
-            studio.acquireLock('PAGE', node.pageId, currentType === 'BUILDERS_CLUB' || currentType === 'BUILDER' ? 'BUILDER' : 'NORMAL');
             setSelectedPageId(node.pageId);
 
             const liveNode = findNodeByPageId(rootNode, node.pageId);
@@ -294,7 +287,6 @@ export const CatalogAdminManagerView: FC<{}> = () => {
     };
 
     const editPage = (node: ICatalogNode | null, isRoot: boolean) => {
-        if (node && node.pageId > 0) studio.acquireLock('PAGE', node.pageId, currentType === 'BUILDERS_CLUB' || currentType === 'BUILDER' ? 'BUILDER' : 'NORMAL');
         catalogAdmin.setCreatingPage(false);
         catalogAdmin.setEditingPageNode(isRoot ? null : node);
         catalogAdmin.setEditingRootPage(isRoot);
@@ -302,7 +294,6 @@ export const CatalogAdminManagerView: FC<{}> = () => {
     };
 
     const createCategory = (parent: ICatalogNode) => {
-        studio.acquireLock('PAGE', parent.pageId > 0 ? parent.pageId : CATALOG_ROOT_LOCK_ID, currentType === 'BUILDERS_CLUB' || currentType === 'BUILDER' ? 'BUILDER' : 'NORMAL');
         catalogAdmin.setCreatingPage(true);
         catalogAdmin.setEditingRootPage(false);
         catalogAdmin.setEditingPageNode(parent);
@@ -329,8 +320,6 @@ export const CatalogAdminManagerView: FC<{}> = () => {
 
     const newOffer = () => {
         if (!currentPage) return;
-
-        studio.acquireLock('PAGE', currentPage.pageId, currentType === 'BUILDERS_CLUB' || currentType === 'BUILDER' ? 'BUILDER' : 'NORMAL');
 
         catalogAdmin.setEditingOffer({
             offerId: -1,
@@ -469,12 +458,27 @@ export const CatalogAdminManagerView: FC<{}> = () => {
                         {currentPage && offers.length === 0 && <div className="nitro-catalog-admin-placeholder is-small">No offers on this page</div>}
                         {offers.map((offer, index) => {
                             const iconUrl = getOfferIconUrl(offer);
+                            const isSelected = currentOffer?.offerId === offer.offerId;
+                            const editableProducts = (offer.products?.length ? offer.products : [ offer.product ]).filter(
+                                (product) =>
+                                    product?.productClassId > 0 &&
+                                    (product.productType === ProductTypeEnum.FLOOR || product.productType === ProductTypeEnum.WALL)
+                            );
 
                             return (
                                 <div
                                     key={offer.offerId}
-                                    className={`nitro-catalog-admin-offer-row ${dragOverOfferIndex === index ? 'is-drag-over' : ''}`}
+                                    className={`nitro-catalog-admin-offer-row ${isSelected ? 'is-selected' : ''} ${dragOverOfferIndex === index ? 'is-drag-over' : ''}`}
                                     draggable
+                                    role="option"
+                                    tabIndex={0}
+                                    aria-selected={isSelected}
+                                    onClick={() => setCurrentOffer(offer)}
+                                    onKeyDown={(event) => {
+                                        if (event.key !== 'Enter' && event.key !== ' ') return;
+                                        event.preventDefault();
+                                        setCurrentOffer(offer);
+                                    }}
                                     onDragLeave={handleOfferDragLeave}
                                     onDragOver={(event) => handleOfferDragOver(event, index)}
                                     onDragStart={(event) => handleOfferDragStart(event, index)}
@@ -516,8 +520,21 @@ export const CatalogAdminManagerView: FC<{}> = () => {
                                         pointsType={offer.activityPointType}
                                     />
                                     <div className="nitro-catalog-admin-manager-controls">
+                                        {editableProducts.map((product, productIndex) => {
+                                            const productLabel = product.furnitureData?.className || `#${product.productClassId}`;
+
+                                            return <button
+                                                key={`${product.productType}-${product.productClassId}-${productIndex}`}
+                                                aria-label={`Edit Furni ${productLabel}`}
+                                                title={`Edit Furni: ${productLabel}`}
+                                                onClick={() => window.dispatchEvent(new CustomEvent('furni-editor:open', {
+                                                    detail: { spriteId: product.productClassId }
+                                                }))}
+                                            >
+                                                <FaWrench />
+                                            </button>;
+                                        })}
                                         <button title="Edit offer" onClick={() => {
-        studio.acquireLock('OFFER', offer.offerId, currentType === 'BUILDERS_CLUB' || currentType === 'BUILDER' ? 'BUILDER' : 'NORMAL');
                                             catalogAdmin.setEditingOffer(offer);
                                         }}>
                                             <FaEdit />
@@ -578,9 +595,9 @@ export const CatalogAdminManagerView: FC<{}> = () => {
                     </span>
                     <button
                         className="nitro-catalog-admin-add"
-                        disabled={!draftRootNode}
+                        disabled={!managerRootNode}
                         title="New root category"
-                        onClick={() => draftRootNode && createCategory(draftRootNode)}
+                        onClick={() => managerRootNode && createCategory(managerRootNode)}
                     >
                         <FaPlus />
                     </button>
@@ -595,10 +612,10 @@ export const CatalogAdminManagerView: FC<{}> = () => {
                         <FaSitemap />
                         <span>Drop here to move to catalog root</span>
                     </div>
-                    {!draftRootNode || draftRootNode.children.length === 0 ? (
+                    {!managerRootNode || managerRootNode.children.length === 0 ? (
                         <div className="nitro-catalog-admin-placeholder is-small">No categories</div>
                     ) : (
-                        draftRootNode.children.map((child) => renderNode(child, 0))
+                        managerRootNode.children.map((child) => renderNode(child, 0))
                     )}
                 </div>
             </div>
@@ -607,16 +624,12 @@ export const CatalogAdminManagerView: FC<{}> = () => {
         </div>
     );
 
-    const renderPublishTab = () => (
+    const renderHistoryTab = () => (
         <div>
-            <CatalogStudioPublishReview
-                phase={commandState.phase}
-                pendingCount={studio.pendingCount}
-                validationCurrent={validationCurrent}
+            <CatalogStudioProblemsHistoryPanel
                 issues={studio.validation?.issues ?? []}
                 history={studio.history}
                 loading={studio.loading}
-                publish={() => catalogAdmin.publishCatalog()}
                 undo={studio.undo}
             />
         </div>
@@ -624,8 +637,8 @@ export const CatalogAdminManagerView: FC<{}> = () => {
 
     const tabPresentation = {
         catalog: { label: 'Catalog', icon: <FaSitemap />, count: categoryCount },
-        transfer: { label: 'Import / Export', icon: <FaEdit />, count: 0 },
-        publish: { label: 'Changes', icon: <FaHistory />, count: studio.pendingCount }
+        sql: { label: 'SQL tools', icon: <FaEdit />, count: 0 },
+        history: { label: 'Problems & History', icon: <FaHistory />, count: validationIssueCount }
     };
     const tabs = getCatalogStudioWorkspaceTabs().map(id => ({ id, ...tabPresentation[id] }));
 
@@ -635,13 +648,10 @@ export const CatalogAdminManagerView: FC<{}> = () => {
             <NitroCardContentView classNames={['nitro-catalog-admin-manager-body']}>
                 <div aria-live="polite" className={`nitro-catalog-admin-command-bar is-${commandState.phase}`}>
                     <div className="nitro-catalog-admin-command-title">
-                        <strong>Catalog Studio</strong>
-                        <span>Shared draft command center</span>
+                        <strong>Catalog Manager</strong>
+                        <span>Direct live catalog controls</span>
                     </div>
                     <div className="nitro-catalog-admin-command-stats">
-                        <span className={hasPendingChanges ? 'has-pending' : ''}>
-                            <FaCloudUploadAlt /> {commandState.pendingLabel}
-                        </span>
                         <span className={validationIssueCount > 0 ? 'has-error' : validationCurrent ? 'is-valid' : 'has-warning'}>
                             {validationCurrent && validationIssueCount === 0 ? <FaCheckCircle /> : <FaExclamationTriangle />}
                             {commandState.validationLabel}
@@ -662,9 +672,7 @@ export const CatalogAdminManagerView: FC<{}> = () => {
                             role="tab"
                             aria-selected={activeTab === tab.id}
                             aria-controls="catalog-studio-active-panel"
-                            className={`nitro-catalog-admin-tab ${activeTab === tab.id ? 'is-active' : ''} ${
-                                tab.id === 'publish' && hasPendingChanges ? 'has-pending' : ''
-                            }`}
+                            className={`nitro-catalog-admin-tab ${activeTab === tab.id ? 'is-active' : ''}`}
                             onClick={() => setActiveTab(tab.id)}
                         >
                             {tab.icon}
@@ -676,8 +684,8 @@ export const CatalogAdminManagerView: FC<{}> = () => {
 
                 <div id="catalog-studio-active-panel" className="nitro-catalog-admin-panel" role="tabpanel" aria-labelledby={`catalog-studio-tab-${activeTab}`}>
                     {activeTab === 'catalog' && renderPagesTab()}
-                    {activeTab === 'transfer' && <CatalogStudioTransferPanel />}
-                    {activeTab === 'publish' && renderPublishTab()}
+                    {activeTab === 'sql' && <CatalogStudioTransferPanel />}
+                    {activeTab === 'history' && renderHistoryTab()}
                 </div>
             </NitroCardContentView>
         </NitroCardView>

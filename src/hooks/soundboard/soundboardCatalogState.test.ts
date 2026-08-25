@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { filterCatalogSounds, reorderCatalog, validateCatalogDraft } from './soundboardCatalogState';
 
 const sounds = [
-    { id: 7, name: 'Campanella', url: '/bell.mp3', enabled: true, sortOrder: 10, minRank: 1 },
-    { id: 12, name: 'Applauso', url: 'https://cdn.example/clap.mp3', enabled: false, sortOrder: 20, minRank: 5 }
+    { id: 7, name: 'Campanella', classname: '', url: '/bell.mp3', enabled: true, sortOrder: 10, minRank: 1 },
+    { id: 12, name: 'Applauso', classname: '', url: 'https://cdn.example/clap.mp3', enabled: false, sortOrder: 20, minRank: 5 }
 ];
 
 describe('Soundboard catalog state', () => {
@@ -15,13 +15,13 @@ describe('Soundboard catalog state', () => {
     });
 
     it('validates server-compatible names, URLs, and ranks', () => {
-        expect(validateCatalogDraft({ id: 0, name: 'Bell', url: '/sounds/bell.mp3', minRank: 1, enabled: true }).valid).toBe(true);
-        expect(validateCatalogDraft({ id: 0, name: '', url: 'javascript:alert(1)', minRank: 0, enabled: true }).errors).toEqual({
+        expect(validateCatalogDraft({ id: 0, name: 'Bell', classname: '', url: '/sounds/bell.mp3', minRank: 1, enabled: true }).valid).toBe(true);
+        expect(validateCatalogDraft({ id: 0, name: '', classname: '', url: 'javascript:alert(1)', minRank: 0, enabled: true }).errors).toEqual({
             name: 'invalid_name',
             url: 'invalid_url',
             minRank: 'invalid_rank'
         });
-        expect(validateCatalogDraft({ id: 0, name: 'Bell', url: 'https://cdn.example/bell.mp3', minRank: 2.5, enabled: true }).valid).toBe(false);
+        expect(validateCatalogDraft({ id: 0, name: 'Bell', classname: '', url: 'https://cdn.example/bell.mp3', minRank: 2.5, enabled: true }).valid).toBe(false);
     });
 
     it('reorders without mutating the source and removes duplicate IDs', () => {

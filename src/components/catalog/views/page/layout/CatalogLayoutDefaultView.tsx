@@ -1,7 +1,7 @@
 import { FC } from 'react';
-import { GetConfigurationValue, LocalizeText, ProductTypeEnum, SanitizeHtml } from '../../../../../api';
+import { CatalogType, GetConfigurationValue, LocalizeText, ProductTypeEnum, SanitizeHtml } from '../../../../../api';
 import { Text } from '../../../../../common';
-import { getCatalogGridMetrics, useCatalogData, useCatalogDisplayPreferences } from '../../../../../hooks';
+import { getCatalogGridMetrics, useCatalogData, useCatalogDisplayPreferences, useCatalogUiState } from '../../../../../hooks';
 import { CatalogHeaderView } from '../../catalog-header/CatalogHeaderView';
 import { CatalogAddOnBadgeWidgetView } from '../widgets/CatalogAddOnBadgeWidgetView';
 import { CatalogItemGridWidgetView } from '../widgets/CatalogItemGridWidgetView';

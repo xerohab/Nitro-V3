@@ -12,9 +12,12 @@ import { useMessageEvent, useNitroEvent } from '../events';
 
 const useCameraState = () => {
     const [availableEffects, setAvailableEffects] = useState<IRoomCameraWidgetEffect[]>([]);
-    const [cameraRoll, setCameraRoll] = useState<CameraPicture[]>([]);
+    // AIR keeps five stable slots for the lifetime of the camera. Empty slots
+    // must remain addressable so a deleted photograph does not shift the
+    // photographs to its right and the user can choose where the next shot goes.
+    const [cameraRoll, setCameraRoll] = useState<Array<CameraPicture | null>>(() => Array(5).fill(null));
     const [selectedPictureIndex, setSelectedPictureIndex] = useState(-1);
-    const [myLevel, setMyLevel] = useState(10);
+    const [activePictureSlotIndex, setActivePictureSlotIndex] = useState(0);
     const [price, setPrice] = useState<{ credits: number; duckets: number; publishDucketPrice: number }>(null);
 
     useNitroEvent<RoomCameraWidgetManagerEvent>(RoomCameraWidgetManagerEvent.INITIALIZED, (event) => {
@@ -35,7 +38,16 @@ const useCameraState = () => {
         SendMessageComposer(new RequestCameraConfigurationComposer());
     }, []);
 
-    return { availableEffects, cameraRoll, setCameraRoll, selectedPictureIndex, setSelectedPictureIndex, myLevel, price };
+    return {
+        availableEffects,
+        cameraRoll,
+        setCameraRoll,
+        selectedPictureIndex,
+        setSelectedPictureIndex,
+        activePictureSlotIndex,
+        setActivePictureSlotIndex,
+        price
+    };
 };
 
 export const useCamera = () => useSharedHook(useCameraState);

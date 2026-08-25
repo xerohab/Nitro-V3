@@ -3,17 +3,40 @@ import { FC, useEffect, useMemo, useState } from 'react';
 import { AutoGridProps, LayoutBadgeImageView, LayoutGridItem } from '../../../../../common';
 import { useCatalogData, useCatalogUiState, useInventoryBadges } from '../../../../../hooks';
 
-const EXCLUDED_BADGE_CODES: string[] = [];
-
 interface CatalogBadgeSelectorWidgetViewProps extends AutoGridProps {}
+
+const MAX_SEARCH_LENGTH = 40;
 
 export const CatalogBadgeSelectorWidgetView: FC<CatalogBadgeSelectorWidgetViewProps> = (props) => {
     const { columnCount = 8, className = '', ...rest } = props;
     const [isVisible, setIsVisible] = useState(false);
     const [currentBadgeCode, setCurrentBadgeCode] = useState<string>(null);
+    const [searchText, setSearchText] = useState('');
     const { currentOffer = null } = useCatalogData();
     const { setPurchaseOptions = null } = useCatalogUiState();
     const { badgeCodes = [], activate = null, deactivate = null } = useInventoryBadges();
+
+    const excludedBadgeCodes = useMemo(
+        () =>
+            new Set(
+                GetConfigurationValue<string>('badge.display.excluded.badgeCodes', '')
+                    .split(',')
+                    .map((badgeCode) => badgeCode.trim())
+                    .filter(Boolean)
+            ),
+        []
+    );
+
+    const availableBadgeCodes = useMemo(() => badgeCodes.filter((badgeCode) => !excludedBadgeCodes.has(badgeCode)), [badgeCodes, excludedBadgeCodes]);
+    const filteredBadgeCodes = useMemo(() => {
+        const normalizedSearch = searchText.trim().toLocaleLowerCase();
+
+        if (!normalizedSearch) return availableBadgeCodes;
+
+        return availableBadgeCodes.filter((badgeCode) =>
+            `${badgeCode} ${LocalizeBadgeName(badgeCode)} ${LocalizeBadgeDescription(badgeCode)}`.toLocaleLowerCase().includes(normalizedSearch)
+        );
+    }, [availableBadgeCodes, searchText]);
 
     const previewStuffData = useMemo(() => {
         if (!currentBadgeCode) return null;
@@ -40,18 +63,24 @@ export const CatalogBadgeSelectorWidgetView: FC<CatalogBadgeSelectorWidgetViewPr
     }, [currentOffer, previewStuffData, setPurchaseOptions]);
 
     useEffect(() => {
-        if (!isVisible) return;
+        if (!activate) return;
 
         const id = activate();
 
-        return () => deactivate(id);
-    }, [isVisible, activate, deactivate]);
+        return () => deactivate?.(id);
+    }, [activate, deactivate]);
 
     useEffect(() => {
-        setIsVisible(true);
+        if (!currentBadgeCode || availableBadgeCodes.includes(currentBadgeCode)) return;
 
-        return () => setIsVisible(false);
-    }, []);
+        setCurrentBadgeCode(null);
+    }, [availableBadgeCodes, currentBadgeCode]);
+
+    useEffect(() => {
+        if (!currentBadgeCode || filteredBadgeCodes.includes(currentBadgeCode)) return;
+
+        setCurrentBadgeCode(null);
+    }, [currentBadgeCode, filteredBadgeCodes]);
 
     return (
         <div className={`grid grid-cols-8 gap-1.5 w-full nitro-catalog-badge-selector-grid ${className}`.trim()}>

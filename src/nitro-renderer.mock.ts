@@ -196,7 +196,9 @@ class StubClass {
 
 export class NitroAlphaFilter extends StubClass {}
 export class NitroContainer extends StubClass {}
-export class NitroRectangle extends StubClass {}
+export class NitroRectangle {
+    constructor(public x = 0, public y = 0, public width = 0, public height = 0) {}
+}
 export class NitroSprite extends StubClass {}
 export class NitroRenderTexture extends StubClass {}
 export class NitroTexture extends StubClass {}
@@ -269,6 +271,12 @@ export class FavouritesEvent extends MessageEvent {}
 export class FlatCreatedEvent extends MessageEvent {}
 export class NavigatorHomeRoomEvent extends MessageEvent {}
 export class NavigatorMetadataEvent extends MessageEvent {}
+export class AvatarEffectsEvent extends MessageEvent {}
+export class AvatarEffectAddedEvent extends MessageEvent {}
+export class AvatarEffectExpiredEvent extends MessageEvent {}
+export class AvatarEffectActivatedEvent extends MessageEvent {}
+export class AvatarEffectSelectedEvent extends MessageEvent {}
+export class IsFirstLoginOfDayEvent extends MessageEvent {}
 export class NavigatorOpenRoomCreatorEvent extends MessageEvent {}
 export class NavigatorSearchesEvent extends MessageEvent {}
 export class NavigatorSearchEvent extends MessageEvent {}
@@ -376,6 +384,7 @@ export class HabboWebTools extends StubClass {}
 // Composers — symbol-only constructors; only their identity matters in the
 // codebase ("did the SUT call SendMessageComposer(new FooComposer(args))").
 export class AddFavouriteRoomMessageComposer extends StubClass {}
+export class AvatarEffectActivatedComposer extends StubClass {}
 export class DeleteFavouriteRoomMessageComposer extends StubClass {}
 export class FollowFriendMessageComposer extends StubClass {}
 export class GetUserEventCatsMessageComposer extends StubClass {}
@@ -663,6 +672,7 @@ export const GetSessionDataManager = vi.fn(stubManager);
 export const GetTickerTime = vi.fn(() => 0);
 export const GetTicker = vi.fn(stubManager);
 export const GetRenderer = vi.fn(stubManager);
+export const GetDesiredResolution = vi.fn(() => 1);
 export class NitroTicker {}
 // TextureUtils — a real-enough stub of the createRenderTexture
 // roundtrip. Tests that mount LayoutRoomPreviewerView allocate a
@@ -672,7 +682,12 @@ export const TextureUtils = {
     createRenderTexture: (_w: number, _h: number) => ({
         destroy: (_options?: unknown) => undefined
     }),
-    generateImage: () => null
+    generateImage: () => null,
+    generateTexture: () => ({
+        destroy: (_options?: unknown) => undefined
+    }),
+    generateCanvas: () => null,
+    writeToTexture: (container: unknown, target: unknown) => target
 };
 export const NitroVersion = stubManager();
 

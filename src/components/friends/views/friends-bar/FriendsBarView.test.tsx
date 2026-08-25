@@ -9,6 +9,9 @@ import { FriendBarView } from './FriendsBarView';
 vi.mock('../../../../hooks', () => ({ useFriends: vi.fn() }));
 vi.mock('../../../../common/layout/LayoutAvatarImageView', () => ({ LayoutAvatarImageView: () => null }));
 vi.mock('../../../../common/layout/LayoutBadgeImageView', () => ({ LayoutBadgeImageView: () => null }));
+vi.mock('../../StaffChatFrankIconView', () => ({
+    StaffChatFrankIconView: (props: { className?: string; size: number }) => <div className={props.className} data-size={props.size} />
+}));
 
 const makeFriend = (id: number, name: string): MessengerFriend => ({ id, name, figure: '', online: true }) as MessengerFriend;
 
@@ -76,6 +79,10 @@ describe('AIR friend bar paging', () => {
         const { container } = render(<FriendBarView onlineFriends={[makeFriend(-1, 'Staff Chat')]} />);
 
         await waitFor(() => expect(container.querySelector('.friend-bar-staff-chat-frank')).not.toBeNull());
+        const frank = container.querySelector('.friend-bar-staff-chat-frank');
+
+        expect(frank).toHaveAttribute('data-size', '40');
+        expect(frank?.parentElement).toHaveClass('avatar', 'staff-chat');
 
         fireEvent.click(container.querySelector<HTMLButtonElement>('.friend-bar-tab'));
 

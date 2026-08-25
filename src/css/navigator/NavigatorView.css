@@ -1,47 +1,216 @@
 .nitro-navigator-air {
-    --navigator-air-orange: #f5a400;
-    --navigator-air-blue: #5bc6e9;
-    --navigator-air-row: #c9e9fa;
-    --navigator-air-surface: #e9e8df;
-    --navigator-air-line: #ffffff;
-    min-width: 360px;
-    background: var(--navigator-air-surface);
+    --navigator-air-orange: #fba800;
+    --navigator-air-row: #d6eeff;
+    --navigator-air-row-alt: #ffffff;
+    --navigator-air-surface: #e9e9e1;
+    --navigator-air-name: #0f557b;
+    position: relative;
+    box-sizing: border-box;
+    width: 425px;
+    min-width: 425px;
+    max-width: 425px;
+    height: var(--navigator-height, 628px);
+    min-height: 0;
+    max-height: calc(100dvh - 70px - env(safe-area-inset-bottom, 0px));
+    overflow: hidden;
+    zoom: min(1, calc((100vw - 16px) / 425), calc((100dvh - 70px - env(safe-area-inset-bottom, 0px)) / 628));
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    filter: drop-shadow(2.828px 2.828px 4px rgba(0, 0, 0, 0.349));
+    font-family: HabboAirUbuntu, UbuntuRegular, Ubuntu, sans-serif;
+    image-rendering: pixelated;
 }
 
-.nitro-navigator-air .nitro-card-content-shell,
-.nitro-navigator-air .content-area {
-    padding: 7px;
-    background: var(--navigator-air-surface);
+.nitro-navigator-air button,
+.nitro-navigator-air input,
+.nitro-navigator-air select {
+    appearance: none;
+    font-family: inherit;
+    -webkit-appearance: none;
 }
 
-.nitro-navigator-air .nitro-card-tabs,
-.nitro-navigator-air .nitro-card-tabs-shell {
-    padding-inline: 14px 5px !important;
+.nitro-navigator-air button::before,
+.nitro-navigator-air button::after {
+    content: none !important;
+    display: none !important;
 }
 
-.nitro-navigator-air .nitro-card-tab-item,
-.nitro-navigator-air .nav-item {
-    flex: 1 1 0;
-    min-width: 0;
-    padding-inline: 7px !important;
+.nitro-navigator-air.is-quick-links {
+    width: 578px;
+    min-width: 578px;
+    max-width: 578px;
+    zoom: min(1, calc((100vw - 16px) / 578), calc((100dvh - 70px - env(safe-area-inset-bottom, 0px)) / 628));
 }
 
-.nitro-navigator-air .nitro-card-tab-item:first-child,
-.nitro-navigator-air .nav-item:first-child,
-.nitro-navigator-air .nitro-card-tab-item:last-child,
-.nitro-navigator-air .nav-item:last-child {
-    flex: 0 0 34px;
-    min-width: 34px;
+.nitro-navigator-air__skin {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    border-style: solid !important;
+    border-color: transparent !important;
+    border-width: 33px 10px 10px !important;
+    border-radius: 0 !important;
+    border-image-source: url("@/assets/images/habbo-skin/slices/frame-ubuntu-3.png") !important;
+    border-image-slice: 33 10 10 10 fill !important;
+    border-image-width: 33px 10px 10px 10px !important;
+    border-image-repeat: stretch !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    image-rendering: pixelated;
+}
+
+.nitro-navigator-air__tab-shelf {
+    position: absolute;
+    top: 31px;
+    right: 10px;
+    left: 10px;
+    z-index: 1;
+    height: 33px;
+    pointer-events: none;
+    background: #ffffff;
+}
+
+.nitro-navigator-air__caption {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    left: 6px;
+    z-index: 4;
+    height: 27px;
+}
+
+.nitro-navigator-air__title {
+    display: block;
+    overflow: hidden;
+    color: #ffffff;
+    font-family: HabboAirUbuntu, UbuntuBold, Ubuntu, sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 15px;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    pointer-events: none;
+    padding: 3px 28px 0 8px;
+}
+
+.nitro-navigator-air__close {
+    position: absolute;
+    top: 2px;
+    right: 0;
+    z-index: 5;
+    width: 19px !important;
+    height: 20px !important;
+    margin: 0 !important;
     padding: 0 !important;
-    border: 0;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: url("@/assets/images/habbo-skin/slices/close-3-default.png") 0 0 / 19px 20px no-repeat !important;
+    box-shadow: none !important;
+    filter: none !important;
+    transform: none !important;
+    cursor: pointer;
+    image-rendering: pixelated;
+}
+
+.nitro-navigator-air__close:hover {
+    background-image: url("@/assets/images/habbo-skin/slices/close-3-hover.png") !important;
+}
+
+.nitro-navigator-air__close:active {
+    background-image: url("@/assets/images/habbo-skin/slices/close-3-pressed.png") !important;
+}
+
+.nitro-navigator-air__tabs {
+    position: absolute;
+    top: 35px;
+    right: 10px;
+    left: 38px;
+    z-index: 3;
+    display: flex;
+    box-sizing: border-box;
+    height: 32px;
+    align-items: flex-end;
+    overflow: visible;
     background: transparent;
-    box-shadow: none;
+    gap: 0;
+}
+
+.nitro-navigator-air.is-quick-links .nitro-navigator-air__tabs {
+    left: 118px;
+}
+
+.nitro-navigator-air__body {
+    position: absolute;
+    top: 61px;
+    right: 10px;
+    bottom: 10px;
+    left: 10px;
+    z-index: 2;
+    display: flex;
+    min-height: 0;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.nitro-navigator-air__tab {
+    box-sizing: border-box;
+    flex: 0 0 88px !important;
+    width: 88px !important;
+    min-width: 88px !important;
+    max-width: 88px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    max-height: 32px !important;
+    margin: 0 !important;
+    padding: 6px 8px 4px !important;
+    overflow: hidden;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background-color: transparent !important;
+    background-image:
+        url("@/assets/images/habbo-skin/slices/tab-3-default-left.png"),
+        url("@/assets/images/habbo-skin/slices/tab-3-default-mid.png"),
+        url("@/assets/images/habbo-skin/slices/tab-3-default-right.png") !important;
+    background-repeat: no-repeat, no-repeat, no-repeat !important;
+    background-position: left top, 9px top, right top !important;
+    background-size: 9px 32px, calc(100% - 18px) 32px, 9px 32px !important;
+    box-shadow: none !important;
+    color: #111 !important;
+    font-family: HabboAirUbuntu, UbuntuRegular, Ubuntu, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 22px !important;
+    text-align: center;
+    white-space: nowrap;
+    image-rendering: pixelated;
+    appearance: none;
+    cursor: pointer;
+}
+
+.nitro-navigator-air__tab:hover {
+    background-image:
+        url("@/assets/images/habbo-skin/slices/tab-3-hover-left.png"),
+        url("@/assets/images/habbo-skin/slices/tab-3-hover-mid.png"),
+        url("@/assets/images/habbo-skin/slices/tab-3-hover-right.png") !important;
+}
+
+.nitro-navigator-air__tab.is-active,
+.nitro-navigator-air__tab.is-active:hover {
+    background-image:
+        url("@/assets/images/habbo-skin/slices/tab-3-selected-left.png"),
+        url("@/assets/images/habbo-skin/slices/tab-3-selected-mid.png"),
+        url("@/assets/images/habbo-skin/slices/tab-3-selected-right.png") !important;
 }
 
 .nitro-navigator-air__quick-toggle,
 .nitro-navigator-air__icon-button,
 .nitro-navigator-air__room-info,
-.nitro-navigator-air__search-submit {
+.nitro-navigator-air__search-clear,
+.nitro-navigator-air__search-refresh {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -49,68 +218,125 @@
     border: 0;
     background: transparent;
     cursor: pointer;
+    padding: 0;
 }
 
 .nitro-navigator-air__quick-toggle {
-    width: 100%;
-    height: 28px;
+    position: absolute;
+    top: 40px;
+    left: 17px;
+    z-index: 5;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    padding: 0;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+.nitro-navigator-air__quick-toggle img {
+    display: block;
+    width: 18px;
+    height: 18px;
+    image-rendering: pixelated;
+}
+
+.nitro-navigator-air__quick-toggle img,
+.nitro-navigator-air__icon-button img {
+    image-rendering: pixelated;
 }
 
 .nitro-navigator-air__workspace {
-    gap: 10px;
+    display: flex;
+    flex: 1 1 0;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    overflow: visible;
 }
 
-.nitro-navigator-air__quick-links {
+.nitro-navigator-air__quick-links,
+.nitro-navigator-search-saves-result {
+    box-sizing: border-box;
     width: 141px;
     min-width: 141px;
-    border-radius: 7px;
-    background: #fff;
-}
-
-.nitro-navigator-search-saves-result {
-    width: 141px;
-    background: #fff;
-    border-radius: 7px;
+    height: 100%;
     overflow: hidden;
+    background: #fff;
 }
 
 .nitro-navigator-search-saves-result__header {
-    min-height: 23px;
-    padding: 3px 7px;
-    border-radius: 7px 7px 0 0;
+    box-sizing: border-box;
+    width: 136px;
+    height: 18px;
+    min-height: 18px;
+    padding: 0 0 0 3px;
     background: var(--navigator-air-orange);
+    color: #fff;
+    font-family: HabboAirUbuntu, UbuntuBold, Ubuntu, sans-serif;
+    font-size: 12px;
     font-weight: 700;
+    line-height: 18px;
+}
+
+.nitro-navigator-search-saves-result__header img {
+    width: 18px;
+    height: 18px;
+    image-rendering: pixelated;
 }
 
 .nitro-navigator-search-saves-result__list {
-    padding: 4px 5px;
+    box-sizing: border-box;
+    width: 136px;
+    padding: 7px 0 0 5px;
+    overflow: auto;
     background: #fff;
 }
 
 .saved-search-row {
-    width: 100%;
-    min-height: 20px;
-    gap: 2px;
+    display: flex;
+    box-sizing: border-box;
+    width: 132px;
+    height: 17px;
+    min-height: 17px;
+    margin: 0 0 2px;
+    align-items: center;
 }
 
 .saved-search-row__open {
     display: flex;
     flex: 1;
     min-width: 0;
+    height: 17px;
     align-items: center;
-    gap: 4px;
-    padding: 1px 0;
+    padding: 0;
     border: 0;
     background: transparent;
     cursor: pointer;
 }
 
+.saved-search-row__label {
+    overflow: hidden;
+    color: #111;
+    font-family: HabboAirUbuntu, UbuntuRegular, Ubuntu, sans-serif;
+    font-size: 11px;
+    line-height: 16px;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .saved-search-row__delete {
-    flex: 0 0 auto;
+    flex: 0 0 16px;
+    width: 16px;
+    height: 16px;
     opacity: 0;
     border: 0;
-    background-color: transparent;
+    background: url("@/assets/images/navigator/air/icon-ql-remove.png") center / 16px 16px no-repeat;
     cursor: pointer;
+    image-rendering: pixelated;
 }
 
 .saved-search-row:hover .saved-search-row__delete,
@@ -119,164 +345,593 @@
 }
 
 .nitro-navigator-air__main {
-    gap: 7px;
+    display: flex;
+    position: relative;
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 0;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .nitro-navigator-air__search {
+    display: flex;
+    box-sizing: border-box;
+    flex: 0 0 36px;
+    width: 408px;
+    max-width: 408px;
+    height: 36px;
+    min-height: 36px;
     align-items: center;
-    min-height: 25px;
+    padding: 6px 0 0 4px;
+    overflow: visible;
+    gap: 13px;
 }
 
 .nitro-navigator-air__filter {
-    flex: 0 0 117px;
-    width: 117px;
-    height: 25px;
-    min-height: 25px;
-    padding-block: 1px;
-    border: 1px solid #000;
-    border-radius: 5px;
-    background-color: #fff;
+    position: relative;
+    flex: 0 0 116px;
+    width: 116px;
+    height: 24px;
+    min-height: 24px;
+    z-index: 6;
+}
+
+.nitro-navigator-air__filter-button {
+    display: flex;
+    box-sizing: border-box;
+    width: 116px;
+    height: 24px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 4px 4px 6px;
+    overflow: hidden;
+    border-style: solid !important;
+    border-color: transparent !important;
+    border-width: 0 !important;
+    border-radius: 0 !important;
+    border-image-source: url("@/assets/images/habbo-skin/slices/border-4.png") !important;
+    border-image-slice: 6 fill !important;
+    border-image-width: 6px !important;
+    border-image-repeat: stretch !important;
+    background: transparent !important;
+    box-shadow: none !important;
     color: #111;
-    font-size: 12px;
+    font-family: HabboAirUbuntu, UbuntuRegular, Ubuntu, sans-serif;
+    font-size: 11px;
+    line-height: 12px;
+    text-align: left;
+    white-space: nowrap;
+    appearance: none;
+    cursor: pointer;
+    image-rendering: pixelated;
+}
+
+.nitro-navigator-air__filter-button span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nitro-navigator-air__filter-button img {
+    flex: 0 0 11px;
+    width: 11px;
+    height: 7px;
+    margin-left: 4px;
+    image-rendering: pixelated;
+    pointer-events: none;
+}
+
+.nitro-navigator-air__filter-list {
+    position: absolute;
+    top: 23px;
+    left: 0;
+    z-index: 8;
+    box-sizing: border-box;
+    width: 116px;
+    margin: 0;
+    padding: 2px 0;
+    list-style: none;
+    border-style: solid !important;
+    border-color: transparent !important;
+    border-width: 6px !important;
+    border-image-source: url("@/assets/images/habbo-skin/slices/dropmenu-3.png") !important;
+    border-image-slice: 6 fill !important;
+    border-image-width: 6px !important;
+    border-image-repeat: stretch !important;
+    background: transparent;
+    image-rendering: pixelated;
+}
+
+.nitro-navigator-air__filter-list button {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    height: 16px;
+    padding: 0 6px;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: #111;
+    font-size: 11px;
+    line-height: 16px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.nitro-navigator-air__filter-list button:hover,
+.nitro-navigator-air__filter-list button.is-selected {
+    background: #d6eeff !important;
 }
 
 .nitro-navigator-air__search-field {
     position: relative;
-    flex: 1;
+    box-sizing: border-box;
+    flex: 0 0 235px;
+    width: 235px;
     min-width: 0;
+    height: 24px;
+    overflow: hidden;
+    border-style: solid !important;
+    border-color: transparent !important;
+    border-width: 0 !important;
+    border-radius: 0 !important;
+    border-image-source: url("@/assets/images/habbo-skin/slices/border-4.png") !important;
+    border-image-slice: 6 fill !important;
+    border-image-width: 6px !important;
+    border-image-repeat: stretch !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    image-rendering: pixelated;
 }
 
 .nitro-navigator-air__search-input {
-    height: 25px;
-    min-height: 25px;
-    padding: 2px 30px 2px 8px;
-    border: 1px solid #b7b7b0;
-    border-radius: 12px;
-    background: #fff;
-    font-size: 12px;
-    font-style: italic;
-}
-
-.nitro-navigator-air__search-submit {
-    position: absolute;
-    top: 1px;
-    right: 3px;
-    width: 24px;
-    height: 23px;
-    color: #202020;
-}
-
-.nitro-navigator-air__main > div:nth-child(2) {
-    padding-right: 2px;
-}
-
-.nitro-navigator-air__main .nitro-card-panel {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    padding: 4px 18px 4px 6px;
     border: 0 !important;
     border-radius: 0 !important;
     background: transparent !important;
+    box-shadow: none !important;
+    color: #000;
+    font-family: HabboAirUbuntu, UbuntuRegular, Ubuntu, sans-serif;
+    font-size: 11px;
+    font-style: normal;
+    line-height: 16px;
+    outline: 0;
 }
 
-.nitro-navigator-air__main .nitro-card-panel > :first-child {
-    min-height: 24px;
-    margin-bottom: 3px;
-    padding: 2px 5px !important;
+.nitro-navigator-air__search-field.is-placeholder .nitro-navigator-air__search-input {
+    color: #9f9f9f;
+    font-style: italic;
+}
+
+.nitro-navigator-air__search-clear {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 20px;
+    height: 20px;
+}
+
+.nitro-navigator-air__search-clear img,
+.nitro-navigator-air__search-refresh img {
+    display: block;
+    width: 16px;
+    height: 16px;
+    image-rendering: pixelated;
+}
+
+.nitro-navigator-air__search-refresh {
+    flex: 0 0 25px;
+    width: 25px;
+    height: 25px;
+}
+
+.nitro-navigator-air__results {
+    position: relative;
+    flex: 1 1 0;
+    min-height: 0;
+    width: 100%;
+    max-width: 100%;
+    overflow: auto;
+}
+
+.nitro-navigator-air__busy-mask {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background: rgba(236, 234, 224, 0.435);
+    pointer-events: none;
+}
+
+.nitro-navigator-air__empty {
+    width: 286px;
+    margin: 0 auto;
+    color: #111;
+    font-family: HabboAirUbuntu, UbuntuBold, Ubuntu, sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 21px;
+    text-align: center;
+}
+
+.nitro-navigator-air__category {
+    width: 396px;
+    max-width: 396px;
+    margin: 0 0 0 2px;
+}
+
+.nitro-navigator-air__category-header {
+    display: flex;
+    box-sizing: border-box;
+    width: 396px;
+    max-width: 396px;
+    height: 30px;
+    min-height: 30px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 5px 0 0;
     background: #fff;
-    color: #126d9b;
 }
 
 .nitro-navigator-air__category-toggle {
+    position: relative;
+    display: flex;
     min-width: 0;
+    max-width: 270px;
+    height: 30px;
+    align-items: center;
+    padding: 0 0 0 20px;
     border: 0;
     background: transparent;
-    color: #126d9b;
+    color: var(--navigator-air-name);
     cursor: pointer;
+    font-family: HabboAirUbuntu, UbuntuRegular, Ubuntu, sans-serif;
+    font-size: 14px;
     text-align: left;
 }
 
-.nitro-navigator-air__category-toggle .fa-icon {
-    color: var(--navigator-air-blue) !important;
+.nitro-navigator-air__category-toggle img {
+    position: absolute;
+    margin-left: -16px;
+    width: 11px;
+    height: 11px;
+    image-rendering: pixelated;
+}
+
+.nitro-navigator-air__category-toggle span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nitro-navigator-air__category-controls {
+    display: flex;
+    height: 18px;
+    align-items: center;
+    gap: 5px;
 }
 
 .nitro-navigator-air__icon-button {
     width: 18px;
     height: 18px;
-    padding: 0;
-    color: var(--navigator-air-blue);
 }
 
-.nitro-navigator-air .navigator-grid {
-    gap: 2px !important;
-    padding: 0 4px 3px;
+.nitro-navigator-air__icon-button img {
+    display: block;
+    image-rendering: pixelated;
 }
 
-.nitro-navigator-air .navigator-item:not(.nitro-card-row) {
-    min-height: 20px;
-    padding: 1px 5px !important;
+.nitro-navigator-air__rows {
+    display: flex;
+    width: 387px;
+    max-width: 387px;
+    margin: 0 0 0 4px;
+    flex-direction: column;
+    gap: 0;
+}
+
+.nitro-navigator-air__tiles {
+    display: flex;
+    width: 387px;
+    max-width: 387px;
+    margin: 4px 0 0 4px;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.nitro-navigator-air__usercount {
+    display: flex;
+    box-sizing: border-box;
+    flex: 0 0 40px;
+    width: 40px;
+    min-width: 40px;
+    max-width: 40px;
+    height: 18px;
+    align-items: center;
+    padding: 1px 2px 1px 3px;
+    overflow: hidden;
     border: 0;
-    border-radius: 2px;
+    border-radius: 0;
+    gap: 1px;
+    color: #fff !important;
+    font-family: HabboAirUbuntu, UbuntuBold, Ubuntu, sans-serif;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    line-height: 14px !important;
+    image-rendering: pixelated;
+}
+
+.nitro-navigator-air__usercount img {
+    flex: 0 0 13px;
+    width: 13px;
+    height: 14px;
+    object-fit: contain;
+    image-rendering: pixelated;
+}
+
+.nitro-navigator-air__usercount span {
+    color: #fff !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    line-height: 14px !important;
+}
+
+.nitro-navigator-air__row {
+    position: relative;
+    box-sizing: border-box;
+    flex: 0 0 20px;
+    width: 383px;
+    min-width: 383px;
+    max-width: 383px;
+    height: 20px;
+    min-height: 20px;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: 0;
     background: var(--navigator-air-row);
     color: #1a1a1a;
+    cursor: pointer;
 }
 
-.nitro-navigator-air .navigator-item:not(.nitro-card-row):hover,
-.nitro-navigator-air .navigator-item:not(.nitro-card-row):focus-visible {
-    background: #a9ddf7;
-    outline: 1px solid #5bb8dd;
+.nitro-navigator-air__row.is-stripe {
+    background: var(--navigator-air-row-alt);
 }
 
-.nitro-navigator-air .navigator-item .bg-primary,
-.nitro-navigator-air .navigator-item .bg-success,
-.nitro-navigator-air .navigator-item .bg-warning,
-.nitro-navigator-air .navigator-item .bg-danger {
-    min-width: 36px;
-    padding: 3px 5px !important;
-    border-radius: 4px;
-    background: #c8c8c1 !important;
+.nitro-navigator-air__row .nitro-navigator-air__usercount {
+    position: absolute;
+    top: 1px;
+    left: 0;
+}
+
+.nitro-navigator-air__row-name {
+    position: absolute;
+    top: 1px;
+    left: 44px;
+    width: 282px;
+    height: 16px;
+    overflow: hidden;
+    font-family: HabboAirUbuntu, UbuntuRegular, Ubuntu, sans-serif;
+    font-size: 11px;
+    line-height: 16px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nitro-navigator-air__row-door {
+    position: absolute;
+    top: 2px;
+    left: 324px;
+}
+
+.nitro-navigator-air__row-group {
+    position: absolute;
+    top: 2px;
+    left: 341px;
+}
+
+.nitro-navigator-air__row .nitro-navigator-air__room-info {
+    position: absolute;
+    top: 0;
+    left: 359px;
+}
+
+.nitro-navigator-air__tile {
+    position: relative;
+    box-sizing: border-box;
+    width: 122px;
+    height: 146px;
+    min-height: 146px;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    background: transparent;
+    color: #1a1a1a;
+    cursor: pointer;
+}
+
+.nitro-navigator-air__tile.is-stripe {
+    background: rgba(214, 238, 255, 0.35);
+}
+
+.nitro-navigator-air__tile-thumb {
+    position: absolute !important;
+    top: 7px;
+    left: 8px;
+    width: 106px !important;
+    height: 106px !important;
+    border: 1px solid #111 !important;
+    border-radius: 0 !important;
+    background-color: #c4c4bc;
+    background-image: url("@/assets/images/navigator/air/default-room.png");
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.nitro-navigator-air__tile-thumb .nitro-navigator-air__usercount {
+    position: absolute;
+    top: 93px;
+    left: 32px;
+}
+
+.nitro-navigator-air__tile-door {
+    position: absolute;
+    top: 89px;
+    left: 84px;
+}
+
+.nitro-navigator-air__tile-badge {
+    position: absolute !important;
+    top: -3px;
+    left: 4px;
+    z-index: 2;
+    width: 50px;
+    height: 61px;
+}
+
+.nitro-navigator-air__tile-name {
+    position: absolute;
+    top: 116px;
+    left: 0;
+    display: flex;
+    width: 122px;
+    height: 30px;
+    padding: 0 18px 0 2px;
+    font-family: HabboAirUbuntu, UbuntuBold, Ubuntu, sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 12px;
+}
+
+.nitro-navigator-air__tile-name span {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.nitro-navigator-air__tile .nitro-navigator-air__room-info {
+    position: absolute;
+    top: 120px;
+    left: 98px;
 }
 
 .nitro-navigator-air__room-info {
     width: 18px;
     height: 18px;
-    padding: 0;
+    background-image: url("@/assets/images/navigator/air/show-room-info.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    image-rendering: pixelated;
 }
 
-.nitro-navigator-air__room-popover {
+.nitro-navigator-air__door {
+    display: block;
+    width: 13px;
+    height: 16px;
+    background-repeat: no-repeat;
+    background-position: center;
+    image-rendering: pixelated;
+}
+
+.nitro-navigator-air__door--doorbell {
+    background-image: url("@/assets/images/navigator/air/doormode-doorbell.png");
+}
+
+.nitro-navigator-air__door--password {
+    background-image: url("@/assets/images/navigator/air/doormode-password.png");
+}
+
+.nitro-navigator-air__door--invisible {
+    background-image: url("@/assets/images/navigator/air/doormode-invisible.png");
+}
+
+.nitro-navigator-air__group {
+    display: block;
+    width: 13px;
+    height: 11px;
+    background: url("@/assets/images/navigator/air/icon-group.png") center / contain no-repeat;
+    image-rendering: pixelated;
+}
+
+.nitro-navigator-air__room-bubble {
+    position: fixed;
+    z-index: 1070;
     box-sizing: border-box;
-    overflow: hidden;
-    border-color: #1f1f1b !important;
-    border-radius: 8px !important;
-    background: #e8e8df !important;
+    width: 374px;
+    min-height: 220px;
+    max-width: calc(100vw - 16px);
+    padding: 8px 8px 8px 11px;
+    border-style: solid;
+    border-width: 7px;
+    border-image-source: url("@/assets/images/habbo-skin/slices/bubble-7.png");
+    border-image-slice: 7 fill;
+    border-image-width: 7px;
+    border-image-repeat: stretch;
+    background: transparent;
     color: #111;
+    font-family: HabboAirUbuntu, UbuntuRegular, Ubuntu, sans-serif;
+    font-size: 12px;
+    filter: drop-shadow(4px 4px 4px rgba(0, 0, 0, 0.349));
+    image-rendering: pixelated;
 }
 
-.nitro-navigator-air__room-popover-body {
-    width: 100%;
-    background: #e8e8df !important;
+.nitro-navigator-air__room-bubble::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: -11px;
+    width: 11px;
+    height: 18px;
+    margin-top: -9px;
+    background: url("@/assets/images/habbo-skin/slices/bubble-pointer-left.png") center / 11px 18px no-repeat;
+    image-rendering: pixelated;
+}
+
+.nitro-navigator-air__room-bubble-content {
+    display: flex;
+    width: 345px;
+    max-width: 100%;
+    flex-direction: column;
+    gap: 3px;
 }
 
 .nitro-navigator-air__room-popover-header {
     display: grid;
     box-sizing: border-box;
     grid-template-columns: 112px minmax(0, 219px);
-    width: calc(100% - 14px);
+    width: 345px;
+    max-width: 100%;
     height: 125px;
-    margin: 6px 7px 3px;
     padding: 6px 7px 7px;
-    gap: 0;
-    border-radius: 7px;
     background: #fff;
 }
 
 .nitro-navigator-air__room-popover-thumbnail {
-    width: 112px !important;
-    height: 112px !important;
-    align-self: start;
-    border-color: #1f1f1b !important;
+    position: relative;
+    width: 110px !important;
+    height: 110px !important;
+    border: 1px solid #111 !important;
     border-radius: 0 !important;
-    background-color: #b9b9b1;
-    background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAG4AAABuCAIAAABJObGsAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyRpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoTWFjaW50b3NoKSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDpCNkVFQkNGRTZDOUIxMUU0QUFDNEQ0QzdCMTI0MzA5RiIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDpCNkVFQkNGRjZDOUIxMUU0QUFDNEQ0QzdCMTI0MzA5RiI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkI2RUVCQ0ZDNkM5QjExRTRBQUM0RDRDN0IxMjQzMDlGIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOkI2RUVCQ0ZENkM5QjExRTRBQUM0RDRDN0IxMjQzMDlGIi8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+7dqZZwAAAgVJREFUeNrs3E1KA0EQxfEodSsXOYLoMV0ooheYRe5loGEI0aiZdFW96v6/RcgEAj0/aj7yBnL3+fGyIz1yDwGUUEJJoIQSSigJlFBCSaCEEkooCZRQQkmghBJKKAmUUEJJoISyQqziot9e39ubp+dHKG9C3O8fluVwfG2bIqBWDvH0w7YpAmpFEQVBrTSiFKgNgCgCasMgpoPaYIiJoDYkYgqoDYwYDGrDI4aB2iSIAaA2FaIrqE2I6ARq0yJ2B7XJEc9Al+WgNZXlEBUvOxsQ2yAM4G7piMdz09qKX/XF1v4ORbntcD5CbDjBn42w1ERbPOK2/KjWNkVAb53KgB34U0oEVLpFv0onHdQGQBQBtWEQ00FtMMREUNNxdG3RA0DnatFdQS3XMaVFdwK1lGN5J9Cid1+GTYXoCmoTIjqB2rSIl0AVKQsVketS5Vr0iohyU1kaUeWJ48yI3ShB7EOp9oAlBbEP5XrVkwUNQOw8lYKgYYgdKNvKTtsdEdBgxG6XHSnQFMTON0PpoImILrfoKaDpiI4/HMNARRDd6wxXUClEd0onUEHEIMqOoLKIoZQ3goojJlBuAC2BmEb5T9BCiMmUv4PWQpSgvARaC1GI8jtoLUQ5yqKCa/jLJiihhJJACSWUUBIooYSSQAkllFASKKGEkkAJJZRQEiihhJJA6ZkvAQYAmSLU4gMTN8cAAAAASUVORK5CYII=") !important;
+    background-color: #000;
+    background-image: url("@/assets/images/navigator/air/default-room.png") !important;
     background-position: center !important;
     background-repeat: no-repeat !important;
+}
+
+.nitro-navigator-air__room-badge {
+    position: absolute !important;
+    top: 1px;
+    left: 1px;
+    z-index: 2;
+    width: 48px;
+    height: 48px;
 }
 
 .nitro-navigator-air__room-popover-copy {
@@ -286,10 +941,13 @@
 }
 
 .nitro-navigator-air__room-popover-title {
-    min-height: 33px;
+    min-height: 16px;
     max-height: 33px;
-    overflow-wrap: anywhere;
+    overflow: hidden;
+    font-family: HabboAirUbuntu, UbuntuBold, Ubuntu, sans-serif;
     font-size: 12px;
+    font-weight: 700;
+    line-height: 16px;
 }
 
 .nitro-navigator-air__room-popover-description {
@@ -297,28 +955,43 @@
     overflow: hidden;
     color: #333;
     font-size: 11px;
-}
-
-.nitro-navigator-air__room-popover-content {
-    width: calc(100% - 14px);
-    margin: 0 7px;
-    padding: 0 0 8px;
+    line-height: 13px;
 }
 
 .nitro-navigator-air__room-popover-owner-row {
+    display: flex;
     box-sizing: border-box;
-    width: 100%;
+    width: 344px;
+    max-width: 100%;
     height: 30px;
+    align-items: center;
+    justify-content: space-between;
     padding: 3px 5px 0;
+}
+
+.nitro-navigator-air__room-owner,
+.nitro-navigator-air__room-group {
+    display: inline-flex;
+    max-width: 170px;
+    align-items: center;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    background: transparent;
+    color: #111;
+    cursor: pointer;
+    font-family: HabboAirUbuntu, UbuntuBold, Ubuntu, sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    text-decoration: underline;
 }
 
 .nitro-navigator-air__room-popover-details {
     display: grid;
     grid-template-columns: 166px 170px;
-    width: 100%;
+    width: 344px;
+    max-width: 100%;
     min-height: 80px;
-    gap: 0;
-    padding-top: 3px;
 }
 
 .nitro-navigator-air__room-popover-properties {
@@ -326,25 +999,25 @@
     grid-template-columns: 70px 85px;
     grid-auto-rows: 20px;
     align-content: start;
-    gap: 0;
     font-size: 11px;
+}
+
+.nitro-navigator-air__room-popover-properties .is-label {
+    font-weight: 700;
 }
 
 .nitro-navigator-air__room-popover-actions {
     display: flex;
     min-width: 0;
     flex-direction: column;
-    gap: 0;
     padding-left: 12px;
 }
 
 .nitro-navigator-air__room-popover-actions button {
     display: flex;
-    min-width: 0;
-    align-items: center;
     width: 170px;
     height: 20px;
-    gap: 0;
+    align-items: center;
     padding: 0;
     border: 0;
     background: transparent;
@@ -361,31 +1034,31 @@
     flex: 0 0 20px;
     background-position: center;
     background-repeat: no-repeat;
+    image-rendering: pixelated;
 }
 
 .nitro-navigator-air__room-popover-actions .icon-navigator-favorite-room {
-    background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAAMCAYAAAC5tzfZAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAGZJREFUeNqcjwEKgDAIRf1dKe9/AjuT4ZjlVtrowWD6fYigGw1/VH0PVUSuhJk9y/ot0IjVVb9Jb8yCY/PoEq0CgDb6gUls9uoWm/d6z26Lt/S5gVTMhFT8EgYxvIeAQnSOOTwFGABauKtzQq3e1AAAAABJRU5ErkJggg==");
+    background-image: url("@/assets/images/navigator/air/icon-fav-no.png");
 }
 
 .nitro-navigator-air__room-popover-actions .icon-navigator-favorite-room.active {
-    background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAAMCAYAAAC5tzfZAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAHtJREFUeNpiZECA/0hsRnziMMn/j+xNGWRtfCEyrXUwOaziTOgSIADi4xNnYkADj49sRlaAIY7iBGKB3MHTDEwMZACQJhOQbmJtAamHhZ4xEJ/B50yYBiA+ixwfODUia0CPRKwa0TXgAsbQVADDxugKGPFohAEMGwACDAAhTzTZ2PdK1gAAAABJRU5ErkJggg==");
+    background-image: url("@/assets/images/navigator/air/icon-fav-yes.png");
 }
 
 .nitro-navigator-air__room-popover-actions .icon-navigator-my-room {
-    background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAAMCAYAAAC5tzfZAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAGBJREFUeNqckAEKwCAMA5t9yf//oHtTR8cCZZpOdiBWzVHVTBPq4BDBcPdWtBIMzgnXrcRg5UsMhRKnDjvi6Dolj5A5w+t6dwGgbtY9rL58i1/S9K5mDAaxEBUni0uAAQDznJ/XPG0uPwAAAABJRU5ErkJggg==");
+    background-image: url("@/assets/images/navigator/air/icon-home-no.png");
 }
 
 .nitro-navigator-air__room-popover-actions .icon-navigator-my-room.active {
-    background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAAMCAYAAAC5tzfZAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAJpJREFUeNpiYMAN/uOSYMKh8P//8/54NTIgKfwPoxscBeF8vJoul9nDNYDYxGhE0QBi49LIguyHxqJDDMGmegw6kQJgQQitBxYHyTMabgRpZGSEajIG4jNAk+EakMGV5R8YdLsOgpgmQHyWEc15YAbIZBio77MD00BbwBS2IIcDkDOJjSeSgTE0hHBhY5hCRiwacYGzMAZAgAEAx7Zd2qIkH5wAAAAASUVORK5CYII=");
+    background-image: url("@/assets/images/navigator/air/icon-home-yes.png");
 }
 
 .nitro-navigator-air__room-popover-actions .icon-navigator-room-settings {
-    background-image: url("@/assets/images/purse-swf/icons/2133_room_settings_icon_png$6c0c9a02a551e7f3f6d546d380b06476-787053618.png");
-    background-size: 16px 16px;
+    background-image: url("@/assets/images/navigator/air/room-settings.png");
 }
 
 .nitro-navigator-air__room-popover-actions .icon-navigator-room-report {
-    background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABEAAAAQCAYAAADwMZRfAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAACQSURBVHja1JNdDsMgDIM/T7sRvf8J4EzuQ0lFWdR221MtRRAs8oODbPMv3qMjCSCLqsk3gG0BvCayANRaibXvPVrwe4axHUkFqLaRRHCttWOmUoLfKrS9W6/E3hyfofPY/mjnJzwkiKSQnWQUlM5JgqVfqmdzcxWkdcWW6YxvgqSXHqZOpsjtXzwqcuctAusA5ShcwSgqDcoAAAAASUVORK5CYII=");
+    background-image: url("@/assets/images/navigator/air/report-room.png");
 }
 
 .nitro-navigator-air__room-popover-actions button:hover span,
@@ -394,20 +1067,31 @@
 }
 
 .nitro-navigator-air__room-popover-tags {
-    margin-top: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.nitro-navigator-air__tag {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #0f557b;
+    cursor: pointer;
+    font-size: 11px;
+    text-decoration: underline;
 }
 
 .nitro-navigator-air__room-popover-event {
     display: grid;
     box-sizing: border-box;
     grid-template-columns: 48px minmax(0, 1fr);
-    width: calc(100% - 14px);
+    width: 331px;
+    max-width: 100%;
     min-height: 55px;
-    margin: 3px 7px 0;
     overflow: hidden;
     border: 1px solid #123f53;
-    border-radius: 3px;
-    background: rgba(15, 26, 112, .7);
+    background: rgba(15, 26, 112, 0.7);
     color: #fff;
 }
 
@@ -416,8 +1100,8 @@
     height: 38px;
     align-self: center;
     justify-self: center;
-    color: transparent;
-    background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACYAAAAmCAYAAACoPemuAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyRpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoTWFjaW50b3NoKSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDo2QUNCQ0NCQjZDRkIxMUU0QUFDNEQ0QzdCMTI0MzA5RiIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDo2QUNCQ0NCQzZDRkIxMUU0QUFDNEQ0QzdCMTI0MzA5RiI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOjZBQ0JDQ0I5NkNGQjExRTRBQUM0RDRDN0IxMjQzMDlGIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjZBQ0JDQ0JBNkNGQjExRTRBQUM0RDRDN0IxMjQzMDlGIi8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+7KB5nAAAARtJREFUeNrsmM0NwjAMhZOqCzAMEmIijmzQZAOOXDhxYRKExDCMYAQ0JaVx+pO0fceeFKmNpfaTY1uOFRGpictQv8zU788BkwVyCaBJgEsCjQKUguqFk4SKwklDsXAIUEE4/ab7qvUiIO0eCm/TKHk1DL7HSGFI+x5jvaW1ZlcOO+c15zGKgR0f+87+bnX4BGminfttOdS/19u9ed5u1tntvypAgr5znC+wChCsKhSo/mBjNTgr+zIp1d6pFxQpJq6OcXJ1KsWe5DGuQOayJx2lRIG1gLFvy7ryV2DBbwYd5elyntXOZkaspa47j+DKYedabPhGUYEkgQ211rCXEWmv2VDww194oUcE0EMV6DEU9OAOftS5+HD4KcAAWjWhw4sGCFEAAAAASUVORK5CYII=") center / contain no-repeat;
+    background: url("@/assets/images/navigator/air/event-icon.png") center / contain no-repeat;
+    image-rendering: pixelated;
 }
 
 .nitro-navigator-air__room-popover-event-copy {
@@ -429,7 +1113,7 @@
 .nitro-navigator-air__room-popover-event-description {
     display: block;
     overflow: hidden;
-    color: #fff !important;
+    color: #fff;
     font-size: 11px;
     line-height: 16px;
 }
@@ -445,35 +1129,104 @@
 }
 
 .nitro-navigator-air__actions {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px;
-    padding: 7px 4px 0;
-    border-top: 0;
+    position: relative;
+    box-sizing: border-box;
+    flex: 0 0 60px;
+    width: 394px;
+    min-width: 394px;
+    max-width: 394px;
+    height: 60px;
+    min-height: 60px;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
 }
 
 .nitro-navigator-air__action {
-    position: relative;
-    min-height: 60px;
-    overflow: hidden;
-    padding: 0 12px 0 78px;
-    border: 1px solid #111;
-    border-radius: 7px;
-    background-position: left center;
-    background-repeat: no-repeat;
-    background-size: 100% 100%;
-    color: #fff;
+    position: absolute;
+    top: 0;
+    left: 0;
+    box-sizing: border-box;
+    width: 189px;
+    min-width: 189px;
+    max-width: 189px;
+    height: 60px;
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: #ffffff;
     cursor: pointer;
+    font-family: HabboAirUbuntu, UbuntuBold, Ubuntu, sans-serif;
+    font-size: 12px;
     font-weight: 700;
-    text-shadow: 1px 1px rgba(0, 0, 0, .55);
+    text-align: center;
+    image-rendering: pixelated;
 }
 
-.nitro-navigator-air__action:hover {
-    filter: brightness(1.07);
+.nitro-navigator-air__action--create {
+    left: 0;
 }
 
-.nitro-navigator-air__action:active {
-    filter: brightness(.92);
+.nitro-navigator-air__action--random,
+.nitro-navigator-air__action--promote {
+    left: 205px;
+}
+
+.nitro-navigator-air__action img {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    z-index: 1;
+    display: block;
+    width: 187px;
+    height: 59px;
+    pointer-events: none;
+    image-rendering: pixelated;
+}
+
+.nitro-navigator-air__action span {
+    position: absolute;
+    top: 22px;
+    left: 60px;
+    z-index: 2;
+    width: 125px;
+    height: 17px;
+    overflow: hidden;
+    color: #ffffff !important;
+    font-family: HabboAirUbuntu, UbuntuBold, Ubuntu, sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 17px;
+    text-align: center;
+    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.247);
+    pointer-events: none;
+}
+
+.nitro-navigator-air__action-border {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    box-sizing: border-box;
+    pointer-events: none;
+    border-style: solid;
+    border-color: transparent;
+    border-width: 6px;
+    border-radius: 0;
+    border-image-source: url("@/assets/images/habbo-skin/slices/border-4.png");
+    border-image-slice: 6;
+    border-image-width: 6px;
+    border-image-repeat: stretch;
+    image-rendering: pixelated;
+}
+
+.nitro-navigator-air__action--random .nitro-navigator-air__action-border,
+.nitro-navigator-air__action--promote .nitro-navigator-air__action-border {
+    border-width: 5px;
+    border-image-source: url("@/assets/images/habbo-skin/slices/border-5.png");
+    border-image-slice: 5;
+    border-image-width: 5px;
 }
 
 .nitro-navigator-air__action:focus-visible,
@@ -498,7 +1251,6 @@
 .nitro-navigator-air__models {
     padding: 7px;
     border: 1px solid #b7b7af;
-    border-radius: 5px;
     background: #f4f3ed;
 }
 
@@ -520,79 +1272,19 @@
     gap: 10px;
 }
 
-@media (max-width: 520px) {
-    .nitro-navigator-air {
-        min-width: min(340px, calc(100vw - 16px));
-    }
-
-    .nitro-navigator-air__workspace {
-        position: relative;
-    }
-
-    .nitro-navigator-air__quick-links {
-        position: absolute;
-        inset: 0 auto 0 0;
-        z-index: 5;
-        width: min(180px, calc(100% - 48px));
-        box-shadow: 3px 2px 5px rgba(0, 0, 0, .3);
-    }
-
-    .nitro-navigator-search-saves-result {
-        width: 100%;
-    }
-
-    .nitro-navigator-air__filter {
-        flex-basis: 96px;
-        width: 96px;
-    }
-
-    .nitro-navigator-air__actions {
-        gap: 7px;
-    }
-
-    .nitro-navigator-air__action {
-        min-height: 54px;
-        padding-left: 60px;
-        font-size: 11px;
-    }
-
-    .nitro-navigator-air__creator-grid {
-        display: flex;
-        flex-direction: column;
-        overflow: auto;
-    }
-
-    .nitro-navigator-air__creator-details,
-    .nitro-navigator-air__models {
-        overflow: visible;
-    }
+.nitro-navigator-search-save {
+    display: inline-flex;
+    width: 18px;
+    height: 18px;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
 }
 
-@media (max-width: 380px) {
-    .nitro-navigator-air__room-popover-header {
-        grid-template-columns: 92px minmax(0, 1fr);
-        height: 105px;
-    }
-
-    .nitro-navigator-air__room-popover-thumbnail {
-        width: 92px !important;
-        height: 92px !important;
-    }
-
-    .nitro-navigator-air__room-popover-copy {
-        height: 92px;
-    }
-
-    .nitro-navigator-air__room-popover-details {
-        grid-template-columns: 1fr;
-        gap: 8px;
-    }
-
-    .nitro-navigator-air__room-popover-actions {
-        padding-left: 0;
-    }
-
-    .nitro-navigator-air__room-popover-actions button {
-        width: 100%;
-    }
+.nitro-navigator-search-save img {
+    width: 18px;
+    height: 18px;
+    image-rendering: pixelated;
 }
+
+

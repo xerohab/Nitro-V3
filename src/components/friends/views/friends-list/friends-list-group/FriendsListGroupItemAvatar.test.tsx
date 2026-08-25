@@ -20,6 +20,10 @@ vi.mock('../../../../../common/layout/avatarImageCrop', () => ({
     cropTransparentImageUrl: vi.fn(async () => 'data:image/png;base64,cropped')
 }));
 
+vi.mock('../../../StaffChatFrankIconView', () => ({
+    StaffChatFrankIconView: (props: { size: number }) => <div className="staff-chat-frank-icon" data-size={props.size} />
+}));
+
 describe('Friends list avatar head', () => {
     beforeEach(() => {
         vi.mocked(OpenMessengerChat).mockClear();
@@ -60,6 +64,22 @@ describe('Friends list avatar head', () => {
         });
     });
 
+    it('renders the dedicated Frank face for Staff Chat', () => {
+        const friend = new MessengerFriend();
+
+        friend.id = 42;
+        friend.name = 'Staff Chat';
+        friend.figure = '';
+        friend.gender = 0;
+        friend.online = true;
+
+        const { container } = render(<FriendsListGroupItemView friend={friend} selected={false} selectFriend={vi.fn()} />);
+        const frank = container.querySelector<HTMLElement>('.hfl-friend-avatar .staff-chat-frank-icon');
+
+        expect(frank).toHaveAttribute('data-size', '20');
+        expect(container.querySelector('.hfl-friend-avatar .avatar-image')).toBeNull();
+    });
+
     it.each([
         { id: -1, name: 'Staff Chat' },
         { id: 42, name: ' staff chat ' }
@@ -76,25 +96,6 @@ describe('Friends list avatar head', () => {
 
         expect(container.querySelector('.hfl-action.follow')).toBeNull();
         expect(container.querySelector('.hfl-action.chat')).not.toBeNull();
-    });
-
-    it('renders the classic Frank icon instead of a generated avatar for Staff Chat', () => {
-        const friend = new MessengerFriend();
-
-        friend.id = 42;
-        friend.name = 'Staff Chat';
-        friend.figure = '';
-        friend.gender = 0;
-        friend.online = true;
-
-        const { container } = render(<FriendsListGroupItemView friend={friend} selected={false} selectFriend={vi.fn()} />);
-        const frank = container.querySelector<HTMLImageElement>('.hfl-staff-chat-frank');
-        const frankSource = frank?.getAttribute('src') || '';
-
-        expect(frank).not.toBeNull();
-        expect(frankSource).toMatch(/^data:image\/svg\+xml,/);
-        expect(decodeURIComponent(frankSource)).toContain('data:image/png;base64,');
-        expect(container.querySelector('.hfl-friend-avatar .avatar-image')).toBeNull();
     });
 
     it('keeps the profile layout slot empty for Staff Chat', () => {

@@ -91,5 +91,17 @@ export const CatalogStudioTransferPanel: FC = () => {
         {result && <div role="status" className={`nitro-catalog-admin-publish-status ${result.success ? 'is-ready' : 'is-blocked'}`}>
             {result.message} &middot; {result.changedEntities} change(s)
         </div>}
+        {!!result?.changes.length && <div className="nitro-catalog-admin-validation-list" aria-label="SQL field diff">
+            <div className="nitro-catalog-admin-publish-changes-head">Dry-run field diff</div>
+            {result.changes.map(change => <div
+                className="nitro-catalog-admin-history-row"
+                key={`${change.catalogType}-${change.entityType}-${change.entityId}-${change.operation}`}
+            >
+                <div className="nitro-catalog-admin-history-main">
+                    <strong>{change.operation} {change.entityType} #{change.entityId}</strong>
+                    <span>{change.catalogType} &middot; {change.fields.length ? change.fields.join(', ') : 'no field changes'}</span>
+                </div>
+            </div>)}
+        </div>}
     </div>;
 };

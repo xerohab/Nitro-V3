@@ -4,7 +4,9 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SoundboardVolumeControl } from './SoundboardVolumeControl';
 
-vi.mock('../../api', () => ({ LocalizeText: () => 'Soundboard' }));
+vi.mock('../../api', () => ({
+    localizeWithFallback: (key: string, fallback: string) => (key === 'widget.memenu.settings.volume.soundboard' ? 'Soundboard' : fallback)
+}));
 
 describe('SoundboardVolumeControl', () => {
     afterEach(cleanup);
@@ -23,7 +25,7 @@ describe('SoundboardVolumeControl', () => {
         fireEvent.mouseUp(range);
 
         expect(onChange).toHaveBeenCalledWith(25);
-        expect(onCommit).toHaveBeenCalledOnce();
+        expect(onCommit).toHaveBeenCalledWith(25);
     });
 
     it('commits keyboard volume changes without requiring a pointer event', () => {
@@ -36,6 +38,7 @@ describe('SoundboardVolumeControl', () => {
         fireEvent.keyUp(range, { key: 'ArrowLeft' });
 
         expect(onChange).toHaveBeenCalledWith(79);
-        expect(onCommit).toHaveBeenCalledOnce();
+        expect(onCommit).toHaveBeenCalledWith(79);
     });
+
 });

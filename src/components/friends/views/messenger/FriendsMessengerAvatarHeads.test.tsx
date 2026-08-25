@@ -19,6 +19,12 @@ vi.mock('../../../../common/layout/avatarImageCrop', () => ({
     cropTransparentImageUrl: vi.fn(async () => 'data:image/png;base64,cropped')
 }));
 
+vi.mock('../../StaffChatFrankIconView', () => ({
+    StaffChatFrankIconView: (props: { className?: string; size: number }) => (
+        <div className={`staff-chat-frank-icon ${props.className || ''}`.trim()} data-size={props.size} />
+    )
+}));
+
 const figure = 'hd-180-1.ch-210-66.lg-270-82.sh-290-80';
 
 const makeFriend = (id = 42, name = 'Lorenzo') => {
@@ -155,7 +161,7 @@ describe('Messenger avatar heads', () => {
         expect(document.querySelector('[data-participant-id="1"]')).toBeNull();
     });
 
-    it('renders the exact Frank asset and no user actions for Staff Chat', () => {
+    it('renders the dedicated Frank face and no user actions for Staff Chat', () => {
         const staff = makeFriend(-1, 'Staff Chat');
         staff.figure = 'ADM';
         const thread = makeThread(staff);
@@ -177,7 +183,7 @@ describe('Messenger avatar heads', () => {
         const tracker = vi.mocked(AddLinkEventTracker).mock.calls[0][0];
         act(() => tracker.linkReceived('friends-messenger/open'));
 
-        expect(document.querySelector('.messenger-avatar-tab .staff-chat-frank')).not.toBeNull();
+        expect(document.querySelector('.messenger-avatar-tab .staff-chat-frank-icon.staff-chat-frank')).toHaveAttribute('data-size', '35');
         expect(document.querySelector('.messenger-avatar-tab .avatar-image')).toBeNull();
         expect(document.querySelector('.messenger-actions .follow')).toBeNull();
         expect(document.querySelector('.messenger-actions .profile')).toBeNull();

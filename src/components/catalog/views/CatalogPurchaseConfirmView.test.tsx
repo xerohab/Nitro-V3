@@ -7,7 +7,7 @@ vi.mock('../../../api', async () => {
 
     return {
         ...actual,
-        GetConfigurationValue: () => '/currency/%type%.png',
+        GetConfigurationValue: (key: string) => (key === 'disclaimer.credit_spending.enabled' ? false : '/currency/%type%.png'),
         LocalizeText: (key: string) => key
     };
 });
@@ -33,10 +33,11 @@ describe('catalog purchase confirmation', () => {
 
         expect(screen.getByRole('dialog')).toHaveAttribute('aria-modal', 'true');
         expect(screen.getByText('Sedia classica')).toBeInTheDocument();
-        expect(screen.getByText('Una sedia molto comoda')).toBeInTheDocument();
         expect(screen.getByRole('img', { name: 'Sedia classica' })).toHaveAttribute('src', '/catalog/sedia.png');
+        expect(screen.getByText('X 2')).toBeInTheDocument();
         expect(screen.getByText('50')).toBeInTheDocument();
-        expect(screen.getByText('10')).toBeInTheDocument();
+        expect(screen.getByText('+ 10')).toBeInTheDocument();
+        expect(screen.queryByText('Una sedia molto comoda')).not.toBeInTheDocument();
     });
 
     it('supports explicit confirmation and Escape cancellation', () => {
@@ -66,6 +67,7 @@ describe('catalog purchase confirmation', () => {
         render(<CatalogPurchaseConfirmView offer={limitedOffer} quantity={1} onCancel={() => undefined} onConfirm={() => undefined} />);
 
         expect(screen.getByText('7 / 100')).toBeInTheDocument();
+        expect(screen.getByRole('status')).toHaveClass('nitro-catalog-purchase-confirm-limited');
     });
 
     it('traps keyboard focus and restores it to the opener when closed', () => {

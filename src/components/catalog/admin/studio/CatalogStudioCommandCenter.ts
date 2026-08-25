@@ -1,61 +1,40 @@
 export interface CatalogStudioCommandInput {
     sessionReady: boolean;
-    pendingCount: number;
-    actorCount: number;
-    lockCount: number;
     validationCurrent: boolean;
     validationIssueCount: number;
     loading: boolean;
 }
 
 export interface CatalogStudioCommandState {
-    phase: 'offline' | 'loading' | 'clean' | 'draft' | 'blocked' | 'ready';
+    phase: 'offline' | 'loading' | 'blocked' | 'ready';
     canValidate: boolean;
-    canPublish: boolean;
-    pendingLabel: string;
-    actorLabel: string;
-    lockLabel: string;
     validationLabel: string;
 }
 
-export type CatalogStudioWorkspaceTab = 'catalog' | 'transfer' | 'publish';
+export type CatalogStudioWorkspaceTab = 'catalog' | 'sql' | 'history';
 
 export const getCatalogStudioWorkspaceTabs = (): CatalogStudioWorkspaceTab[] =>
-    [ 'catalog', 'transfer', 'publish' ];
+    [ 'catalog', 'sql', 'history' ];
 
 const quantity = (count: number, singular: string, plural: string) =>
     `${count} ${count === 1 ? singular : plural}`;
 
-export const getCatalogStudioPageLockKey = (pageId: number, catalogType: string) =>
-    catalogType === 'BUILDERS_CLUB' || catalogType === 'BUILDER'
-        ? `BUILDER:PAGE:${pageId}`
-        : `PAGE:${pageId}`;
-
 export const getCatalogStudioCommandState = (input: CatalogStudioCommandInput): CatalogStudioCommandState => {
-    const hasPending = input.pendingCount > 0;
     const hasIssues = input.validationIssueCount > 0;
-    const canValidate = input.sessionReady && hasPending && !input.validationCurrent && !input.loading;
-    const canPublish = input.sessionReady && hasPending && input.validationCurrent && !hasIssues && !input.loading;
+    const canValidate = input.sessionReady && !input.loading;
     let phase: CatalogStudioCommandState['phase'] = 'offline';
 
     if (!input.sessionReady && input.loading) {
         phase = 'loading';
     } else if (input.sessionReady) {
-        if (!hasPending) phase = 'clean';
-        else if (input.validationCurrent && hasIssues) phase = 'blocked';
-        else if (canPublish) phase = 'ready';
-        else phase = 'draft';
+        phase = hasIssues ? 'blocked' : 'ready';
     }
 
     return {
         phase,
         canValidate,
-        canPublish,
-        pendingLabel: quantity(input.pendingCount, 'pending change', 'pending changes'),
-        actorLabel: quantity(input.actorCount, 'editor online', 'editors online'),
-        lockLabel: quantity(input.lockCount, 'active lock', 'active locks'),
         validationLabel: hasIssues
-            ? quantity(input.validationIssueCount, 'validation issue', 'validation issues')
-            : input.validationCurrent ? 'Validation current' : 'Validation required'
+            ? quantity(input.validationIssueCount, 'live problem', 'live problems')
+            : input.validationCurrent ? 'Live catalog healthy' : 'Health check available'
     };
 };

@@ -387,7 +387,21 @@ const ASSET_LOADER_JS = `(() => {
     }
   };
 
-  const fetchManifest = async () => {
+  const assetLikelyExists = async (path) => {
+    for(const candidate of expandAssetCandidates(path)) {
+      try {
+        const response = await fetch(withCacheBust(new URL(candidate.href)), { method: "HEAD", cache: "no-store" });
+        if(response.ok) return true;
+        if(response.status === 404 || response.status === 410) continue;
+        return true;
+      } catch {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  const fetchManifestEntry = async (mode) => {
     const base = getBase();
     const deploy = getDeployBase();
     const candidates = [
@@ -406,14 +420,27 @@ const ASSET_LOADER_JS = `(() => {
         const response = await fetch(withCacheBust(new URL(candidate.href)), { cache: "no-store" });
         if(!response.ok) continue;
         const json = await response.json();
-        if(json && typeof json === "object") {
-          debug("loader: manifest from " + candidate.href);
-          let manifestBase = new URL(".", candidate.href);
-          if(/\\/\\.vite\\/manifest\\.json$/.test(candidate.pathname)) {
-            manifestBase = new URL("..", manifestBase);
-          }
-          return { manifest: json, base: manifestBase };
+        if(!json || typeof json !== "object") continue;
+        const entry = findEntryFromManifest(json);
+        if(!entry) continue;
+        let manifestBase = new URL(".", candidate.href);
+        if(/\\/\\.vite\\/manifest\\.json$/.test(candidate.pathname)) {
+          manifestBase = new URL("..", manifestBase);
         }
+        const jsPath = resolveManifestPath(manifestBase, entry.js);
+        // A manifest left over from a previous deploy names hashed files that
+        // no longer exist — verify before committing, so a stale copy falls
+        // through to the next manifest source instead of a hard 404.
+        const verifyTarget = mode.distObfuscationEnabled ? jsPath + ".dat" : jsPath;
+        if(!(await assetLikelyExists(verifyTarget))) {
+          debug("loader: stale manifest " + candidate.href + " (missing " + verifyTarget + ")");
+          continue;
+        }
+        debug("loader: entry from manifest " + candidate.href + " " + jsPath);
+        return {
+          js: jsPath,
+          css: entry.css.map(file => resolveManifestPath(manifestBase, file))
+        };
       } catch {}
     }
     return null;
@@ -493,14 +520,10 @@ const ASSET_LOADER_JS = `(() => {
 
     let jsPath = null;
     let cssPaths = [];
-    const manifestResult = await fetchManifest();
-    if(manifestResult) {
-      const entry = findEntryFromManifest(manifestResult.manifest);
-      if(entry) {
-        jsPath = resolveManifestPath(manifestResult.base, entry.js);
-        if(entry.css.length) cssPaths = entry.css.map(file => resolveManifestPath(manifestResult.base, file));
-        debug("loader: entry from manifest " + jsPath);
-      }
+    const manifestEntry = await fetchManifestEntry(mode);
+    if(manifestEntry) {
+      jsPath = manifestEntry.js;
+      if(manifestEntry.css.length) cssPaths = manifestEntry.css;
     }
     if(!jsPath) {
       const indexEntry = await fetchEntryFromIndexHtml();

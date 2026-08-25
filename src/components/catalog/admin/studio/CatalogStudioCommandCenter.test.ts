@@ -3,62 +3,36 @@ import * as CommandCenter from './CatalogStudioCommandCenter';
 
 const { getCatalogStudioCommandState, getCatalogStudioWorkspaceTabs } = CommandCenter;
 
-describe('Catalog Studio command center state', () => {
-    it('requires current validation before publishing pending changes', () => {
+describe('Catalog Manager command center state', () => {
+    it('reports live problems without a publication state', () => {
         const state = getCatalogStudioCommandState({
             sessionReady: true,
-            pendingCount: 3,
-            actorCount: 2,
-            lockCount: 1,
             validationCurrent: false,
             validationIssueCount: 0,
             loading: false
         });
 
-        expect(state.phase).toBe('draft');
-        expect(state.canValidate).toBe(true);
-        expect(state.canPublish).toBe(false);
-        expect(state.pendingLabel).toBe('3 pending changes');
-    });
-
-    it('enables publication only for a validated clean draft', () => {
-        const state = getCatalogStudioCommandState({
-            sessionReady: true,
-            pendingCount: 1,
-            actorCount: 1,
-            lockCount: 0,
-            validationCurrent: true,
-            validationIssueCount: 0,
-            loading: false
-        });
-
         expect(state.phase).toBe('ready');
-        expect(state.canValidate).toBe(false);
-        expect(state.canPublish).toBe(true);
+        expect(state.canValidate).toBe(true);
+        expect('canPublish' in state).toBe(false);
+        expect('pendingLabel' in state).toBe(false);
     });
 
-    it('blocks publication when validation found issues', () => {
+    it('marks the live catalog as needing repair when validation found issues', () => {
         const state = getCatalogStudioCommandState({
             sessionReady: true,
-            pendingCount: 2,
-            actorCount: 1,
-            lockCount: 0,
             validationCurrent: true,
             validationIssueCount: 4,
             loading: false
         });
 
         expect(state.phase).toBe('blocked');
-        expect(state.canPublish).toBe(false);
-        expect(state.validationLabel).toBe('4 validation issues');
+        expect(state.validationLabel).toBe('4 live problems');
     });
 
     it('shows a neutral loading state while the first session is opening', () => {
         const state = getCatalogStudioCommandState({
             sessionReady: false,
-            pendingCount: 0,
-            actorCount: 0,
-            lockCount: 0,
             validationCurrent: false,
             validationIssueCount: 0,
             loading: true
@@ -66,18 +40,9 @@ describe('Catalog Studio command center state', () => {
 
         expect(state.phase).toBe('loading');
         expect(state.canValidate).toBe(false);
-        expect(state.canPublish).toBe(false);
-    });
-
-    it('uses the catalog type when resolving a page lock', () => {
-        const getPageLockKey = (CommandCenter as any).getCatalogStudioPageLockKey;
-
-        expect(getPageLockKey(976, 'NORMAL')).toBe('PAGE:976');
-        expect(getPageLockKey(976, 'BUILDERS_CLUB')).toBe('BUILDER:PAGE:976');
-        expect(getPageLockKey(976, 'BUILDER')).toBe('BUILDER:PAGE:976');
     });
 
     it('exposes only the three essential workspace areas', () => {
-        expect(getCatalogStudioWorkspaceTabs()).toEqual([ 'catalog', 'transfer', 'publish' ]);
+        expect(getCatalogStudioWorkspaceTabs()).toEqual([ 'catalog', 'sql', 'history' ]);
     });
 });

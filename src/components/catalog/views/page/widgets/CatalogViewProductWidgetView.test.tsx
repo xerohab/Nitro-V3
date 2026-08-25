@@ -33,6 +33,7 @@ vi.mock('../../../../../hooks', () => ({
 }));
 
 const createRoomPreviewer = () => ({
+    addViewOffset: { x: 0, y: 0 },
     addAvatarIntoRoom: vi.fn(function (this: { setAutomaticStateChange: (enabled: boolean) => void }) {
         this.setAutomaticStateChange(true);
     }),
@@ -96,7 +97,7 @@ describe('catalog product preview', () => {
         render(<CatalogViewProductWidgetView />);
 
         await waitFor(() => {
-            expect(roomPreviewer.reset).toHaveBeenCalledWith(false);
+            expect(roomPreviewer.reset).not.toHaveBeenCalled();
             expect(avatarRenderManager.isValidFigureSetForGender).toHaveBeenCalledWith(101, 'M');
             expect(avatarRenderManager.isValidFigureSetForGender).toHaveBeenCalledWith(202, 'M');
             expect(avatarRenderManager.getFigureStringWithFigureIds).toHaveBeenCalledWith('base-figure', 'M', [101, 202]);
@@ -125,11 +126,12 @@ describe('catalog product preview', () => {
         render(<CatalogViewProductWidgetView />);
 
         await waitFor(() => {
-            expect(roomPreviewer.reset).toHaveBeenCalledWith(false);
+            expect(roomPreviewer.reset).toHaveBeenCalledWith(true);
             expect(roomPreviewer.addFurnitureIntoRoom).toHaveBeenCalledWith(500, expect.anything(), null, '');
             expect(roomPreviewer.addAvatarIntoRoom).not.toHaveBeenCalled();
             expect(roomPreviewer.zoomIn).not.toHaveBeenCalled();
             expect(roomPreviewer.centerWallItems).toBe(true);
+            expect(roomPreviewer.updateObjectRoom).not.toHaveBeenCalled();
             expect(roomPreviewer.setAutomaticStateChange).toHaveBeenLastCalledWith(true);
         });
     });

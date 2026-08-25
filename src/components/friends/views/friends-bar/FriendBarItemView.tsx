@@ -2,15 +2,16 @@ import { FindNewFriendsMessageComposer, MouseEventType } from '@nitrots/nitro-re
 import { AnimatePresence, motion } from 'framer-motion';
 import { FC, useEffect, useRef, useState } from 'react';
 import { GetUserProfile, LocalizeText, MessengerFriend, OpenMessengerChat, SendMessageComposer } from '../../../../api';
+import staffChatFrankIcon from '../../../../assets/images/friends/staff-chat-frank.svg';
 import addFriendsIcon from '../../../../assets/images/friends/swf/add_friends_icon.png';
 import chatIcon from '../../../../assets/images/friends/swf/friendlist_chat.png';
 import profileIcon from '../../../../assets/images/friends/swf/friendlist_eye.png';
 import visitIcon from '../../../../assets/images/friends/swf/friendlist_go_room.png';
 import searchFriendsIcon from '../../../../assets/images/friends/swf/search_friends_icon.png';
-import staffChatFrankIcon from '../../../../assets/images/friends/staff-chat-frank.svg';
 import { LayoutAvatarImageView, LayoutBadgeImageView } from '../../../../common';
 import { useFriends } from '../../../../hooks';
 import { isStaffChatIdentity } from '../../staffChatIdentity';
+import { StaffChatFrankIconView } from '../../StaffChatFrankIconView';
 
 export const FriendBarItemView: FC<{ friend: MessengerFriend }> = (props) => {
     const { friend = null } = props;
@@ -79,8 +80,8 @@ export const FriendBarItemView: FC<{ friend: MessengerFriend }> = (props) => {
     return (
         <div ref={elementRef} className={`friend-bar-friend relative ${isVisible ? 'is-selected' : ''}`}>
             {isStaffChat ? (
-                <div className="friend-bar-item-head staff-chat absolute left-[-3px] bottom-[-1px] z-10 h-[35px] w-[40px] pointer-events-none">
-                    <img className="friend-bar-staff-chat-frank block h-[35px] w-[40px] max-w-none" src={staffChatFrankIcon} alt="" />
+                <div className="friend-bar-item-head avatar staff-chat absolute left-[-3px] bottom-[-2px] z-10 h-[40px] w-[40px] overflow-hidden pointer-events-none">
+                    <StaffChatFrankIconView size={40} className="friend-bar-staff-chat-frank" />
                 </div>
             ) : friend.id > 0 ? (
                 <div className="friend-bar-item-head avatar friend-bar-item-head-avatar absolute left-[-3px] bottom-[-2px] z-10 h-[40px] w-[40px] overflow-hidden pointer-events-none">

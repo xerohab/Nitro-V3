@@ -44,46 +44,46 @@ jobs:
       - name: Checkout client
         uses: actions/checkout@v7
         with:
-          path: Nitro-V3
+          path: octane
 
       - name: Checkout renderer
         uses: actions/checkout@v7
         with:
           repository: duckethotel/ducket-render
           ref: main
-          path: Nitro_Render_V3
+          path: octane-renderer
           token: ${{ secrets.DUCKET_REPO_TOKEN }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '22'
+          node-version-file: 'octane/.nvmrc'
 
       - name: Enable Corepack
         run: corepack enable
 
       - name: Install renderer dependencies
-        working-directory: Nitro_Render_V3
+        working-directory: octane-renderer
         run: yarn install --frozen-lockfile
 
       - name: Install client dependencies
         env:
           COREPACK_ENABLE_DOWNLOAD_PROMPT: '0'
-        working-directory: Nitro-V3
+        working-directory: octane
         run: corepack yarn install --immutable
 
       - name: Link renderer into client
         run: |
-          mkdir -p Nitro-V3/node_modules/@nitrots
-          ln -sfn "${{ github.workspace }}/Nitro_Render_V3" Nitro-V3/node_modules/@nitrots/nitro-renderer
+          mkdir -p octane/node_modules/@nitrots
+          ln -sfn "${{ github.workspace }}/octane-renderer" octane/node_modules/@nitrots/nitro-renderer
 
       - name: Build client
-        working-directory: Nitro-V3
+        working-directory: octane
         run: yarn build
 
       - name: Read package version
         id: version
-        working-directory: Nitro-V3
+        working-directory: octane
         run: |
           VERSION=$(node -p "require('./package.json').version")
           SHORT_SHA=${GITHUB_SHA::7}
@@ -91,7 +91,7 @@ jobs:
           echo "short_sha=$SHORT_SHA" >> "$GITHUB_OUTPUT"
 
       - name: Package dist
-        working-directory: Nitro-V3
+        working-directory: octane
         run: |
           zip -r "../ducket-client-dist-${{ steps.version.outputs.short_sha }}.zip" dist
 

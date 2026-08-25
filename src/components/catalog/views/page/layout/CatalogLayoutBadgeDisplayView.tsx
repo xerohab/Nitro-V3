@@ -7,6 +7,8 @@ import { CatalogBadgeSelectorWidgetView } from '../widgets/CatalogBadgeSelectorW
 import { CatalogFirstProductSelectorWidgetView } from '../widgets/CatalogFirstProductSelectorWidgetView';
 import { CatalogItemGridWidgetView } from '../widgets/CatalogItemGridWidgetView';
 import { CatalogLimitedItemWidgetView } from '../widgets/CatalogLimitedItemWidgetView';
+import { CatalogPreviewControls } from '../widgets/CatalogPreviewControls';
+import { CatalogProductDetailsView } from '../widgets/CatalogProductDetailsView';
 import { CatalogPurchaseWidgetView } from '../widgets/CatalogPurchaseWidgetView';
 import { CatalogSpinnerWidgetView } from '../widgets/CatalogSpinnerWidgetView';
 import { CatalogTotalPriceWidget } from '../widgets/CatalogTotalPriceWidget';

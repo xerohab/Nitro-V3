@@ -3,25 +3,12 @@ import {
     IRoomCameraWidgetEffect,
     IRoomCameraWidgetSelectedEffect,
     NitroLogger,
-    NitroTexture,
     RoomCameraWidgetSelectedEffect
 } from '@nitrots/nitro-renderer';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { FaSave, FaSearchMinus, FaSearchPlus, FaTrash } from 'react-icons/fa';
+import { FaDownload, FaSearchMinus, FaSearchPlus, FaTrash } from 'react-icons/fa';
 import { CameraEditorTabs, CameraPicture, CameraPictureThumbnail, LocalizeText } from '../../../../api';
-import {
-    Button,
-    Column,
-    Flex,
-    Grid,
-    NitroCardContentView,
-    NitroCardHeaderView,
-    NitroCardTabsItemView,
-    NitroCardTabsView,
-    NitroCardView,
-    Slider,
-    Text
-} from '../../../../common';
+import { Button, NitroCardContentView, NitroCardHeaderView, NitroCardView, Slider } from '../../../../common';
 import { CameraWidgetEffectListView } from './effect-list';
 
 export interface CameraWidgetEditorViewProps {
@@ -34,67 +21,59 @@ export interface CameraWidgetEditorViewProps {
 }
 
 const TABS: string[] = [CameraEditorTabs.COLORMATRIX, CameraEditorTabs.COMPOSITE];
+const DEFAULT_EFFECT_STRENGTH: number = 0.5;
+const EFFECT_RENDER_DEBOUNCE: number = 50;
+
+const getDownloadName = (): string => {
+    const now = new Date();
+    const pad = (value: number) => value.toString().padStart(2, '0');
+
+    return `Habbo_${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}.png`;
+};
 
 export const CameraWidgetEditorView: FC<CameraWidgetEditorViewProps> = (props) => {
-    const { picture = null, availableEffects = null, myLevel = 1, onClose = null, onCancel = null, onCheckout = null } = props;
+    const { picture = null, availableEffects = [], myLevel = 1, onClose = null, onCancel = null, onCheckout = null } = props;
     const [currentTab, setCurrentTab] = useState(TABS[0]);
     const [selectedEffectName, setSelectedEffectName] = useState<string>(null);
     const [selectedEffects, setSelectedEffects] = useState<IRoomCameraWidgetSelectedEffect[]>([]);
     const [effectsThumbnails, setEffectsThumbnails] = useState<CameraPictureThumbnail[]>([]);
     const [isZoomed, setIsZoomed] = useState(false);
+    const [isRendering, setIsRendering] = useState(false);
     const [currentPictureUrl, setCurrentPictureUrl] = useState<string>(picture?.imageUrl ?? '');
-    const [stableTexture, setStableTexture] = useState<NitroTexture>(null);
-    const debounceTimerRef = useRef<ReturnType<typeof setTimeout>>(null);
     const requestIdRef = useRef<number>(0);
+    const stableTexture = picture?.texture ?? null;
 
-    useEffect(() => {
-        const img = new Image();
-        img.onload = () => setStableTexture(NitroTexture.from(img));
-        img.src = picture.imageUrl;
-    }, [picture]);
-
-    const getColorMatrixEffects = useMemo(() => {
-        return availableEffects.filter((effect) => effect.colorMatrix);
-    }, [availableEffects]);
-
-    const getCompositeEffects = useMemo(() => {
-        return availableEffects.filter((effect) => effect.texture);
-    }, [availableEffects]);
-
-    const getEffectList = useCallback(() => {
-        return currentTab === CameraEditorTabs.COLORMATRIX ? getColorMatrixEffects : getCompositeEffects;
-    }, [currentTab, getColorMatrixEffects, getCompositeEffects]);
+    const colorMatrixEffects = useMemo(() => availableEffects.filter((effect) => effect.colorMatrix), [availableEffects]);
+    const compositeEffects = useMemo(() => availableEffects.filter((effect) => effect.texture), [availableEffects]);
+    const visibleEffects = currentTab === CameraEditorTabs.COLORMATRIX ? colorMatrixEffects : compositeEffects;
 
     const getSelectedEffectIndex = useCallback(
         (name: string) => {
-            if (!name || !name.length || !selectedEffects || !selectedEffects.length) return -1;
+            if (!name || !selectedEffects.length) return -1;
+
             return selectedEffects.findIndex((effect) => effect.effect.name === name);
         },
         [selectedEffects]
     );
 
-    const getCurrentEffectIndex = useMemo(() => {
-        return getSelectedEffectIndex(selectedEffectName);
-    }, [selectedEffectName, getSelectedEffectIndex]);
-
-    const getCurrentEffect = useMemo(() => {
-        if (!selectedEffectName) return null;
-        return selectedEffects[getCurrentEffectIndex] || null;
-    }, [selectedEffectName, getCurrentEffectIndex, selectedEffects]);
+    const currentEffectIndex = getSelectedEffectIndex(selectedEffectName);
+    const currentEffect = currentEffectIndex >= 0 ? selectedEffects[currentEffectIndex] : null;
 
     const setSelectedEffectAlpha = useCallback(
         (alpha: number) => {
-            const index = getCurrentEffectIndex;
-            if (index === -1) return;
+            if (currentEffectIndex < 0) return;
 
-            setSelectedEffects((prevValue) => {
-                const clone = [...prevValue];
-                const currentEffect = clone[index];
-                clone[index] = new RoomCameraWidgetSelectedEffect(currentEffect.effect, alpha);
-                return clone;
+            setIsRendering(true);
+            setSelectedEffects((previous) => {
+                const next = [...previous];
+                const selectedEffect = next[currentEffectIndex];
+
+                next[currentEffectIndex] = new RoomCameraWidgetSelectedEffect(selectedEffect.effect, alpha);
+
+                return next;
             });
         },
-        [getCurrentEffectIndex]
+        [currentEffectIndex]
     );
 
     const processAction = useCallback(
@@ -107,182 +86,248 @@ export const CameraWidgetEditorView: FC<CameraWidgetEditorViewProps> = (props) =
                     onCancel();
                     return;
                 case 'checkout':
-                    onCheckout(currentPictureUrl);
+                    if (!isRendering && currentPictureUrl) onCheckout(currentPictureUrl);
                     return;
                 case 'change_tab':
                     setCurrentTab(String(effectName));
+                    setSelectedEffectName(null);
                     return;
                 case 'select_effect': {
-                    const existingIndex = getSelectedEffectIndex(effectName);
-                    if (existingIndex >= 0) return;
+                    const effect = availableEffects.find((availableEffect) => availableEffect.name === effectName);
 
-                    const effect = availableEffects.find((effect) => effect.name === effectName);
-                    if (!effect) return;
+                    if (!effect || effect.minLevel > myLevel) return;
 
-                    setSelectedEffects((prevValue) => [...prevValue, new RoomCameraWidgetSelectedEffect(effect, 1)]);
                     setSelectedEffectName(effect.name);
+
+                    if (getSelectedEffectIndex(effectName) >= 0) return;
+
+                    setIsRendering(true);
+                    setSelectedEffects((previous) => {
+                        const effectsWithoutAnotherFrame =
+                            effect.type === 'frame' ? previous.filter((selectedEffect) => selectedEffect.effect.type !== 'frame') : previous;
+
+                        return [
+                            ...effectsWithoutAnotherFrame,
+                            new RoomCameraWidgetSelectedEffect(effect, effect.type === 'frame' ? 1 : DEFAULT_EFFECT_STRENGTH)
+                        ];
+                    });
                     return;
                 }
                 case 'remove_effect': {
                     const existingIndex = getSelectedEffectIndex(effectName);
-                    if (existingIndex === -1) return;
 
-                    setSelectedEffects((prevValue) => {
-                        const clone = [...prevValue];
-                        clone.splice(existingIndex, 1);
-                        return clone;
-                    });
+                    if (existingIndex < 0) return;
+
+                    setIsRendering(true);
+                    setSelectedEffects((previous) => previous.filter((_, index) => index !== existingIndex));
 
                     if (selectedEffectName === effectName) setSelectedEffectName(null);
                     return;
                 }
                 case 'clear_effects':
-                    onCancel();
+                    if (!selectedEffects.length) return;
+
+                    setIsRendering(true);
+                    setSelectedEffects([]);
+                    setSelectedEffectName(null);
                     return;
                 case 'download': {
                     if (!currentPictureUrl) return;
 
-                    const parts = currentPictureUrl.split(',');
-                    const mime = parts[0].match(/:(.*?);/)?.[1] || 'image/png';
-                    const binary = atob(parts[1]);
-                    const bytes = new Uint8Array(binary.length);
-                    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-                    const blob = new Blob([bytes], { type: mime });
-                    const blobUrl = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
 
-                    const w = window.open('', '_blank');
-                    if (w) {
-                        w.document.title = 'camera_photo.png';
-                        w.document.body.style.margin = '0';
-                        w.document.body.innerHTML = `<img src="${blobUrl}" style="max-width:100%"/>`;
-                    }
-
+                    link.href = currentPictureUrl;
+                    link.download = getDownloadName();
+                    link.rel = 'noopener';
+                    link.click();
                     return;
                 }
                 case 'zoom':
-                    setIsZoomed((prev) => !prev);
+                    setIsRendering(true);
+                    setIsZoomed((previous) => !previous);
                     return;
             }
         },
-        [availableEffects, selectedEffectName, currentPictureUrl, getSelectedEffectIndex, onCancel, onCheckout, onClose]
+        [
+            availableEffects,
+            currentPictureUrl,
+            getSelectedEffectIndex,
+            isRendering,
+            myLevel,
+            onCancel,
+            onCheckout,
+            onClose,
+            selectedEffectName,
+            selectedEffects.length
+        ]
     );
 
     useEffect(() => {
         if (!stableTexture) return;
 
+        let cancelled = false;
+
         const processThumbnails = async () => {
-            const renderedEffects = await Promise.all(
-                availableEffects.map((effect) =>
-                    GetRoomCameraWidgetManager().applyEffects(stableTexture, [new RoomCameraWidgetSelectedEffect(effect, 1)], false)
-                )
-            );
-            setEffectsThumbnails(renderedEffects.map((image, index) => new CameraPictureThumbnail(availableEffects[index].name, image.src)));
+            for (const effect of availableEffects) {
+                if (effect.minLevel > myLevel) continue;
+
+                try {
+                    const image = await GetRoomCameraWidgetManager().applyEffects(stableTexture, [new RoomCameraWidgetSelectedEffect(effect, 1)], false);
+
+                    if (cancelled) return;
+
+                    setEffectsThumbnails((previous) => [
+                        ...previous.filter((thumbnail) => thumbnail.effectName !== effect.name),
+                        new CameraPictureThumbnail(effect.name, image.src)
+                    ]);
+                } catch (error) {
+                    NitroLogger.error(`Failed to render camera effect thumbnail ${effect.name}`, error);
+                }
+            }
         };
-        processThumbnails();
-    }, [stableTexture, availableEffects]);
+
+        void processThumbnails();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [stableTexture, availableEffects, myLevel]);
 
     useEffect(() => {
         if (!stableTexture) return;
 
-        if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+        const requestId = ++requestIdRef.current;
 
-        debounceTimerRef.current = setTimeout(() => {
-            const id = ++requestIdRef.current;
+        const debounceTimer = setTimeout(() => {
+            if (!selectedEffects.length && !isZoomed) {
+                if (requestId === requestIdRef.current) {
+                    setCurrentPictureUrl(picture.imageUrl);
+                    setIsRendering(false);
+                }
 
-            // No effects: show the original capture untouched. Re-rendering it
-            // through PixiJS resamples the pixel-art photo and adds dithering /
-            // moire ("line dots"), so the editor no longer matched the crisp
-            // room capture. Only composite through the renderer once an effect
-            // is actually applied.
-            if (!selectedEffects.length) {
-                if (id === requestIdRef.current) setCurrentPictureUrl(picture.imageUrl);
                 return;
             }
 
             GetRoomCameraWidgetManager()
-                .applyEffects(stableTexture, selectedEffects, false)
+                .applyEffects(stableTexture, selectedEffects, isZoomed)
                 .then((imageElement) => {
-                    if (id !== requestIdRef.current) return;
-                    setCurrentPictureUrl(imageElement.src);
-                })
-                .catch((error) => NitroLogger.error('Failed to apply effects to picture', error));
-        }, 50);
+                    if (requestId !== requestIdRef.current) return;
 
+                    setCurrentPictureUrl(imageElement.src);
+                    setIsRendering(false);
+                })
+                .catch((error) => {
+                    if (requestId === requestIdRef.current) {
+                        setCurrentPictureUrl('');
+                        setIsRendering(false);
+                    }
+
+                    NitroLogger.error('Failed to apply effects to picture', error);
+                });
+        }, EFFECT_RENDER_DEBOUNCE);
+
+        return () => clearTimeout(debounceTimer);
+    }, [stableTexture, selectedEffects, isZoomed, picture]);
+
+    useEffect(() => {
         return () => {
-            if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+            requestIdRef.current++;
         };
-    }, [stableTexture, selectedEffects, picture]);
+    }, []);
 
     return (
-        <NitroCardView className="w-[600px] max-w-[95vw] h-[500px] max-h-[90vh]" isResizable={false} style={{ resize: 'none' }}>
-            <NitroCardHeaderView headerText={LocalizeText('camera.editor.button.text')} onCloseClick={(event) => processAction('close')} />
-            <NitroCardTabsView>
-                {TABS.map((tab) => (
-                    <NitroCardTabsItemView key={tab} isActive={currentTab === tab} onClick={(event) => processAction('change_tab', tab)}>
-                        <i className={'nitro-icon icon-camera-' + tab}></i>
-                    </NitroCardTabsItemView>
-                ))}
-            </NitroCardTabsView>
-            <NitroCardContentView>
-                <Grid>
-                    <Column className="min-h-0 overflow-y-auto has-classic-scrollbar" size={5}>
+        <NitroCardView className="nitro-camera-editor" isResizable={false} style={{ resize: 'none' }}>
+            <NitroCardHeaderView headerText={LocalizeText('camera.editor.button.text')} onCloseClick={() => processAction('close')} />
+            <NitroCardContentView className="nitro-camera-editor__content">
+                <div className="nitro-camera-editor__layout">
+                    <div className="nitro-camera-editor__effect-tabs" role="tablist">
+                        {TABS.map((tab) => (
+                            <button
+                                type="button"
+                                key={tab}
+                                role="tab"
+                                aria-selected={currentTab === tab}
+                                className={`nitro-camera-editor__effect-tab${currentTab === tab ? ' nitro-camera-editor__effect-tab--active' : ''}`}
+                                title={LocalizeText(`camera.effect.category.${tab}`)}
+                                onClick={() => processAction('change_tab', tab)}
+                            >
+                                <i className={`nitro-icon icon-camera-${tab}`} />
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="nitro-camera-editor__effect-grid-frame has-classic-scrollbar">
                         <CameraWidgetEffectListView
                             myLevel={myLevel}
+                            selectedEffectName={selectedEffectName}
                             selectedEffects={selectedEffects}
-                            effects={getEffectList()}
+                            effects={visibleEffects}
                             thumbnails={effectsThumbnails}
                             processAction={processAction}
                         />
-                    </Column>
-                    <Column justifyContent="between" className="overflow-x-auto" size={7}>
-                        <Column center fullWidth>
-                            <div className="flex aspect-square w-full max-w-[325px] items-center justify-center overflow-hidden">
-                                {currentPictureUrl && (
-                                    <img
-                                        alt=""
-                                        src={currentPictureUrl}
-                                        className="h-full w-full object-cover [image-rendering:pixelated]"
-                                        style={isZoomed ? { transform: 'scale(2)', transformOrigin: 'center' } : undefined}
-                                    />
+                    </div>
+
+                    <div className="nitro-camera-editor__preview" onClick={() => setSelectedEffectName(null)}>
+                        {currentPictureUrl && <img alt="" src={currentPictureUrl} />}
+                    </div>
+
+                    {currentEffect && currentEffect.effect.type !== 'frame' && (
+                        <div className="nitro-camera-editor__slider-panel">
+                            <div className="nitro-camera-editor__slider-label">
+                                {`${LocalizeText(`camera.effect.name.${currentEffect.effect.name}`)} ${Math.round(currentEffect.strength * 100)}%`}
+                            </div>
+                            <Slider
+                                disabledButton
+                                className="nitro-camera-editor__slider"
+                                min={0}
+                                max={100}
+                                step={1}
+                                value={Math.round(currentEffect.strength * 100)}
+                                onChange={(value) => setSelectedEffectAlpha(value / 100)}
+                                renderThumb={({ key, ...thumbProps }) => (
+                                    <div key={key} {...thumbProps} aria-label={LocalizeText(`camera.effect.name.${currentEffect.effect.name}`)} />
                                 )}
-                            </div>
-                            {selectedEffectName && (
-                                <Column center fullWidth gap={1}>
-                                    <Text>{LocalizeText('camera.effect.name.' + selectedEffectName)}</Text>
-                                    <Slider
-                                        min={0}
-                                        max={100}
-                                        step={1}
-                                        value={Math.round(getCurrentEffect.strength * 100)}
-                                        onChange={(event) => setSelectedEffectAlpha(event / 100)}
-                                        renderThumb={({ key, ...props }, state) => (
-                                            <div key={key} {...props}>
-                                                {state.valueNow}
-                                            </div>
-                                        )}
-                                    />
-                                </Column>
-                            )}
-                        </Column>
-                        <div className="flex justify-between">
-                            <div className="relative inline-flex align-middle">
-                                <Button onClick={(event) => processAction('clear_effects')}>
-                                    <FaTrash className="fa-icon" />
-                                </Button>
-                                <Button onClick={(event) => processAction('download')}>
-                                    <FaSave className="fa-icon" />
-                                </Button>
-                                <Button onClick={(event) => processAction('zoom')}>
-                                    {isZoomed ? <FaSearchMinus className="fa-icon" /> : <FaSearchPlus className="fa-icon" />}
-                                </Button>
-                            </div>
-                            <div className="flex gap-1">
-                                <Button onClick={(event) => processAction('cancel')}>{LocalizeText('generic.cancel')}</Button>
-                                <Button onClick={(event) => processAction('checkout')}>{LocalizeText('camera.preview.button.text')}</Button>
-                            </div>
+                            />
                         </div>
-                    </Column>
-                </Grid>
+                    )}
+
+                    <button type="button" className="nitro-camera-editor__tool nitro-camera-editor__tool--save" onClick={() => processAction('download')}>
+                        <FaDownload aria-hidden="true" />
+                        <span>{LocalizeText('floor.plan.editor.save')}</span>
+                    </button>
+                    <button
+                        type="button"
+                        className="nitro-camera-editor__tool nitro-camera-editor__tool--zoom"
+                        aria-pressed={isZoomed}
+                        onClick={() => processAction('zoom')}
+                    >
+                        {isZoomed ? <FaSearchMinus aria-hidden="true" /> : <FaSearchPlus aria-hidden="true" />}
+                        <span>{LocalizeText('room.zoom.button.text')}</span>
+                    </button>
+                    <button
+                        type="button"
+                        className="nitro-camera-editor__tool nitro-camera-editor__tool--clear"
+                        disabled={!selectedEffects.length}
+                        title={LocalizeText('camera.delete.button.text')}
+                        aria-label={LocalizeText('camera.delete.button.text')}
+                        onClick={() => processAction('clear_effects')}
+                    >
+                        <FaTrash aria-hidden="true" />
+                    </button>
+
+                    <div className="nitro-camera-editor__button-separator" />
+                    <Button className="nitro-camera-editor__cancel" variant="secondary" onClick={() => processAction('cancel')}>
+                        {LocalizeText('catalog.purchase_confirmation.cancel')}
+                    </Button>
+                    <Button
+                        className="nitro-camera-editor__purchase"
+                        disabled={isRendering || !currentPictureUrl}
+                        variant="success"
+                        onClick={() => processAction('checkout')}
+                    >
+                        {LocalizeText('camera.preview.button.text')}
+                    </Button>
+                </div>
             </NitroCardContentView>
         </NitroCardView>
     );

@@ -1,6 +1,5 @@
 import { Dispatch, FC, SetStateAction } from 'react';
 import { IAchievementCategory } from '../../../api';
-import { AutoGrid } from '../../../common';
 import { AchievementsCategoryListItemView } from './AchievementsCategoryListItemView';
 
 interface AchievementsCategoryListViewProps {
@@ -11,19 +10,22 @@ interface AchievementsCategoryListViewProps {
 
 export const AchievementsCategoryListView: FC<AchievementsCategoryListViewProps> = (props) => {
     const { categories = null, selectedCategoryCode = null, setSelectedCategoryCode = null } = props;
+    const itemCount = Math.max(9, categories?.length ?? 0);
 
     return (
-        <AutoGrid columnCount={3} columnMinHeight={100} columnMinWidth={90}>
-            {categories &&
-                categories.length > 0 &&
-                categories.map((category, index) => (
+        <div className="air-achievements-categories">
+            {Array.from({ length: itemCount }, (_, index) => {
+                const category = categories?.[index] ?? null;
+
+                return (
                     <AchievementsCategoryListItemView
-                        key={index}
+                        key={category?.code ?? `empty-${index}`}
                         category={category}
                         selectedCategoryCode={selectedCategoryCode}
                         setSelectedCategoryCode={setSelectedCategoryCode}
                     />
-                ))}
-        </AutoGrid>
+                );
+            })}
+        </div>
     );
 };

@@ -1,39 +1,30 @@
 import { NavigatorDeleteSavedSearchComposer, NavigatorSavedSearch } from '@nitrots/nitro-renderer';
 import { FC, MouseEvent } from 'react';
-import { FaBolt } from 'react-icons/fa';
-import { LocalizeText, SendMessageComposer } from '../../../../api';
-import { Flex, Text } from '../../../../common';
+import { LocalizeText, localizeWithFallback, SendMessageComposer } from '../../../../api';
 import { useNavigatorUiStore } from '../../../../hooks';
 
 export interface NavigatorSearchSavesResultItemViewProps {
     search: NavigatorSavedSearch;
 }
 
+const savedSearchLabel = (search: NavigatorSavedSearch) => {
+    let code = search.code || '';
+
+    if (code.startsWith('${')) code = code.slice(2, code.length - 1);
+    if (code.startsWith('category__')) code = code.slice('category__'.length);
+
+    const title = localizeWithFallback('navigator.searchcode.title.' + code, search.code || code);
+
+    return search.filter ? `${title} - ${search.filter}` : title;
+};
+
 export const NavigatorSearchSavesResultItemView: FC<NavigatorSearchSavesResultItemViewProps> = (props) => {
     const { search = null } = props;
+    const title = savedSearchLabel(search);
 
-    const getResultTitle = () => {
-        let name = search.code;
-
-        if (!name || !name.length || LocalizeText('navigator.searchcode.title.' + name) === 'navigator.searchcode.title.' + name) return search.code;
-
-        if (name.startsWith('${')) return name.slice(2, name.length - 1);
-
-        return 'navigator.searchcode.title.' + name;
-    };
-
-    // Drive the search through the navigator store so useNavigatorSearch
-    // both fires the request AND accepts the response. Sending the
-    // composer directly didn't work: the search hook only keeps a
-    // NavigatorSearchEvent whose result.code matches the active tab, so a
-    // raw search whose code differed from the current tab was discarded
-    // (clicking a saved search appeared to do nothing).
     const openSearch = () => {
-        const code = search.code.split('.').reverse()[0];
-        const store = useNavigatorUiStore.getState();
-
-        store.setTab(code);
-        if (search.filter) store.setFilter(search.filter);
+        useNavigatorUiStore.getState().setSearch(search.code, search.filter || '');
+        useNavigatorUiStore.getState().show();
     };
 
     const deleteSearch = (event: MouseEvent) => {
@@ -41,23 +32,18 @@ export const NavigatorSearchSavesResultItemView: FC<NavigatorSearchSavesResultIt
         SendMessageComposer(new NavigatorDeleteSavedSearchComposer(search.id));
     };
 
-    const title = LocalizeText(getResultTitle());
-
     return (
-        <Flex alignItems="center" className="saved-search-row group shrink-0">
+        <div className="saved-search-row">
             <button type="button" className="saved-search-row__open" title={LocalizeText('navigator.tooltip.open.saved.search')} onClick={openSearch}>
-                <FaBolt className="text-orange-500 shrink-0 text-[10px]" />
-                <Text small truncate variant="black" className="grow! min-w-0 text-left">
-                    {title}
-                </Text>
+                <span className="saved-search-row__label">{title}</span>
             </button>
             <button
                 type="button"
-                className="saved-search-row__delete nitro-icon icon-navigator-search-delete"
+                className="saved-search-row__delete"
                 aria-label={`${LocalizeText('navigator.tooltip.remove.saved.search')} ${title}`}
                 title={LocalizeText('navigator.tooltip.remove.saved.search')}
                 onClick={deleteSearch}
             />
-        </Flex>
+        </div>
     );
 };

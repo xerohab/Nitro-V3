@@ -6,6 +6,7 @@ import { NitroCardContextProvider } from './NitroCardContext';
 export interface NitroCardViewProps extends DraggableWindowProps, ColumnProps {
     theme?: string;
     isResizable?: boolean;
+    frameStyle?: number;
 }
 
 export const NitroCardView: FC<NitroCardViewProps> = (props) => {
@@ -20,6 +21,7 @@ export const NitroCardView: FC<NitroCardViewProps> = (props) => {
         gap = 0,
         classNames = [],
         isResizable = true,
+        frameStyle = null,
         dragStyle,
         offsetLeft,
         offsetTop,
@@ -30,14 +32,23 @@ export const NitroCardView: FC<NitroCardViewProps> = (props) => {
     const getClassNames = useMemo(() => {
         const newClassNames: string[] = [isResizable ? 'resize' : 'resize-none', 'nitro-card', 'nitro-card-shell', `theme-${theme}`];
 
+        if (frameStyle !== null) newClassNames.push(`nitro-card-frame-${frameStyle}`);
         if (classNames.length) newClassNames.push(...classNames);
 
         return newClassNames;
-    }, [classNames, isResizable]);
+    }, [classNames, frameStyle, isResizable]);
 
     return (
         <NitroCardContextProvider value={{ theme }}>
-            <DraggableWindow disableDrag={disableDrag} dragStyle={dragStyle} handleSelector={handleSelector} offsetLeft={offsetLeft} offsetTop={offsetTop} uniqueKey={uniqueKey} windowPosition={windowPosition}>
+            <DraggableWindow
+                disableDrag={disableDrag}
+                dragStyle={dragStyle}
+                handleSelector={handleSelector}
+                offsetLeft={offsetLeft}
+                offsetTop={offsetTop}
+                uniqueKey={uniqueKey}
+                windowPosition={windowPosition}
+            >
                 <Column classNames={getClassNames} gap={gap} innerRef={elementRef} overflow={overflow} position={position} {...rest} />
             </DraggableWindow>
         </NitroCardContextProvider>

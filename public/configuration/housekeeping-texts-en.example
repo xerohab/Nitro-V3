@@ -162,6 +162,7 @@
     "housekeeping.soundboard.filter.enabled": "Enabled",
     "housekeeping.soundboard.filter.disabled": "Disabled",
     "housekeeping.soundboard.name": "Name",
+    "housekeeping.soundboard.classname": "Sound (classname)",
     "housekeeping.soundboard.url": "URL",
     "housekeeping.soundboard.min_rank": "Minimum rank",
     "housekeeping.soundboard.enabled": "Enabled",

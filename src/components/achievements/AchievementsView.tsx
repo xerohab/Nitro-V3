@@ -1,10 +1,11 @@
 import { AddLinkEventTracker, ILinkEventTracker, RemoveLinkEventTracker } from '@nitrots/nitro-renderer';
 import { FC, useEffect, useState } from 'react';
 import { AchievementUtilities, LocalizeText } from '../../api';
-import { Column, LayoutImage, LayoutProgressBar, Text } from '../../common';
+import { DraggableWindowPosition } from '../../common';
 import { useAchievements } from '../../hooks';
 import { NitroCard } from '../../layout';
 import { AchievementCategoryView } from './AchievementCategoryView';
+import { AirAchievementProgressBar } from './AirAchievementProgressBar';
 import { AchievementsCategoryListView } from './category-list';
 
 export const AchievementsView: FC<{}> = (props) => {
@@ -49,30 +50,15 @@ export const AchievementsView: FC<{}> = (props) => {
     if (!isVisible) return null;
 
     return (
-        <NitroCard className="w-[375px] h-[405px]" uniqueKey="achievements">
-            <NitroCard.Header headerText={LocalizeText('inventory.achievements')} onCloseClick={(event) => setIsVisible(false)} />
-            {selectedCategory && (
-                <div className="relative flex items-center justify-center gap-3 p-1 cursor-pointer container-fluid bg-muted">
-                    <div
-                        className="bg-[url('@/assets/images/achievements/back-arrow.png')] bg-center no-repeat w-[33px] h-[34px]"
-                        onClick={(event) => setSelectedCategoryCode(null)}
-                    />
-                    <Column className="grow!" gap={0}>
-                        <Text className="text-small" fontSize={4} fontWeight="bold">
-                            {LocalizeText(`quests.${selectedCategory.code}.name`)}
-                        </Text>
-                        <Text>
-                            {LocalizeText(
-                                'achievements.details.categoryprogress',
-                                ['progress', 'limit'],
-                                [selectedCategory.getProgress().toString(), selectedCategory.getMaxProgress().toString()]
-                            )}
-                        </Text>
-                    </Column>
-                    <LayoutImage imageUrl={AchievementUtilities.getAchievementCategoryImageUrl(selectedCategory, null, true)} />
-                </div>
-            )}
-            <NitroCard.Content>
+        <NitroCard
+            className="nitro-achievements-air"
+            uniqueKey="achievements"
+            windowPosition={DraggableWindowPosition.TOP_CENTER}
+            offsetTop={-30}
+            data-view={selectedCategory ? 'category' : 'categories'}
+        >
+            <NitroCard.Header headerText={LocalizeText('inventory.achievements')} onCloseClick={() => setIsVisible(false)} />
+            <NitroCard.Content className="air-achievements-content">
                 {!selectedCategory && (
                     <>
                         <AchievementsCategoryListView
@@ -80,11 +66,10 @@ export const AchievementsView: FC<{}> = (props) => {
                             selectedCategoryCode={selectedCategoryCode}
                             setSelectedCategoryCode={setSelectedCategoryCode}
                         />
-                        <div className="flex flex-col justify-end grow gap-1">
-                            <Text center small>
-                                {LocalizeText('achievements.categories.score', ['score'], [achievementScore.toString()])}
-                            </Text>
-                            <LayoutProgressBar
+                        <div className="air-achievements-category-footer">
+                            <AirAchievementProgressBar
+                                className="air-achievements-total-progress"
+                                width={246}
                                 maxProgress={getMaxProgress}
                                 progress={getProgress}
                                 text={LocalizeText(
@@ -93,10 +78,39 @@ export const AchievementsView: FC<{}> = (props) => {
                                     [getProgress.toString(), getMaxProgress.toString()]
                                 )}
                             />
+                            <div className="air-achievements-score">
+                                {LocalizeText('achievements.categories.score', ['score'], [achievementScore.toString()])}
+                            </div>
                         </div>
                     </>
                 )}
-                {selectedCategory && <AchievementCategoryView category={selectedCategory} />}
+                {selectedCategory && (
+                    <>
+                        <div className="air-achievements-category-header">
+                            <button
+                                type="button"
+                                className="air-achievements-back"
+                                onClick={() => setSelectedCategoryCode(null)}
+                                aria-label={LocalizeText('generic.back')}
+                            />
+                            <div className="air-achievements-category-name">{LocalizeText(`quests.${selectedCategory.code}.name`)}</div>
+                            <div className="air-achievements-category-progress">
+                                {LocalizeText(
+                                    'achievements.details.categoryprogress',
+                                    ['progress', 'limit'],
+                                    [selectedCategory.getProgress().toString(), selectedCategory.getMaxProgress().toString()]
+                                )}
+                            </div>
+                            <img
+                                className="air-achievements-category-icon"
+                                src={AchievementUtilities.getAchievementCategoryImageUrl(selectedCategory, null, true)}
+                                alt=""
+                                draggable={false}
+                            />
+                        </div>
+                        <AchievementCategoryView category={selectedCategory} />
+                    </>
+                )}
             </NitroCard.Content>
         </NitroCard>
     );

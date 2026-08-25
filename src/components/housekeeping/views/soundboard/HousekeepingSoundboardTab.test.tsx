@@ -55,6 +55,12 @@ vi.mock('../../../../hooks', () => ({
         request: mocks.request,
         upsert: mocks.upsert,
         reorder: mocks.reorder
+    }),
+    useSoundboardManifest: () => ({
+        manifest: { categories: [], byClassname: new Map() },
+        manifestRef: { current: { categories: [], byClassname: new Map() } },
+        classnames: [],
+        loaded: true
     })
 }));
 

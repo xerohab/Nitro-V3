@@ -1,6 +1,7 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { useNavigatorRoomInfoPopupStore } from '../../../../hooks';
+import { NavigatorRoomInfoPopupView } from './NavigatorRoomInfoPopupView';
 import { NavigatorSearchResultItemView } from './NavigatorSearchResultItemView';
 
 vi.mock('@nitrots/nitro-renderer', async () => {
@@ -57,62 +58,59 @@ const room = {
     userCount: 3
 } as any;
 
-const Harness = () => {
-    const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
-    const [isPopoverActive, setIsPopoverActive] = useState(false);
-
-    return (
-        <NavigatorSearchResultItemView
-            roomData={room}
-            selectedRoomId={selectedRoomId}
-            setSelectedRoomId={setSelectedRoomId}
-            isPopoverActive={isPopoverActive}
-            setIsPopoverActive={setIsPopoverActive}
-        />
-    );
-};
+const Harness = () => (
+    <>
+        <NavigatorSearchResultItemView roomData={room} />
+        <NavigatorRoomInfoPopupView />
+    </>
+);
 
 afterEach(() => {
     vi.useRealTimers();
     cleanup();
+    useNavigatorRoomInfoPopupStore.getState().hide();
 });
 
 describe('AIR navigator room information hover', () => {
-    it('opens the room information popup on the first mouse hover without a click', () => {
+    it('does not open the room information popup on the first mouse hover', () => {
         render(<Harness />);
 
         fireEvent.mouseEnter(screen.getByRole('button', { name: 'Hover room' }));
+
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    it('opens the room information popup on the info-region click', () => {
+        render(<Harness />);
+
+        fireEvent.click(screen.getByRole('button', { name: 'navigator.room.popup.room.info' }));
 
         expect(screen.getByRole('dialog')).toBeInTheDocument();
         expect(screen.getByText('Room description')).toBeInTheDocument();
     });
 
-    it('closes the room information popup after the pointer leaves', () => {
+    it('closes the room information popup after the AIR 4s leave timeout', () => {
         vi.useFakeTimers();
         render(<Harness />);
-        const roomRow = screen.getByRole('button', { name: 'Hover room' });
-        fireEvent.mouseEnter(roomRow);
+        fireEvent.click(screen.getByRole('button', { name: 'navigator.room.popup.room.info' }));
 
-        fireEvent.mouseLeave(roomRow);
-        act(() => vi.advanceTimersByTime(200));
+        act(() => vi.advanceTimersByTime(4100));
 
         expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
-    it('keeps the popup open while the pointer moves from the row into its actions', () => {
+    it('keeps the popup open while the pointer stays on the bubble after the timer', () => {
         vi.useFakeTimers();
         render(<Harness />);
-        const roomRow = screen.getByRole('button', { name: 'Hover room' });
-        fireEvent.mouseEnter(roomRow);
+        fireEvent.click(screen.getByRole('button', { name: 'navigator.room.popup.room.info' }));
         const dialog = screen.getByRole('dialog');
 
-        fireEvent.mouseLeave(roomRow);
         fireEvent.mouseEnter(dialog);
-        act(() => vi.advanceTimersByTime(200));
+        act(() => vi.advanceTimersByTime(4100));
         expect(screen.getByRole('dialog')).toBeInTheDocument();
 
         fireEvent.mouseLeave(dialog);
-        act(() => vi.advanceTimersByTime(200));
+        act(() => vi.advanceTimersByTime(300));
         expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
 });

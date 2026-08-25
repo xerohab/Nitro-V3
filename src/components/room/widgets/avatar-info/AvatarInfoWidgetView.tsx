@@ -226,26 +226,6 @@ export const AvatarInfoWidgetView: FC<{}> = (props) => {
                 return <InfoStandWidgetFurniView avatarInfo={avatarInfo as AvatarInfoFurni} onClose={() => setAvatarInfo(null)} />;
             case AvatarInfoUser.OWN_USER:
             case AvatarInfoUser.PEER:
-                if (isTouchLayout) {
-                    const info = avatarInfo as AvatarInfoUser;
-                    const figure = encodeURIComponent(info.figure || '');
-                    const avatarHeadUrl = `https://www.habbo.com/habbo-imaging/avatarimage?figure=${figure}&direction=2&head_direction=2&gesture=sml&size=m&headonly=1`;
-
-                    if (!mobileUserDetailsOpen) {
-                        return (
-                            <button
-                                className="nitro-mobile-furni-infostand-trigger nitro-mobile-user-infostand-trigger"
-                                type="button"
-                                onClick={() => setMobileUserDetailsOpen(true)}
-                            >
-                                <div className="nitro-mobile-user-infostand-avatar">
-                                    <img className="nitro-mobile-user-infostand-avatar-image" src={avatarHeadUrl} alt={info.name} draggable={false} />
-                                </div>
-                            </button>
-                        );
-                    }
-                }
-
                 return <InfoStandWidgetUserView avatarInfo={avatarInfo as AvatarInfoUser} setAvatarInfo={setAvatarInfo} onClose={() => setAvatarInfo(null)} />;
             case AvatarInfoUser.BOT:
                 return <InfoStandWidgetBotView avatarInfo={avatarInfo as AvatarInfoUser} onClose={() => setAvatarInfo(null)} />;

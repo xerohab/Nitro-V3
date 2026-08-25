@@ -1,9 +1,18 @@
+import {
+    NavigatorCategoryListModeComposer,
+    NavigatorSearchCloseComposer,
+    NavigatorSearchOpenComposer,
+    NavigatorSettingsSaveComposer
+} from '@nitrots/nitro-renderer';
+import { SendMessageComposer } from '../../api';
 import { createNitroStore } from '../../state/createNitroStore';
 
 const QUICK_LINKS_STORAGE_KEY = 'nitro.navigator.air.quickLinksOpen';
 const COLLAPSED_RESULTS_STORAGE_KEY = 'nitro.navigator.air.collapsedResults';
 const EXPANDED_RESULTS_STORAGE_KEY = 'nitro.navigator.air.expandedResults';
 const RESULT_VIEW_MODES_STORAGE_KEY = 'nitro.navigator.air.resultViewModes';
+const NAVIGATOR_MIN_HEIGHT = 500;
+const NAVIGATOR_DEFAULT_HEIGHT = 628;
 
 const persistBooleanPreference = (key: string, value: boolean) => {
     try {
@@ -65,6 +74,9 @@ export type NavigatorUiState = {
     needsSearch: boolean;
     currentTabCode: string;
     currentFilter: string;
+    windowX: number;
+    windowY: number;
+    windowHeight: number;
     collapsedResultCodes: string[];
     expandedResultCodes: string[];
     resultViewModes: Record<string, number>;
@@ -88,7 +100,10 @@ export type NavigatorUiActions = {
     consumeSearchRequest(): void;
     setTab(code: string): void;
     setFilter(value: string): void;
+    setSearch(code: string, filter: string): void;
     hydrateAirPreferences(): void;
+    applyServerSettings(settings: { openSearches: boolean; windowX: number; windowY: number; windowHeight: number }): void;
+    persistWindowSettings(bounds: { x: number; y: number; width: number; height: number }): void;
     toggleResultCollapsed(code: string): void;
     setResultCollapsed(code: string, collapsed: boolean): void;
     setResultViewMode(code: string, mode: number): void;
@@ -106,6 +121,9 @@ export const useNavigatorUiStore = createNitroStore<NavigatorUiState & Navigator
     needsSearch: false,
     currentTabCode: '',
     currentFilter: '',
+    windowX: 0,
+    windowY: 0,
+    windowHeight: NAVIGATOR_DEFAULT_HEIGHT,
     collapsedResultCodes: [],
     expandedResultCodes: [],
     resultViewModes: {},
@@ -134,13 +152,25 @@ export const useNavigatorUiStore = createNitroStore<NavigatorUiState & Navigator
     consumeSearchRequest: () => set({ needsSearch: false }),
     setTab: (code) => set({ currentTabCode: code, currentFilter: '', isCreatorOpen: false }),
     setFilter: (value) => set({ currentFilter: value }),
+    setSearch: (code, filter) => set({ currentTabCode: code, currentFilter: filter, isCreatorOpen: false }),
     hydrateAirPreferences: () =>
         set({
-            isOpenSavesSearches: readBooleanPreference(QUICK_LINKS_STORAGE_KEY, true),
+            isOpenSavesSearches: readBooleanPreference(QUICK_LINKS_STORAGE_KEY, false),
             collapsedResultCodes: readResultCodeList(COLLAPSED_RESULTS_STORAGE_KEY),
             expandedResultCodes: readResultCodeList(EXPANDED_RESULTS_STORAGE_KEY),
             resultViewModes: readResultViewModes()
         }),
+    applyServerSettings: (settings) =>
+        set({
+            isOpenSavesSearches: settings.openSearches,
+            windowX: settings.windowX,
+            windowY: settings.windowY,
+            windowHeight: Math.max(NAVIGATOR_MIN_HEIGHT, settings.windowHeight || NAVIGATOR_DEFAULT_HEIGHT)
+        }),
+    persistWindowSettings: (bounds) => {
+        const state = useNavigatorUiStore.getState();
+        SendMessageComposer(new NavigatorSettingsSaveComposer(bounds.x, bounds.y, bounds.width, bounds.height, state.isOpenSavesSearches, 0));
+    },
     toggleResultCollapsed: (code) =>
         set((state) => {
             const collapsed = !state.collapsedResultCodes.includes(code);
@@ -151,6 +181,7 @@ export const useNavigatorUiStore = createNitroStore<NavigatorUiState & Navigator
 
             persistResultCodeList(COLLAPSED_RESULTS_STORAGE_KEY, collapsedResultCodes);
             persistResultCodeList(EXPANDED_RESULTS_STORAGE_KEY, expandedResultCodes);
+            SendMessageComposer(collapsed ? new NavigatorSearchCloseComposer(code) : new NavigatorSearchOpenComposer(code));
 
             return { collapsedResultCodes, expandedResultCodes };
         }),
@@ -165,6 +196,7 @@ export const useNavigatorUiStore = createNitroStore<NavigatorUiState & Navigator
 
             persistResultCodeList(COLLAPSED_RESULTS_STORAGE_KEY, collapsedResultCodes);
             persistResultCodeList(EXPANDED_RESULTS_STORAGE_KEY, expandedResultCodes);
+            SendMessageComposer(collapsed ? new NavigatorSearchCloseComposer(code) : new NavigatorSearchOpenComposer(code));
 
             return { collapsedResultCodes, expandedResultCodes };
         }),
@@ -175,6 +207,8 @@ export const useNavigatorUiStore = createNitroStore<NavigatorUiState & Navigator
             try {
                 window.localStorage.setItem(RESULT_VIEW_MODES_STORAGE_KEY, JSON.stringify(resultViewModes));
             } catch {}
+
+            SendMessageComposer(new NavigatorCategoryListModeComposer(code, resultViewModes[code]));
 
             return { resultViewModes };
         })

@@ -1,8 +1,25 @@
-import { AddLinkEventTracker, AvatarEditorFigureCategory, AvatarFigurePartType, GetSessionDataManager, ILinkEventTracker, RemoveLinkEventTracker, SetClothingChangeDataMessageComposer, UserFigureComposer } from '@nitrots/nitro-renderer';
+import {
+    AddLinkEventTracker,
+    AvatarEditorFigureCategory,
+    AvatarFigurePartType,
+    GetSessionDataManager,
+    ILinkEventTracker,
+    RemoveLinkEventTracker,
+    SetClothingChangeDataMessageComposer,
+    UserFigureComposer
+} from '@nitrots/nitro-renderer';
 import { FC, useEffect, useState } from 'react';
 import { FaDice, FaRedo, FaTrash } from 'react-icons/fa';
 import { AvatarEditorAction, LocalizeText, SendMessageComposer } from '../../api';
-import { Button, ButtonGroup, NitroCardContentView, NitroCardHeaderView, NitroCardTabsItemView, NitroCardTabsView, NitroCardView } from '../../common';
+import mainGenericSrc from '../../assets/images/avatareditor/air/main-generic.png';
+import mainHeadSrc from '../../assets/images/avatareditor/air/main-head.png';
+import mainLegsSrc from '../../assets/images/avatareditor/air/main-legs.png';
+import mainMiscSrc from '../../assets/images/avatareditor/air/main-misc.png';
+import mainTorsoSrc from '../../assets/images/avatareditor/air/main-torso.png';
+import wardrobeHangerSrc from '../../assets/images/avatareditor/wardrobe-hanger.png';
+import mainNftSrc from '../../assets/images/wardrobe/nft.png';
+import mainPetsSrc from '../../assets/images/wardrobe/pets.png';
+import { NitroCardContentView, NitroCardHeaderView, NitroCardTabsItemView, NitroCardTabsView, NitroCardView } from '../../common';
 import { useAvatarEditor } from '../../hooks';
 import { AvatarEditorFigurePreviewView } from './AvatarEditorFigurePreviewView';
 import { AvatarEditorModelView } from './AvatarEditorModelView';
@@ -10,8 +27,31 @@ import { AvatarEditorNftView } from './AvatarEditorNftView';
 import { AvatarEditorPetView } from './AvatarEditorPetView';
 import { AvatarEditorWardrobeView } from './AvatarEditorWardrobeView';
 
+const MAIN_TAB_ICONS: Record<string, string> = {
+    [AvatarEditorFigureCategory.GENERIC]: mainGenericSrc,
+    [AvatarEditorFigureCategory.HEAD]: mainHeadSrc,
+    [AvatarEditorFigureCategory.TORSO]: mainTorsoSrc,
+    [AvatarEditorFigureCategory.LEGS]: mainLegsSrc,
+    [AvatarEditorFigureCategory.PETS]: mainPetsSrc,
+    [AvatarEditorFigureCategory.MISC]: mainMiscSrc,
+    [AvatarEditorFigureCategory.NFT]: mainNftSrc
+};
+
+// AIR removes unavailable tabs from this sequence without reordering the
+// survivors. Polaris-only categories are kept after the official tabs.
+const MAIN_TAB_ORDER: string[] = [
+    AvatarEditorFigureCategory.GENERIC,
+    AvatarEditorFigureCategory.HEAD,
+    AvatarEditorFigureCategory.TORSO,
+    AvatarEditorFigureCategory.LEGS,
+    AvatarEditorFigureCategory.MISC,
+    AvatarEditorFigureCategory.NFT,
+    AvatarEditorFigureCategory.PETS
+];
+
 export const AvatarEditorView: FC<{}> = (props) => {
     const [isVisible, setIsVisible] = useState(false);
+    const [isWardrobeOpen, setIsWardrobeOpen] = useState(false);
     const {
         setIsVisible: setEditorVisibility,
         clothingChangeData = null,
@@ -26,9 +66,20 @@ export const AvatarEditorView: FC<{}> = (props) => {
         getFigureString = null
     } = useAvatarEditor();
 
-    const isWardrobeOpen = activeModelKey === AvatarEditorFigureCategory.WARDROBE;
     const isPetsOpen = activeModelKey === AvatarEditorFigureCategory.PETS;
     const isNftOpen = activeModelKey === AvatarEditorFigureCategory.NFT;
+    const canUseWardrobe = !clothingChangeData && !isNftOpen;
+    const orderedModelKeys = Object.keys(avatarModels)
+        .filter((modelKey) => modelKey !== AvatarEditorFigureCategory.WARDROBE)
+        .sort((left, right) => {
+            const leftIndex = MAIN_TAB_ORDER.indexOf(left);
+            const rightIndex = MAIN_TAB_ORDER.indexOf(right);
+
+            if (leftIndex === -1) return rightIndex === -1 ? left.localeCompare(right) : 1;
+            if (rightIndex === -1) return -1;
+
+            return leftIndex - rightIndex;
+        });
 
     const processAction = (action: string) => {
         switch (action) {
@@ -63,8 +114,10 @@ export const AvatarEditorView: FC<{}> = (props) => {
                     case 'show':
                         if (parts[2] && parts[3] && (parts[2] === AvatarFigurePartType.MALE || parts[2] === AvatarFigurePartType.FEMALE)) {
                             setClothingChangeData({ objectId: Number(parts[3]), gender: parts[2] });
+                            setIsWardrobeOpen(false);
                         } else {
                             setClothingChangeData(null);
+                            setIsWardrobeOpen(true);
                         }
                         setIsVisible(true);
                         return;
@@ -74,7 +127,11 @@ export const AvatarEditorView: FC<{}> = (props) => {
                         return;
                     case 'toggle':
                         setClothingChangeData(null);
-                        setIsVisible((prevValue) => !prevValue);
+                        setIsVisible((prevValue) => {
+                            if (!prevValue) setIsWardrobeOpen(true);
+
+                            return !prevValue;
+                        });
                         return;
                 }
             },
@@ -89,70 +146,100 @@ export const AvatarEditorView: FC<{}> = (props) => {
     useEffect(() => {
         setEditorVisibility(isVisible);
 
-        if (!isVisible) setClothingChangeData(null);
+        if (!isVisible) {
+            setClothingChangeData(null);
+            setIsWardrobeOpen(false);
+        }
     }, [isVisible, setEditorVisibility, setClothingChangeData]);
+
+    useEffect(() => {
+        if (!canUseWardrobe) setIsWardrobeOpen(false);
+    }, [canUseWardrobe]);
 
     if (!isVisible) return null;
 
     return (
-        <NitroCardView className={`nitro-avatar-editor ${isWardrobeOpen ? 'w-[880px]' : 'w-[600px]'} h-[460px]`} isResizable={false} uniqueKey="avatar-editor">
+        <NitroCardView
+            className={`nitro-avatar-editor${isWardrobeOpen ? ' is-wardrobe-open' : ''}`}
+            frameStyle={3}
+            isResizable={false}
+            uniqueKey="avatar-editor"
+        >
             <NitroCardHeaderView
                 headerText={LocalizeText(clothingChangeData ? 'widget.furni.clothingchange.editor.title' : 'avatareditor.title')}
                 onCloseClick={(event) => setIsVisible(false)}
             />
-            <NitroCardTabsView classNames={['avatar-editor-tabs']}>
-                {Object.keys(avatarModels).map((modelKey) => {
-                    const isActive = activeModelKey === modelKey;
-                    const isWardrobe = modelKey === AvatarEditorFigureCategory.WARDROBE;
-                    const isPets = modelKey === AvatarEditorFigureCategory.PETS;
-                    const isNft = modelKey === AvatarEditorFigureCategory.NFT;
-                    const isMisc = modelKey === AvatarEditorFigureCategory.MISC;
-
-                    let tabClass = `tab ${modelKey}`;
-                    if (isWardrobe) tabClass = 'tab-wardrobe';
-                    else if (isPets) tabClass = 'tab-pets';
-                    else if (isNft) tabClass = 'tab-nft';
-                    else if (isMisc) tabClass = 'tab-misc';
-
-                    return (
-                        <NitroCardTabsItemView key={modelKey} isActive={isActive} onClick={(event) => setActiveModelKey(modelKey)}>
-                            <div className={tabClass} />
-                        </NitroCardTabsItemView>
-                    );
-                })}
-            </NitroCardTabsView>
-            <NitroCardContentView>
-                <div className="flex gap-2 overflow-hidden h-full">
-                    <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-                        {activeModelKey.length > 0 && !isWardrobeOpen && !isPetsOpen && !isNftOpen && (
+            <NitroCardContentView className="nitro-avatar-editor-content">
+                <div className="nitro-avatar-editor-stage">
+                    <div className="nitro-avatar-editor-nameplate">
+                        <span>{GetSessionDataManager().userName}</span>
+                    </div>
+                    <div className="nitro-avatar-editor-tab-row">
+                        <NitroCardTabsView classNames={['avatar-editor-tabs']}>
+                            {orderedModelKeys.map((modelKey) => (
+                                <NitroCardTabsItemView
+                                    key={modelKey}
+                                    classNames={['nitro-avatar-editor-main-tab', `is-${modelKey}`]}
+                                    isActive={activeModelKey === modelKey}
+                                    onClick={() => setActiveModelKey(modelKey)}
+                                >
+                                    <img className="nitro-avatar-editor-main-tab-icon" src={MAIN_TAB_ICONS[modelKey]} alt="" draggable={false} />
+                                </NitroCardTabsItemView>
+                            ))}
+                        </NitroCardTabsView>
+                    </div>
+                    {canUseWardrobe && (
+                        <button
+                            type="button"
+                            className={`nitro-avatar-editor-wardrobe-toggle${isWardrobeOpen ? ' is-open' : ''}`}
+                            aria-pressed={isWardrobeOpen}
+                            aria-label={LocalizeText('avatareditor.wardrobe.title')}
+                            onClick={() => setIsWardrobeOpen((open) => !open)}
+                        >
+                            <img alt="" draggable={false} src={wardrobeHangerSrc} />
+                        </button>
+                    )}
+                    <div className="nitro-avatar-editor-main">
+                        {activeModelKey.length > 0 && !isPetsOpen && !isNftOpen && (
                             <AvatarEditorModelView categories={avatarModels[activeModelKey]} name={activeModelKey} />
                         )}
-                        {isWardrobeOpen && <AvatarEditorWardrobeView />}
                         {isPetsOpen && <AvatarEditorPetView categories={avatarModels[activeModelKey]} />}
                         {isNftOpen && <AvatarEditorNftView categories={avatarModels[activeModelKey]} />}
-                    </div>
-                    <div className="flex flex-col shrink-0 w-[120px] gap-1 overflow-hidden">
                         <AvatarEditorFigurePreviewView />
-                        <div className="flex flex-col grow! gap-1">
-                            {!clothingChangeData && (
-                                <ButtonGroup className="w-full">
-                                    <Button variant="secondary" className="flex-1" onClick={(event) => processAction(AvatarEditorAction.ACTION_RESET)}>
-                                        <FaRedo className="fa-icon" />
-                                    </Button>
-                                    <Button variant="secondary" className="flex-1" onClick={(event) => processAction(AvatarEditorAction.ACTION_CLEAR)}>
-                                        <FaTrash className="fa-icon" />
-                                    </Button>
-                                    <Button variant="secondary" className="flex-1" onClick={(event) => processAction(AvatarEditorAction.ACTION_RANDOMIZE)}>
-                                        <FaDice className="fa-icon" />
-                                    </Button>
-                                </ButtonGroup>
-                            )}
-                            <Button className="w-full" variant="success" onClick={(event) => processAction(AvatarEditorAction.ACTION_SAVE)}>
-                                {LocalizeText('avatareditor.save')}
-                            </Button>
-                        </div>
+                        {!clothingChangeData && (
+                            <div className="nitro-avatar-editor-secondary-actions">
+                                <button
+                                    type="button"
+                                    aria-label="Reset avatar"
+                                    title="Reset avatar"
+                                    onClick={() => processAction(AvatarEditorAction.ACTION_RESET)}
+                                >
+                                    <FaRedo className="fa-icon" />
+                                </button>
+                                <button
+                                    type="button"
+                                    aria-label="Clear avatar"
+                                    title="Clear avatar"
+                                    onClick={() => processAction(AvatarEditorAction.ACTION_CLEAR)}
+                                >
+                                    <FaTrash className="fa-icon" />
+                                </button>
+                                <button
+                                    type="button"
+                                    aria-label="Randomize avatar"
+                                    title="Randomize avatar"
+                                    onClick={() => processAction(AvatarEditorAction.ACTION_RANDOMIZE)}
+                                >
+                                    <FaDice className="fa-icon" />
+                                </button>
+                            </div>
+                        )}
+                        <button type="button" className="nitro-avatar-editor-save" onClick={() => processAction(AvatarEditorAction.ACTION_SAVE)}>
+                            {LocalizeText('avatareditor.save')}
+                        </button>
                     </div>
                 </div>
+                {isWardrobeOpen && canUseWardrobe && <AvatarEditorWardrobeView />}
             </NitroCardContentView>
         </NitroCardView>
     );

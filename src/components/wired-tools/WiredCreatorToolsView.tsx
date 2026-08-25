@@ -26,15 +26,16 @@ import {
     RoomUnitStatusEvent,
     UpdateFurniturePositionComposer,
     Vector3d,
-    WiredMonitorDataEvent,
-    WiredMonitorRequestComposer,
     WiredFurniRuntimeStateEvent,
     WiredFurniRuntimeStateRequestComposer,
+    WiredMonitorDataEvent,
+    WiredMonitorRequestComposer,
     WiredUserInspectMoveComposer
 } from '@nitrots/nitro-renderer';
 import { FC, KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     AvatarInfoUtilities,
+    createPacketCooldownGate,
     GetRoomObjectBounds,
     GetRoomObjectScreenLocation,
     LocalizeText,
@@ -72,9 +73,9 @@ import {
     VARIABLES_ELEMENTS,
     WEEKDAY_NAMES,
     WIRED_CLOCK_REFRESH_MS,
+    WIRED_FREEZE_EFFECT_IDS,
     WIRED_FURNI_RUNTIME_ACTION_READ,
     WIRED_FURNI_RUNTIME_ACTION_WRITE,
-    WIRED_FREEZE_EFFECT_IDS,
     WIRED_INSPECTION_REFRESH_MS,
     WIRED_MONITOR_ACTION_CLEAR_LOGS,
     WIRED_MONITOR_ACTION_FETCH,
@@ -204,6 +205,12 @@ export const WiredCreatorToolsView: FC<{}> = () => {
     const variableHighlightOverlays = useWiredCreatorToolsUiStore((s) => s.variableHighlightOverlays);
     const setVariableHighlightOverlays = useWiredCreatorToolsUiStore((s) => s.setVariableHighlightOverlays);
     const variableHighlightObjectsRef = useRef<Array<{ category: number; objectId: number }>>([]);
+    const monitorRequestGateRef = useRef<ReturnType<typeof createPacketCooldownGate> | null>(null);
+
+    if (!monitorRequestGateRef.current) {
+        monitorRequestGateRef.current = createPacketCooldownGate();
+    }
+
     const shouldPauseVariableSnapshotRefresh = !!editingVariable || !!editingManagedHolderVariableId || isInspectionGiveOpen || isManagedGiveOpen;
     const selectedVariableKeys = useWiredCreatorToolsUiStore((s) => s.selectedVariableKeys);
     const setSelectedVariableKeys = useWiredCreatorToolsUiStore((s) => s.setSelectedVariableKeys);
@@ -845,17 +852,21 @@ export const WiredCreatorToolsView: FC<{}> = () => {
         setSelectedMonitorLogDetails(null);
     }, [selectedMonitorErrorType]);
 
+    const requestMonitorSnapshot = useCallback(() => {
+        monitorRequestGateRef.current?.request(() => {
+            SendMessageComposer(new WiredMonitorRequestComposer(WIRED_MONITOR_ACTION_FETCH));
+        });
+    }, []);
+
     useEffect(() => {
         if (!isVisible || activeTab !== 'monitor' || !roomSession?.roomId) return;
 
-        const requestSnapshot = () => SendMessageComposer(new WiredMonitorRequestComposer(WIRED_MONITOR_ACTION_FETCH));
+        requestMonitorSnapshot();
 
-        requestSnapshot();
-
-        const interval = window.setInterval(requestSnapshot, WIRED_MONITOR_POLL_MS);
+        const interval = window.setInterval(requestMonitorSnapshot, WIRED_MONITOR_POLL_MS);
 
         return () => window.clearInterval(interval);
-    }, [isVisible, activeTab, roomSession?.roomId]);
+    }, [isVisible, activeTab, roomSession?.roomId, requestMonitorSnapshot]);
 
     useEffect(() => {
         if (!isVisible || !roomSession?.roomId || !roomSettings.canInspect || shouldPauseVariableSnapshotRefresh) return;

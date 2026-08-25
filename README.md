@@ -1,4 +1,10 @@
-# Nitro V3
+# Octane
+
+Octane originated as a fork of [Nitro React](https://github.com/billsonnn/nitro-react) and its companion [Nitro Renderer](https://github.com/billsonnn/nitro-renderer).
+
+Since then, Octane has evolved beyond its origins. Both the client and renderer have been expanded, improved and maintained through numerous fixes and new features.
+
+While Octane remains grateful to the Nitro project and its contributors, it is no longer intended to be a simple fork or reskin. It is an independently developed platform with its own identity, technical direction and long-term vision.
 
 ## Prerequisites
 
@@ -14,7 +20,7 @@ in one go: prerequisites check, renderer clone & link, dependency install,
 config copy, JSON parsing mode selection, URL prompt with validation, and the
 production build.
 
-After cloning Nitro V3, from its root run:
+After cloning Octane, from its root run:
 
 ```
 # Windows
@@ -34,7 +40,7 @@ The installer walks through these steps:
 
 ```
 [1/9] Check prerequisites (node >= 18, yarn, git)
-[2/9] Clone Nitro_Render_V3
+[2/9] Clone octane-renderer
 [3/9] Setup renderer (yarn install + yarn link)
 [4/9] Setup client (yarn install + yarn link "@nitrots/nitro-renderer")
 [5/9] Copy public/configuration/*.example -> *.json
@@ -165,17 +171,16 @@ Both styles work; you can migrate one gamedata file at a time.
 
 ## Installation (manual)
 
--   First you should open terminal and navigate to the folder where you want to clone Nitro and Nitro-Renderer
--   Clone Nitro (Expl. C:\Github\)
-    -   `git clone https://github.com/duckietm/Nitro-V3.git` <== For now switch to Dev-RendererV2 
-	-   `git clone https://github.com/duckietm/Nitro_Render_V3.git`
-	-   Install the dependencies for the renderer : cd C:\Github\Nitro_Render_V3
+-   First you should open terminal and navigate to the folder where you want to clone Octane and Octane Renderer
+-   Clone Octane (Expl. C:\Github\)
+  -   `git clone https://github.com/duckietm/Octane.git` <== For now switch to Dev-RendererV2
+	-   `git clone https://github.com/duckietm/Octane-Renderer.git`
+	-   Install the dependencies for the renderer : cd C:\Github\octane-renderer
     	-   `yarn install`
-	-	Now we will create a Link for the Nitro Renderer : `yarn link` This will give you a link address `yarn link "@nitrots/nitro-renderer"`
-    -   Install the dependencies for Cool UI : cd C:\Github\Nitro-V3
+	-	Now we will create a Link for the Octane Renderer : `yarn link` This will give you a link address `yarn link "@nitrots/nitro-renderer"`
+    -   Install the dependencies for Cool UI : cd C:\Github\octane
 	-   `yarn install`
-	-   `yarn link "@nitrots/nitro-renderer"` <== This will link the renderer in the project
--   Rename a few files
+ -  -   Rename a few files
     -   Copy `public/configuration/renderer-config.example` to `public/configuration/renderer-config.json`
     -   Copy `public/configuration/ui-config.example` to `public/configuration/ui-config.json`
     -   Copy `public/configuration/client-mode.example` to `public/configuration/client-mode.json`
@@ -189,7 +194,7 @@ Both styles work; you can migrate one gamedata file at a time.
 
 ## JSON / JSONC configuration mode
 
-Starting with this version of Nitro V3, you can choose how the client parses the
+Starting with this version of Octane, you can choose how the client parses the
 configuration files (`renderer-config.json`, `ui-config.json`, `client-mode.json`,
 and the gamedata JSONs served by the renderer):
 
@@ -206,7 +211,7 @@ which mode to use:
 
 ```
 ════════════════════════════════════════════════════════════
-  Nitro V3 — JSON mode configuration
+  Octane — JSON mode configuration
 ════════════════════════════════════════════════════════════
 
   1) JSONC  (recommended)
@@ -255,12 +260,12 @@ to JSONC; nothing is silently coerced.
 
 ## Usage
 
--   To use Nitro you need `.nitro` assets generated, see [nitro-converter](https://git.krews.org/nitro/nitro-converter) for instructions
+-   To use Octane you need `.nitro` assets generated, see [nitro-converter](https://git.krews.org/nitro/nitro-converter) for instructions
 -   See [Morningstar Websockets](https://git.krews.org/nitro/ms-websockets) for instructions on configuring websockets on your server
 
 ### Development
 
-Run Nitro in development mode when you are editing the files, this way you can see the changes in your browser instantly
+Run Octane in development mode when you are editing the files, this way you can see the changes in your browser instantly
 
 ```
 yarn start
@@ -268,11 +273,11 @@ yarn start
 
 ### Production
 
-To build a production version of Nitro just run the following command
+To build a production version of Octane just run the following command
 
 ```
 yarn build:prod
 ```
 
 -   A `dist` folder will be generated, these are the files that must be uploaded to your webserver
--   Consult your CMS documentation for compatibility with Nitro and how to add the production files
+-   Consult your CMS documentation for compatibility with Octane and how to add the production files

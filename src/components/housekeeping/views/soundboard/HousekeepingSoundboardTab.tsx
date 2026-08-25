@@ -1,7 +1,7 @@
 import { GetSoundManager, ISoundboardCatalogSound } from '@nitrots/nitro-renderer';
 import { DragEvent, FC, useEffect, useMemo, useState } from 'react';
 import { LocalizeText } from '../../../../api';
-import { useSoundboardCatalog } from '../../../../hooks';
+import { useSoundboardCatalog, useSoundboardManifest } from '../../../../hooks';
 import {
     filterCatalogSounds,
     reorderCatalog,
@@ -9,9 +9,9 @@ import {
     SoundboardCatalogFilter,
     validateCatalogDraft
 } from '../../../../hooks/soundboard/soundboardCatalogState';
-import { resolveSoundboardUrl } from '../../../../hooks/soundboard/soundboardUrl';
+import { resolveSoundboardSoundUrl } from '../../../../hooks/soundboard/soundboardUrl';
 
-const EMPTY_DRAFT: SoundboardCatalogDraft = { id: 0, name: '', url: '', minRank: 1, enabled: true };
+const EMPTY_DRAFT: SoundboardCatalogDraft = { id: 0, name: '', classname: '', url: '', minRank: 1, enabled: true };
 const RESULT_KEYS = [
     'success',
     'forbidden',
@@ -26,6 +26,7 @@ const RESULT_KEYS = [
 
 export const HousekeepingSoundboardTab: FC = () => {
     const { sounds, lastResult, pendingOperation, request, upsert, reorder } = useSoundboardCatalog();
+    const { manifest, classnames: knownClassnames } = useSoundboardManifest();
     const [query, setQuery] = useState('');
     const [filter, setFilter] = useState<SoundboardCatalogFilter>('all');
     const [draft, setDraft] = useState<SoundboardCatalogDraft>(EMPTY_DRAFT);
@@ -50,7 +51,14 @@ export const HousekeepingSoundboardTab: FC = () => {
     const draftLocked = pendingOperation !== null;
 
     const editSound = (sound: ISoundboardCatalogSound) => {
-        setDraft({ id: sound.id, name: sound.name, url: sound.url, minRank: sound.minRank, enabled: sound.enabled });
+        setDraft({
+            id: sound.id,
+            name: sound.name,
+            classname: sound.classname ?? '',
+            url: sound.url,
+            minRank: sound.minRank,
+            enabled: sound.enabled
+        });
     };
 
     const preview = (candidate: SoundboardCatalogDraft) => {
@@ -58,7 +66,7 @@ export const HousekeepingSoundboardTab: FC = () => {
 
         setPreviewFailed(false);
         void GetSoundManager()
-            .playSoundboard(resolveSoundboardUrl(candidate.url.trim()))
+            .playSoundboard(resolveSoundboardSoundUrl({ classname: candidate.classname?.trim() ?? '', url: candidate.url?.trim() ?? '' }, manifest))
             .then((played) => setPreviewFailed(!played));
     };
 
@@ -130,6 +138,23 @@ export const HousekeepingSoundboardTab: FC = () => {
                         onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))}
                         className="rounded border border-zinc-300 bg-white px-2 py-1 text-xs font-normal normal-case"
                     />
+                </label>
+                <label className="flex flex-col gap-0.5 text-[10px] font-semibold uppercase tracking-wide">
+                    {LocalizeText('housekeeping.soundboard.classname')}
+                    <input
+                        aria-label={LocalizeText('housekeeping.soundboard.classname')}
+                        disabled={draftLocked}
+                        value={draft.classname}
+                        list="soundboard-classnames"
+                        placeholder={knownClassnames[0] ?? ''}
+                        onChange={(event) => setDraft((current) => ({ ...current, classname: event.target.value }))}
+                        className="rounded border border-zinc-300 bg-white px-2 py-1 text-xs font-normal normal-case"
+                    />
+                    <datalist id="soundboard-classnames">
+                        {knownClassnames.map((classname) => (
+                            <option key={classname} value={classname} />
+                        ))}
+                    </datalist>
                 </label>
                 <label className="flex flex-col gap-0.5 text-[10px] font-semibold uppercase tracking-wide">
                     {LocalizeText('housekeeping.soundboard.url')}
@@ -217,7 +242,7 @@ export const HousekeepingSoundboardTab: FC = () => {
                                     {sound.name} <span className="font-normal text-zinc-400">#{sound.id}</span>
                                 </div>
                                 <div className="truncate text-[10px] text-zinc-500">
-                                    {sound.url} · rank {sound.minRank} ·{' '}
+                                    {sound.classname || sound.url} · rank {sound.minRank} ·{' '}
                                     {sound.enabled
                                         ? LocalizeText('housekeeping.soundboard.filter.enabled')
                                         : LocalizeText('housekeeping.soundboard.filter.disabled')}

@@ -19,7 +19,7 @@ describe('standard catalog product preview controls', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Rotate left' }));
         fireEvent.click(screen.getByRole('button', { name: 'Rotate right' }));
 
-        expect(rotations).toEqual([false, true]);
+        expect(rotations).toEqual([true, false]);
         expect(screen.queryByRole('button', { name: 'Change state' })).not.toBeInTheDocument();
         expect(screen.queryByRole('button', { name: 'Toggle zoom' })).not.toBeInTheDocument();
         expect(roomPreviewer.zoomIn).not.toHaveBeenCalled();
@@ -121,7 +121,7 @@ describe('standard catalog product preview controls', () => {
         expect(screen.queryByRole('button', { name: 'Change state' })).not.toBeInTheDocument();
         fireEvent.click(screen.getByRole('button', { name: 'Rotate left' }));
 
-        expect(roomPreviewer.changeRoomObjectDirection).toHaveBeenCalledWith(false);
+        expect(roomPreviewer.changeRoomObjectDirection).toHaveBeenCalledWith(true);
         fireEvent.click(screen.getByRole('button', { name: 'Change avatar action' }));
 
         const zoomButton = screen.getByRole('button', { name: 'Toggle zoom' });
@@ -153,7 +153,7 @@ describe('standard catalog product preview controls', () => {
 
         fireEvent.click(within(view.container).getByRole('button', { name: 'Rotate left' }));
 
-        expect(roomPreviewer.changeRoomObjectDirection).toHaveBeenCalledWith(false);
+        expect(roomPreviewer.changeRoomObjectDirection).toHaveBeenCalledWith(true);
         expect(canvasClick).not.toHaveBeenCalled();
     });
 });

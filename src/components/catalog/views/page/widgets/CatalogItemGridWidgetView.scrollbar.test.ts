@@ -9,6 +9,7 @@ describe('CatalogItemGridWidgetView scrollbar ownership', () => {
         expect(source).toContain('<ClassicScrollAreaView');
         expect(source).toContain('classicScrollbar');
         expect(source).toContain('overflow="visible"');
+        expect(source).toContain('elementRef.current.scrollLeft = 0');
         expect(source).not.toContain('innerRef={elementRef}');
     });
 });

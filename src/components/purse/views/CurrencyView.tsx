@@ -1,5 +1,8 @@
 import { FC, useMemo } from 'react';
 import { LocalizeFormattedNumber, LocalizeShortNumber } from '../../../api';
+import creditsIcon from '../../../assets/images/purse/air/credits.png';
+import diamondIcon from '../../../assets/images/purse/air/diamond.png';
+import ducketsIcon from '../../../assets/images/purse/air/duckets.png';
 import { Flex, LayoutCurrencyIcon, Text } from '../../../common';
 
 interface CurrencyViewProps {
@@ -7,6 +10,12 @@ interface CurrencyViewProps {
     amount: number;
     short: boolean;
 }
+
+const AIR_PURSE_ICONS: Record<number, string> = {
+    [-1]: creditsIcon,
+    0: ducketsIcon,
+    5: diamondIcon
+};
 
 export const CurrencyView: FC<CurrencyViewProps> = (props) => {
     const { type = -1, amount = -1, short = false } = props;
@@ -16,17 +25,20 @@ export const CurrencyView: FC<CurrencyViewProps> = (props) => {
 
         return LocalizeShortNumber(amount).toLowerCase();
     }, [amount, shouldShorten]);
+    const airIcon = AIR_PURSE_ICONS[type];
 
     const element = useMemo(() => {
         return (
-            <Flex justifyContent="end" pointer gap={1} className={`nitro-purse-button rounded allcurrencypurse nitro-purse-button currency-info currency-${type}`}>
+            <Flex justifyContent="end" pointer gap={1} className={`nitro-purse-button allcurrencypurse nitro-purse-button currency-info currency-${type}`}>
                 <Text truncate textEnd variant="white" grow className="nitro-purse-button__amount currency-text">
                     {displayAmount}
                 </Text>
-                <LayoutCurrencyIcon type={type} />
+                {airIcon
+                    ? <img src={ airIcon } alt="" className="nitro-purse-air-currency" />
+                    : <LayoutCurrencyIcon type={ type } />}
             </Flex>
         );
-    }, [displayAmount, type]);
+    }, [airIcon, displayAmount, type]);
 
     if (!shouldShorten) return element;
 
