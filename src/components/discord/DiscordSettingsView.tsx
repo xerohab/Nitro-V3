@@ -183,7 +183,7 @@ export const DiscordSettingsView: FC = () => {
     return (
         <NitroCardView className="discord-settings-window w-[390px]" theme="primary-slim" uniqueKey="discord-settings">
             <NitroCardHeaderView
-                headerText={localizeWithFallback('discord.settings.title', 'Impostazioni Discord')}
+                headerText={localizeWithFallback('discord.settings.title', 'Discord Settings')}
                 onCloseClick={() => setIsVisible(false)}
             />
 
@@ -196,7 +196,7 @@ export const DiscordSettingsView: FC = () => {
                         {localizeWithFallback('discord.settings.header', 'Discord Rich Presence')}
                     </Text>
                     <Text small className="text-white/80">
-                        {localizeWithFallback('discord.settings.subtitle', 'Mostra la tua attività su Discord')}
+                        {localizeWithFallback('discord.settings.subtitle', 'Show your activity on Discord')}
                     </Text>
                 </div>
             </div>
@@ -205,39 +205,39 @@ export const DiscordSettingsView: FC = () => {
                 <DiscordPresencePreview preferences={preferences} />
 
                 <CheckboxRow
-                    label={localizeWithFallback('discord.settings.show_habbo', 'Mostra Habbo su Discord')}
+                    label={localizeWithFallback('discord.settings.show_habbo', 'Show Habbo on Discord')}
                     description={localizeWithFallback(
                         'discord.settings.show_habbo.desc',
-                        'Visualizza che stai giocando ad Habbo sul tuo profilo Discord',
+                        'Display that you are playing Habbo on your Discord profile',
                     )}
                     checked={preferences.showHabbo}
                     onChange={setPref('showHabbo')}
                 />
                 <CheckboxRow
-                    label={localizeWithFallback('discord.settings.share_activity', 'Condividi attività')}
+                    label={localizeWithFallback('discord.settings.share_activity', 'Share activity')}
                     description={localizeWithFallback(
                         'discord.settings.share_activity.desc',
-                        'Mostra in quale stanza ti trovi e cosa stai facendo',
+                        'Show which room you are in and what you are doing',
                     )}
                     checked={preferences.shareActivity}
                     disabled={activityDisabled}
                     onChange={setPref('shareActivity')}
                 />
                 <CheckboxRow
-                    label={localizeWithFallback('discord.settings.hide_hidden', 'Nascondi stanze nascoste')}
+                    label={localizeWithFallback('discord.settings.hide_hidden', 'Hide hidden rooms')}
                     description={localizeWithFallback(
                         'discord.settings.hide_hidden.desc',
-                        'Non rivelare i dettagli quando sei in una stanza nascosta',
+                        'Do not reveal details when you are in a hidden room',
                     )}
                     checked={preferences.hideInHiddenRooms}
                     disabled={subOptionDisabled}
                     onChange={setPref('hideInHiddenRooms')}
                 />
                 <CheckboxRow
-                    label={localizeWithFallback('discord.settings.allow_joining', 'Consenti di unirsi')}
+                    label={localizeWithFallback('discord.settings.allow_joining', 'Allow joining')}
                     description={localizeWithFallback(
                         'discord.settings.allow_joining.desc',
-                        'Aggiungi un pulsante "Visita stanza" alla tua presence',
+                        'Add a "Visit room" button to your presence',
                     )}
                     checked={preferences.allowJoining}
                     disabled={subOptionDisabled}
@@ -245,7 +245,7 @@ export const DiscordSettingsView: FC = () => {
                 />
 
                 <Text small className="text-black/60 uppercase tracking-wider px-1 pt-2">
-                    {localizeWithFallback('discord.settings.servers', 'Server Discord')}
+                    {localizeWithFallback('discord.settings.servers', 'Discord Servers')}
                 </Text>
                 <div className="flex flex-col gap-2">
                     <ServerLink

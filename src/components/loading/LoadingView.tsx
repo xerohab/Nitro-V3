@@ -1,7 +1,11 @@
 import { GetConfiguration } from '@nitrots/nitro-renderer';
+
 import { FC, useMemo } from 'react';
+
 import loadingGif from '@/assets/images/loading/loading.gif';
+
 import nitroV3Logo from '@/assets/images/notifications/nitro_v3.png';
+
 import { Base, Column, Text } from '../../common';
 
 interface LoadingViewProps {
