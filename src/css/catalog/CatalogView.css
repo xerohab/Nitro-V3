@@ -4914,3 +4914,174 @@
     flex: 0 0 12.5% !important;
     box-sizing: border-box !important;
 }
+/* ============================================================================
+   XERO CATALOG LAYOUT RECOVERY
+   Restores full-width item grid and visible purchase controls after Dev merge
+   ============================================================================ */
+
+.nitro-catalog-default-layout {
+    position: relative !important;
+    width: 100% !important;
+    height: 460px !important;
+    min-height: 460px !important;
+    max-height: 460px !important;
+    overflow: hidden !important;
+}
+
+/* Allow the upper product/preview section to use the available catalog width */
+.nitro-catalog-product-view {
+    position: relative !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 230px !important;
+    min-height: 230px !important;
+    max-height: 230px !important;
+    overflow: visible !important;
+}
+
+/* Keep preview usable rather than squeezed by the old AIR dimensions */
+.nitro-catalog-offer-panel {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+}
+
+.nitro-catalog-offer-panel > .nitro-catalog-offer-preview {
+    width: 360px !important;
+    min-width: 360px !important;
+    max-width: 360px !important;
+}
+
+/* Item grid should span the full lower catalog area */
+.nitro-catalog-grid-shell {
+    position: absolute !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: 245px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 170px !important;
+    min-height: 170px !important;
+    padding: 3px !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+}
+
+.nitro-catalog-grid-shell .nitro-catalog-item-grid-scroll-area,
+.nitro-catalog-grid-shell .nitro-catalog-grid-virtual {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Stop the purchase controls being cut off */
+.nitro-catalog-purchase-row {
+    position: absolute !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: 418px !important;
+    width: 100% !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    padding: 4px 8px !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+}
+
+/* Make both Buy and Buy-as-gift remain visible */
+.nitro-catalog-offer-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 8px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 30px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+}
+
+.nitro-catalog-default-layout
+    .nitro-catalog-offer-actions
+    > .nitro-catalog-standard-button {
+    position: relative !important;
+    display: inline-flex !important;
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: 90px !important;
+    height: 28px !important;
+    min-height: 28px !important;
+    margin: 0 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.nitro-catalog-default-layout
+    .nitro-catalog-offer-actions
+    > .nitro-catalog-standard-buy-button {
+    margin-left: 0 !important;
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+/* ============================================================================
+   XERO CATALOG PREVIEW SIZE FIX
+   Give furniture more vertical room inside the preview
+   ============================================================================ */
+
+.nitro-catalog-offer-panel > .nitro-catalog-offer-preview {
+    height: 230px !important;
+    min-height: 230px !important;
+    max-height: 230px !important;
+    overflow: hidden !important;
+}
+
+.nitro-catalog-offer-preview > .shadow-room-previewer {
+    top: -25px !important;
+    height: 280px !important;
+    min-height: 280px !important;
+    max-height: 280px !important;
+}
+
+/* Keep the actual rendered canvas filling the larger preview */
+.nitro-catalog-offer-preview
+    > .shadow-room-previewer
+    > .shadow-room-previewer-canvas {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+}
+/* ============================================================================
+   XERO CATALOG FONT MATCH
+   Match catalog typography to Inventory/NitroCard tabs
+   ============================================================================ */
+
+.nitro-catalog-window,
+.nitro-catalog-window button,
+.nitro-catalog-window input,
+.nitro-catalog-window select,
+.nitro-catalog-window textarea,
+.nitro-catalog-window .nitro-card-tab-item,
+.nitro-catalog-window .nitro-catalog-tab-label,
+.nitro-catalog-window .nitro-catalog-navigation-shell,
+.nitro-catalog-window .nitro-catalog-navigation-shell *,
+.nitro-catalog-window .nitro-catalog-preview-title,
+.nitro-catalog-window .nitro-catalog-offer-info,
+.nitro-catalog-window .nitro-catalog-offer-actions {
+    font-family: HabboAirUbuntu, UbuntuRegular, Ubuntu, sans-serif !important;
+}
+/* Force catalog sidebar/category text to match Inventory tabs */
+.nitro-catalog-window .nitro-catalog-navigation-shell,
+.nitro-catalog-window .nitro-catalog-navigation-shell *,
+.nitro-catalog-window .nitro-catalog-navigation-item,
+.nitro-catalog-window .nitro-catalog-navigation-item *,
+.nitro-catalog-window .navigation-item,
+.nitro-catalog-window .navigation-item *,
+.nitro-catalog-window .nitro-catalog-navigation-link,
+.nitro-catalog-window .nitro-catalog-navigation-link * {
+    font-family: HabboAirUbuntu, UbuntuRegular, Ubuntu, sans-serif !important;
+    font-style: normal !important;
+}
