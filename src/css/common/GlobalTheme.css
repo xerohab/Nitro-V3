@@ -1,0 +1,136 @@
+/* ============================================================================
+   LOUNGE HOTEL GLOBAL CLIENT THEME (SAFE CONTAINER OVERRIDE)
+   ============================================================================ */
+
+:root {
+    --bg-dark-base: #151311;
+    --bg-panel-dark: #1e1b18;
+    --bg-card-dark: #12100e;
+    --border-gold: rgba(212, 148, 0, 0.4);
+    --text-gold-bright: #ffb800;
+    --text-gold-muted: #d49400;
+    --red-gradient: linear-gradient(180deg, #b82519 0%, #8a170e 100%);
+}
+
+/* 1. Main Window Outer Shells */
+.nitro-inventory-window,
+.nitro-notification-bubble,
+.modal-content,
+.habbo-window,
+.habbo-card {
+    background-color: var(--bg-dark-base) !important;
+    border: 1px solid var(--border-gold) !important;
+    border-radius: 12px !important;
+    color: #ffffff !important;
+}
+
+/* 2. Window & Modal Header Bars */
+.nitro-card-header-shell,
+.nitro-window-header,
+.modal-header,
+[class*="card-header"] {
+    background: var(--bg-panel-dark) !important;
+    border-bottom: 1px solid var(--border-gold) !important;
+}
+
+.nitro-card-header-shell *,
+.nitro-window-header *,
+.modal-header *,
+.nitro-card-header-text {
+    color: var(--text-gold-bright) !important;
+    font-weight: 700 !important;
+}
+
+/* 3. Modal Notification Alert Body (Fixes grey area behind Blaise) */
+.modal-body,
+.nitro-notification-bubble {
+    background-color: var(--bg-dark-base) !important;
+    color: #ffffff !important;
+}
+
+.modal-body * {
+    color: #ffffff !important;
+}
+
+/* 4. Inventory Navigation Tabs */
+.nitro-inventory-window .nav-tabs,
+.nitro-inventory-window .nitro-card-tabs {
+    background-color: var(--bg-panel-dark) !important;
+    border-bottom: 1px solid var(--border-gold) !important;
+}
+
+.nitro-inventory-window .nav-link,
+.nitro-inventory-window .nitro-card-tab-item {
+    background-color: var(--bg-card-dark) !important;
+    border: 1px solid rgba(212, 148, 0, 0.3) !important;
+    border-bottom: none !important;
+    color: var(--text-gold-muted) !important;
+    font-weight: bold !important;
+}
+
+.nitro-inventory-window .nav-link.active,
+.nitro-inventory-window .nitro-card-tab-item.active {
+    background: var(--red-gradient) !important;
+    border-color: var(--text-gold-bright) !important;
+    color: #ffffff !important;
+}
+
+/* 5. Inventory Item Grid Cards (Preserves Row Heights) */
+.nitro-inventory-window .layout-grid-item {
+    background-color: var(--bg-card-dark) !important;
+    border: 1px solid rgba(212, 148, 0, 0.3) !important;
+    border-radius: 8px !important;
+}
+
+.nitro-inventory-window .layout-grid-item.is-active,
+.nitro-inventory-window .layout-grid-item:hover {
+    background-color: #2b2219 !important;
+    border: 2px solid var(--text-gold-bright) !important;
+    box-shadow: 0 0 8px rgba(255, 184, 0, 0.3) !important;
+}
+
+/* 6. Buttons Across Modals & Inventory (Red & Gold Actions) */
+.modal-content button,
+.modal-dialog button,
+.nitro-inventory-window button,
+.btn-primary,
+.btn-success,
+.btn-info,
+.btn-secondary {
+    background: var(--red-gradient) !important;
+    border: 1px solid var(--text-gold-bright) !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    border-radius: 6px !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4) !important;
+}
+
+.modal-content button:hover,
+.modal-dialog button:hover,
+.nitro-inventory-window button:hover,
+.btn-primary:hover,
+.btn-success:hover {
+    background: linear-gradient(180deg, #d12c1d 0%, #a11b11 100%) !important;
+    border-color: #ffd054 !important;
+    cursor: pointer !important;
+}
+
+/* 7. Input Fields */
+.nitro-inventory-window input,
+.nitro-inventory-window select {
+    background-color: var(--bg-card-dark) !important;
+    border: 1px solid var(--border-gold) !important;
+    color: #ffffff !important;
+}
+
+/* 8. Scrollbars */
+*::-webkit-scrollbar {
+    width: 8px !important;
+    height: 8px !important;
+    background-color: var(--bg-card-dark) !important;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: var(--text-gold-muted) !important;
+    border-radius: 4px !important;
+}
