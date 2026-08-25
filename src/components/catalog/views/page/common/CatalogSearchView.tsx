@@ -6,7 +6,6 @@ import {
     FilterCatalogNode,
     FurnitureOffer,
     ICatalogNode,
-    ICatalogPage,
     IPurchasableOffer,
     LocalizeText,
     PageLocalization,
@@ -20,12 +19,13 @@ import {
     normalizeCatalogSearchText,
     shouldRunCatalogSearch
 } from './catalogSearch.helpers';
+import { getCatalogSearchOfferTarget } from './catalogSearchOfferMap.generated';
 
 export const CatalogSearchView: FC<{}> = () => {
     const [searchValue, setSearchValue] = useState('');
     const searchTimeout = useRef<ReturnType<typeof setTimeout>>(null);
     const { rootNode = null } = useCatalogData();
-    const { currentType = null, setSearchResult = null, setCurrentPage = null } = useCatalogUiState();
+    const { currentType = null, setSearchResult = null, setCurrentPage = null, setCurrentOffer = null } = useCatalogUiState();
 
     const runSearch = useCallback(
         (search: string) => {
@@ -40,7 +40,34 @@ export const CatalogSearchView: FC<{}> = () => {
             const offers: IPurchasableOffer[] = [];
 
             for (const furniture of foundFurniture) {
-                offers.push(new FurnitureOffer(furniture));
+                const target = getCatalogSearchOfferTarget(furniture.id);
+
+                // Only expose items that can be resolved to a real catalogue offer.
+                // FurnitureData ids are furniture/class ids and are NOT safe purchase ids.
+                if (!target) continue;
+
+                const offer = new FurnitureOffer(furniture);
+
+                Object.defineProperty(offer, 'offerId', {
+                    value: target.offerId,
+                    writable: true,
+                    configurable: true
+                });
+
+                // Search pages are virtual, so retain the exact real page/offer pair
+                // used by the server when PurchaseFromCatalogComposer is sent.
+                Object.defineProperty(offer, '__searchCatalogOfferId', {
+                    value: target.offerId,
+                    writable: true,
+                    configurable: true
+                });
+                Object.defineProperty(offer, '__searchCatalogPageId', {
+                    value: target.pageId,
+                    writable: true,
+                    configurable: true
+                });
+
+                offers.push(offer);
             }
 
             let nodes: ICatalogNode[] = [];
@@ -64,8 +91,11 @@ export const CatalogSearchView: FC<{}> = () => {
                     1
                 )
             );
+
+            // Select once for a new search. Subsequent clicks must not be overwritten.
+            setCurrentOffer?.(offers.length > 0 ? offers[0] : null);
         },
-        [currentType, rootNode, setCurrentPage, setSearchResult]
+        [currentType, rootNode, setCurrentPage, setSearchResult, setCurrentOffer]
     );
 
     const scheduleSearch = useCallback(

@@ -106,13 +106,15 @@ const useInventoryFurniState = () => {
         };
     }, [isVisible, resetCategory]);
 
+    // Force fetching furniture list on visibility if update is needed or if items list is uninitialized
     useEffect(() => {
-        if (!isVisible || !needsUpdate) return;
+        if (!isVisible) return;
 
-        SendMessageComposer(new FurnitureListComposer());
-
-        setNeedsUpdate(false);
-    }, [isVisible, needsUpdate]);
+        if (needsUpdate || !groupItems || groupItems.length === 0) {
+            SendMessageComposer(new FurnitureListComposer());
+            setNeedsUpdate(false);
+        }
+    }, [isVisible, needsUpdate, groupItems]);
 
     useEffect(() => {
         const refreshFurnitureLocalization = () => {

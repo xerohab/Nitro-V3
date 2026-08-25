@@ -1,6 +1,6 @@
 import { MouseEventType } from '@nitrots/nitro-renderer';
 import { FC, KeyboardEvent, MouseEvent, useEffect, useMemo, useRef, useState } from 'react';
-import { CatalogType, GetConfigurationValue, IPurchasableOffer, Offer, ProductTypeEnum } from '../../../../../api';
+import { CatalogType, GetConfigurationValue, GetFurnitureData, IPurchasableOffer, Offer, ProductTypeEnum } from '../../../../../api';
 import { LayoutAvatarImageView, LayoutGridItem, LayoutGridItemProps } from '../../../../../common';
 
 export interface CatalogOfferTileViewProps extends LayoutGridItemProps {
@@ -51,26 +51,37 @@ export const CatalogOfferTileView: FC<CatalogOfferTileViewProps> = (props) => {
         );
         observer.observe(element);
         return () => observer.disconnect();
-    }, [offer?.offerId]);
+    }, [offer?.offerId, offer?.product?.productClassId]);
 
     const resolvedIconUrl = useMemo(() => {
         if (!offer || offer.pricingModel === Offer.PRICING_MODEL_BUNDLE) return null;
         const product = offer.product;
         if (!product) return null;
+
         if (product.productType === ProductTypeEnum.FLOOR || product.productType === ProductTypeEnum.WALL) {
-            const className = product.furnitureData?.className;
+            // Dynamically resolve furnitureData if it isn't attached to search offer products
+            const furniData = product.furnitureData || (product.productClassId ? GetFurnitureData(product.productClassId, product.productType) : null);
+            const className = furniData?.className;
+
             if (className?.length) {
                 let param = '';
-                if (product.productType === ProductTypeEnum.WALL && product.extraParam?.length) param = `_${product.extraParam}`;
-                else if (product.productType === ProductTypeEnum.FLOOR && product.furnitureData?.hasIndexedColor && product.furnitureData.colorIndex > 0) {
-                    param = `_${product.furnitureData.colorIndex}`;
+                if (product.productType === ProductTypeEnum.WALL && product.extraParam?.length) {
+                    param = `_${product.extraParam}`;
+                } else if (product.productType === ProductTypeEnum.FLOOR && furniData?.hasIndexedColor && furniData.colorIndex > 0) {
+                    param = `_${furniData.colorIndex}`;
                 }
+
                 const configuredIconUrl = GetConfigurationValue<string>('furni.asset.icon.url', '');
-                if (configuredIconUrl?.length) return configuredIconUrl.replace('%libname%', className).replace('%param%', param);
+                if (configuredIconUrl?.length) {
+                    return configuredIconUrl.replace('%libname%', className).replace('%param%', param);
+                }
             }
+
+            if (furniData?.iconUrl) return furniData.iconUrl;
         }
+
         return typeof product.getIconUrl === 'function' ? (product.getIconUrl(offer) ?? null) : null;
-    }, [offer]);
+    }, [offer, offer?.product?.productClassId, offer?.product?.furnitureData]);
 
     const prices = useMemo(() => {
         if (!offer) return [];
@@ -107,16 +118,17 @@ export const CatalogOfferTileView: FC<CatalogOfferTileViewProps> = (props) => {
 
     if (!offer?.product) return null;
     const product = offer.product;
+    const furniData = product.furnitureData || (product.productClassId ? GetFurnitureData(product.productClassId, product.productType) : null);
     const iconUrl = iconVisible ? resolvedIconUrl : null;
 
     return (
         <div
             ref={tileRef}
-            aria-label={offer.localizationName || product.furnitureData?.name || ''}
+            aria-label={offer.localizationName || furniData?.name || ''}
             aria-selected={itemActive}
             role="option"
             tabIndex={0}
-            title={showTechnicalDetails ? `ID: ${product.productClassId} | Offer: ${offer.offerId}` : offer.localizationName}
+            title={showTechnicalDetails ? `ID: ${product.productClassId} | Offer: ${offer.offerId}` : (offer.localizationName || furniData?.name)}
             onKeyDown={onKeyDown}
         >
             <LayoutGridItem
@@ -138,8 +150,10 @@ export const CatalogOfferTileView: FC<CatalogOfferTileViewProps> = (props) => {
                         draggable={false}
                         style={tintColor ? { filter: 'url(#guild-furni-recolor)', transform: 'translateZ(0)' } : undefined}
                         onError={(event) => {
-                            const fallbackIconUrl = typeof product.getIconUrl === 'function' ? product.getIconUrl(offer) : null;
-                            if (fallbackIconUrl && event.currentTarget.src !== fallbackIconUrl) event.currentTarget.src = fallbackIconUrl;
+                            const fallbackIconUrl = furniData?.iconUrl || (typeof product.getIconUrl === 'function' ? product.getIconUrl(offer) : null);
+                            if (fallbackIconUrl && event.currentTarget.src !== fallbackIconUrl) {
+                                event.currentTarget.src = fallbackIconUrl;
+                            }
                         }}
                     />
                 )}

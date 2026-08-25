@@ -91,14 +91,6 @@ import { useCatalogSkipPurchaseConfirmation } from './useCatalogSkipPurchaseConf
 const DUMMY_PAGE_ID_FOR_OFFER_SEARCH = -12345678;
 const DRAG_AND_DROP_ENABLED = true;
 
-// Internal singleton source — published through the Zustand bridge so every
-// public filter below sees the same listeners + state. Do NOT export
-// this directly; consumers must go through the filters or the
-// deprecated `useCatalog` shim. The previous 1100-line monolith
-// exposed everything via `useCatalog`; the three filters below
-// (`useCatalogData` / `useCatalogUiState` / `useCatalogActions`)
-// shrink the surface each consumer subscribes to, which lets the
-// React Compiler memoize and avoids unrelated re-renders.
 const useCatalogStore = () => {
     const [isVisible, setIsVisible] = useState(false);
     const [isBusy, setIsBusy] = useState(false);
@@ -178,8 +170,6 @@ const useCatalogStore = () => {
         setCurrentType(normalizeCatalogType(type));
     }, []);
 
-    // Merge real-time imported furniture from custom/imported.jsonc once per session or after publishing.
-    // Fetching on every catalog open was adding avoidable latency; the file is usually absent.
     const importedFurnidataMerged = useRef(false);
 
     const refreshImportedFurnidata = useCallback((force: boolean = false) => {
@@ -243,11 +233,6 @@ const useCatalogStore = () => {
         (offer: IPurchasableOffer) => {
             const roomSession = GetRoomSession();
 
-            // Count non-self, non-moderator users sharing the room. Only
-            // matters when the subscription has expired — the pure helper
-            // short-circuits on the limit-reached / not-in-room paths
-            // first, so we skip the room scan when there's still time on
-            // the clock.
             let visitorCount = 0;
 
             if (roomSession && secondsLeft <= 0 && !builderPlacementBlockedByVisitors) {
@@ -619,11 +604,62 @@ const useCatalogStore = () => {
         (offer: IPurchasableOffer) => {
             if (!offer) return;
 
-            applySelectedOffer(offer);
+            // Clone offer reference to force state updates even on duplicate/dummy offerIds
+            const targetOffer = Object.assign(Object.create(Object.getPrototypeOf(offer)), offer);
 
-            if (offer.isLazy && offer.offerId > -1) offer.activate();
+            // Hydrate product furnitureData definitions
+            if (targetOffer.products && targetOffer.products.length > 0) {
+                for (const product of targetOffer.products) {
+                    if (!product.furnitureData && product.productClassId) {
+                        const data = GetFurnitureData(product.productClassId, product.productType);
+                        if (data) {
+                            if (typeof (product as any).setFurnitureData === 'function') {
+                                (product as any).setFurnitureData(data);
+                            } else {
+                                Object.defineProperty(product, 'furnitureData', {
+                                    value: data,
+                                    writable: true,
+                                    configurable: true
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Unbind search offers from currentPage to prevent falling back to default page offers
+            if (searchResult && searchResult.offers) {
+                setCurrentOffer(targetOffer);
+                if (targetOffer.isLazy && targetOffer.offerId > -1) targetOffer.activate();
+                return;
+            }
+
+            // Resolve page node for catalog offers
+            if (!targetOffer.page || targetOffer.page.pageId <= 0 || targetOffer.page.pageId === DUMMY_PAGE_ID_FOR_OFFER_SEARCH) {
+                const matchingNodes = getNodesByOfferId(targetOffer.offerId, true) || getNodesByOfferId(targetOffer.offerId);
+
+                if (matchingNodes && matchingNodes.length > 0) {
+                    targetOffer.page = new CatalogPage(
+                        matchingNodes[0].pageId,
+                        currentPage?.layoutCode || 'default_3x3',
+                        currentPage?.localization || new PageLocalization([], []),
+                        [],
+                        currentPage?.acceptSeasonCurrencyAsCredits || false,
+                        currentPage?.mode ?? CatalogPage.MODE_NORMAL
+                    );
+                } else if (currentPage) {
+                    targetOffer.page = currentPage;
+                }
+            }
+
+            setCurrentOffer(null);
+
+            setTimeout(() => {
+                applySelectedOffer(targetOffer);
+                if (targetOffer.isLazy && targetOffer.offerId > -1) targetOffer.activate();
+            }, 0);
         },
-        [applySelectedOffer]
+        [applySelectedOffer, getNodesByOfferId, currentPage, searchResult]
     );
 
     const refreshBuilderStatus = useCallback(() => {}, []);
@@ -750,12 +786,6 @@ const useCatalogStore = () => {
 
         if (!offerData || !offerData.products.length) return;
 
-        const offerProductData = offerData.products[0];
-
-        if (offerProductData.uniqueLimitedItem) {
-            // update unique
-        }
-
         const products: IProduct[] = [];
         const productData = GetProductDataForLocalization(offerData.localizationId);
 
@@ -791,6 +821,26 @@ const useCatalogStore = () => {
             offerData.itemIds,
             offerData.haveOffer
         );
+
+        if (offer.products && offer.products.length > 0) {
+            for (const prod of offer.products) {
+                if (!prod.furnitureData && prod.productClassId) {
+                    const data = GetFurnitureData(prod.productClassId, prod.productType);
+                    if (data) {
+                        if (typeof (prod as any).setFurnitureData === 'function') {
+                            (prod as any).setFurnitureData(data);
+                        } else {
+                            Object.defineProperty(prod, 'furnitureData', {
+                                value: data,
+                                writable: true,
+                                configurable: true
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
         cacheResolvedOffer(offer);
 
         const matchingNodes = getNodesByOfferId(offer.offerId, true) || getNodesByOfferId(offer.offerId);
@@ -890,7 +940,7 @@ const useCatalogStore = () => {
         const product = purchasableOffer.product;
 
         if (event.category === RoomObjectCategory.WALL) {
-            switch (product.furnitureData.className) {
+            switch (product.furnitureData?.className) {
                 case 'floor':
                 case 'wallpaper':
                 case 'landscape':
@@ -929,7 +979,7 @@ const useCatalogStore = () => {
                         );
                         break;
                     case RoomObjectCategory.WALL: {
-                        switch (product.furnitureData.className) {
+                        switch (product.furnitureData?.className) {
                             case 'floor':
                             case 'wallpaper':
                             case 'landscape':
@@ -960,15 +1010,13 @@ const useCatalogStore = () => {
 
                     if (catalogPlaceMultipleObjects) requestOfferToMover(purchasableOffer);
                 } else {
-                    // confirm
-
                     if (catalogPlaceMultipleObjects) requestOfferToMover(purchasableOffer);
                 }
                 break;
             }
             case CatalogType.BUILDER: {
                 const placeBuilderItem = () => {
-                    let pageId = purchasableOffer.page.pageId;
+                    let pageId = purchasableOffer.page?.pageId ?? -1;
 
                     if (pageId === DUMMY_PAGE_ID_FOR_OFFER_SEARCH) {
                         pageId = -1;
@@ -1247,14 +1295,6 @@ const useCatalogStore = () => {
     };
 };
 
-/**
- * Read-only slice of server-driven catalog state. Anything a consumer
- * needs to *display* (page tree, current page, offers, Builders Club
- * counters) lives here.
- *
- * `roomPreviewer` and the busy flag are kept here too because they
- * are observed (not mutated) by every consumer that renders a preview.
- */
 export const useCatalogData = () => {
     const {
         isBusy,
@@ -1295,14 +1335,6 @@ export const useCatalogData = () => {
     };
 };
 
-/**
- * UI-side state owned by the catalog overlay itself: visibility, the
- * currently-rendered page id and breadcrumb, search query result,
- * purchase options, multi-place toggle. Includes the setters that
- * mutate the data slice when the user picks a page / offer / search
- * result — those don't trigger server traffic so they belong to the
- * UI layer.
- */
 export const useCatalogUiState = () => {
     const {
         isVisible,
@@ -1341,13 +1373,6 @@ export const useCatalogUiState = () => {
     };
 };
 
-/**
- * Imperative actions: open / toggle the catalog, navigate the page
- * tree, request a furni to the mover, look up nodes by id/name, run
- * the Builders Club placement check. These all either send a
- * composer to the server, dispatch a UI event, or run synchronous
- * tree queries — none of them are React state by themselves.
- */
 export const useCatalogActions = () => {
     const {
         openCatalogByType,

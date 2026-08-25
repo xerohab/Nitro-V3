@@ -80,6 +80,9 @@ import './css/widgets/FurnitureWidgets.css';
 import './css/WiredView.css';
 import './css/common/ClassicScrollbar.css';
 
+/* LOUNGE HOTEL GLOBAL RED & GOLD OVERRIDE */
+import './css/common/GlobalTheme.css';
+
 document.documentElement.classList.add('has-classic-scrollbar');
 
 createRoot(document.getElementById('root')).render(

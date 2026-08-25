@@ -1,8 +1,9 @@
 import { type CSSProperties, type RefObject, useLayoutEffect, useMemo, useState } from 'react';
 
-const CATALOG_WINDOW_BASE_WIDTH = 570;
-const CATALOG_WINDOW_HEIGHT = 635;
-const CATALOG_WINDOW_MAX_WIDTH = 1040;
+const CATALOG_WINDOW_BASE_WIDTH = 860;
+const CATALOG_WINDOW_HEIGHT = 700; // Increased from 635px to pull purchase actions into full view
+const CATALOG_WINDOW_MAX_WIDTH = 1100;
+
 // Bordi finestra (2+2) + padding contenuto card + margine ultimo tab + margine di
 // sicurezza per evitare che l'ultima categoria venga clippata dall'overflow:hidden.
 const CATALOG_FRAME_PADDING = 28;
@@ -21,7 +22,7 @@ const measureCatalogTabStripWidth = (shell: HTMLElement) => {
     });
 
     const shellStyle = window.getComputedStyle(shell);
-    const paddingX = Number.parseFloat(shellStyle.paddingLeft) + Number.parseFloat(shellStyle.paddingRight);
+    const paddingX = Number.parseFloat(shellStyle.paddingLeft || '0') + Number.parseFloat(shellStyle.paddingRight || '0');
 
     return Math.ceil(tabsWidth + paddingX);
 };
@@ -89,7 +90,9 @@ export const useCatalogWindowWidth = (
             '--nitro-catalog-window-height': `${CATALOG_WINDOW_HEIGHT}px`,
             width: `${width}px`,
             minWidth: `${width}px`,
-            maxWidth: `${width}px`
+            maxWidth: `${width}px`,
+            height: `${CATALOG_WINDOW_HEIGHT}px`,
+            minHeight: `${CATALOG_WINDOW_HEIGHT}px`
         } as CSSProperties;
     }, [stripWidth]);
 };

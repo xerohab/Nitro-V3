@@ -1,6 +1,6 @@
 import { GetAvatarRenderManager, GetSessionDataManager, Vector3d } from '@nitrots/nitro-renderer';
 import { FC, useEffect } from 'react';
-import { FurniCategory, Offer, ProductTypeEnum } from '../../../../../api';
+import { FurniCategory, GetFurnitureData, Offer, ProductTypeEnum } from '../../../../../api';
 import { AutoGrid, Column, LayoutGridItem, LayoutRoomPreviewerView } from '../../../../../common';
 import { useCatalogData, useCatalogUiState } from '../../../../../hooks';
 
@@ -17,6 +17,22 @@ export const CatalogViewProductWidgetView: FC<{ height?: number }> = (props) => 
 
         if (!product) return;
 
+        // Ensure furnitureData is resolved for search items before populating the 3D room preview
+        if (!product.furnitureData && product.productClassId) {
+            const data = GetFurnitureData(product.productClassId, product.productType);
+            if (data) {
+                if (typeof (product as any).setFurnitureData === 'function') {
+                    (product as any).setFurnitureData(data);
+                } else {
+                    Object.defineProperty(product, 'furnitureData', {
+                        value: data,
+                        writable: true,
+                        configurable: true
+                    });
+                }
+            }
+        }
+
         roomPreviewer.reset(false);
         roomPreviewer.centerWallItems = true;
         roomPreviewer.setAutomaticStateChange(false);
@@ -28,15 +44,17 @@ export const CatalogViewProductWidgetView: FC<{ height?: number }> = (props) => 
         const populate = () => {
             switch (product.productType) {
                 case ProductTypeEnum.FLOOR: {
-                    if (!product.furnitureData) return;
+                    const furniData = product.furnitureData || GetFurnitureData(product.productClassId, product.productType);
+                    
+                    if (!furniData && !product.productClassId) return;
 
-                    const furniData = GetSessionDataManager().getFloorItemData(product.furnitureData.id);
-                    const isPurchasableClothing = product.furnitureData.specialType === FurniCategory.FIGURE_PURCHASABLE_SET;
+                    const sessionData = GetSessionDataManager().getFloorItemData(product.furnitureData?.id ?? furniData?.id ?? product.productClassId);
+                    const isPurchasableClothing = furniData?.specialType === FurniCategory.FIGURE_PURCHASABLE_SET;
 
                     if (isPurchasableClothing) {
                         const sessionDataManager = GetSessionDataManager();
                         const avatarRenderManager = GetAvatarRenderManager();
-                        const customParams = furniData?.customParams ?? product.furnitureData.customParams ?? '';
+                        const customParams = sessionData?.customParams ?? furniData?.customParams ?? '';
                         const customParts = customParams
                             .split(',')
                             .map((value) => value.trim())
@@ -61,11 +79,13 @@ export const CatalogViewProductWidgetView: FC<{ height?: number }> = (props) => 
                     return;
                 }
                 case ProductTypeEnum.WALL: {
-                    if (!product.furnitureData) return;
+                    const furniData = product.furnitureData || GetFurnitureData(product.productClassId, product.productType);
 
                     roomPreviewer.updateRoomWallsAndFloorVisibility(true, true);
 
-                    switch (product.furnitureData.specialType) {
+                    const specialType = furniData?.specialType ?? FurniCategory.NONE;
+
+                    switch (specialType) {
                         case FurniCategory.FLOOR:
                             roomPreviewer.updateObjectRoom(product.extraParam);
                             return;
@@ -75,9 +95,9 @@ export const CatalogViewProductWidgetView: FC<{ height?: number }> = (props) => 
                         case FurniCategory.LANDSCAPE: {
                             roomPreviewer.updateObjectRoom(null, null, product.extraParam);
 
-                            const furniData = GetSessionDataManager().getWallItemDataByName('window_double_default');
+                            const windowData = GetSessionDataManager().getWallItemDataByName('window_double_default');
 
-                            if (furniData) roomPreviewer.addWallItemIntoRoom(furniData.id, new Vector3d(90), furniData.customParams);
+                            if (windowData) roomPreviewer.addWallItemIntoRoom(windowData.id, new Vector3d(90), windowData.customParams);
                             return;
                         }
                         default:
@@ -100,7 +120,7 @@ export const CatalogViewProductWidgetView: FC<{ height?: number }> = (props) => 
 
         populate();
         roomPreviewer.setAutomaticStateChange(animateFurnitureState);
-    }, [currentOffer, previewStuffData, roomPreviewer]);
+    }, [currentOffer, currentOffer?.product?.productClassId, previewStuffData, roomPreviewer]);
 
     if (!currentOffer) return null;
 
@@ -117,5 +137,7 @@ export const CatalogViewProductWidgetView: FC<{ height?: number }> = (props) => 
         );
     }
 
-    return <LayoutRoomPreviewerView key={currentOffer?.offerId} height={height} roomPreviewer={roomPreviewer} />;
+    const previewKey = `preview_${currentOffer.offerId}_${currentOffer.product?.productClassId ?? 'none'}`;
+
+    return <LayoutRoomPreviewerView key={previewKey} height={height} roomPreviewer={roomPreviewer} />;
 };
