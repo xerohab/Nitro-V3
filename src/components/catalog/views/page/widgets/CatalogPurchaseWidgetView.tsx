@@ -511,7 +511,7 @@ export const CatalogPurchaseWidgetView: FC<CatalogPurchaseWidgetViewProps> = (pr
                         setPurchaseState(CatalogPurchaseState.CONFIRM);
                     }}
                 >
-                    {LocalizeText('catalog.purchase_confirmation.gift')}
+                    {LocalizeText('catalog.purchase_confirmation.gift').replace(/\bgift\b/i, 'Gift')}
                 </Button>
             )}
             <PurchaseButton />

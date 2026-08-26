@@ -5085,3 +5085,1228 @@
     font-family: HabboAirUbuntu, UbuntuRegular, Ubuntu, sans-serif !important;
     font-style: normal !important;
 }
+
+/* ============================================================
+   LOUNGE MOBILE - CATALOG INTERNAL LAYOUT
+   ============================================================ */
+
+html.nitro-mobile-mode .nitro-catalog-window {
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+}
+
+/* Top tab/category bar */
+html.nitro-mobile-mode .nitro-catalog-window .nav,
+html.nitro-mobile-mode .nitro-catalog-window .tabs,
+html.nitro-mobile-mode .nitro-catalog-window [class*="tab"] {
+    max-width: 100% !important;
+}
+
+/* Let top categories scroll horizontally instead of being clipped */
+html.nitro-mobile-mode .nitro-catalog-window .nav-tabs,
+html.nitro-mobile-mode .nitro-catalog-window [class*="tabs"] {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Main catalog content */
+html.nitro-mobile-mode .nitro-catalog-window .nitro-catalog-body,
+html.nitro-mobile-mode .nitro-catalog-window .catalog-content,
+html.nitro-mobile-mode .nitro-catalog-window [class*="catalog-content"] {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+}
+
+/* Left navigation/item list */
+html.nitro-mobile-mode .nitro-catalog-window .catalog-navigation,
+html.nitro-mobile-mode .nitro-catalog-window [class*="navigation"] {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* Preview area */
+html.nitro-mobile-mode .nitro-catalog-window .catalog-preview,
+html.nitro-mobile-mode .nitro-catalog-window [class*="preview"] {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* Purchase / price area */
+html.nitro-mobile-mode .nitro-catalog-window .catalog-purchase,
+html.nitro-mobile-mode .nitro-catalog-window [class*="purchase"] {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+}
+
+/* Product grids / strips */
+html.nitro-mobile-mode .nitro-catalog-window .grid,
+html.nitro-mobile-mode .nitro-catalog-window [class*="grid"] {
+    max-width: 100% !important;
+}
+
+/* Prevent stubborn desktop widths */
+html.nitro-mobile-mode .nitro-catalog-window * {
+    box-sizing: border-box;
+}
+
+/* Make very wide inner rows scroll rather than overflow */
+html.nitro-mobile-mode .nitro-catalog-window .overflow-x-auto,
+html.nitro-mobile-mode .nitro-catalog-window [class*="scroll"] {
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ============================================================================
+   MOBILE CATALOG INTERACTION + LAYOUT FIX
+   Keep the category tree tappable and ensure the page/item panel is not
+   clipped below it on tall phone viewports.
+   ============================================================================ */
+.nitro-catalog-main-shell {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: row;
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    gap: 12px;
+    overflow: hidden;
+}
+
+.nitro-catalog-navigation-item {
+    pointer-events: auto !important;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(255, 184, 0, 0.18);
+}
+
+@media (max-width: 640px), (orientation: landscape) and (max-height: 520px) {
+    .nitro-catalog-content-shell {
+        display: flex !important;
+        flex: 1 1 auto !important;
+        flex-direction: column !important;
+        min-height: 0 !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .nitro-catalog-main-shell {
+        display: block !important;
+        flex: 0 0 auto !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+    }
+
+    .nitro-catalog-stage,
+    .nitro-catalog-stage.is-navigation-hidden {
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 0 !important;
+        gap: 8px !important;
+        overflow: visible !important;
+    }
+
+    /* Do not let the tree consume ~30% of a very tall phone screen. */
+    .nitro-catalog-sidebar {
+        position: relative !important;
+        z-index: 3 !important;
+        display: flex !important;
+        flex: 0 0 auto !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        height: 220px !important;
+        min-height: 150px !important;
+        max-height: 220px !important;
+        overflow: hidden !important;
+    }
+
+    .nitro-catalog-search-shell {
+        flex: 0 0 42px !important;
+        width: 100% !important;
+        height: 42px !important;
+        min-height: 42px !important;
+    }
+
+    .nitro-catalog-search-shell input {
+        height: 40px !important;
+        min-height: 40px !important;
+        line-height: 40px !important;
+        font-size: 15px !important;
+    }
+
+    .nitro-catalog-navigation-shell {
+        position: relative !important;
+        z-index: 4 !important;
+        flex: 1 1 auto !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        min-height: 0 !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        touch-action: pan-y;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .nitro-catalog-navigation-scroll-area,
+    .nitro-catalog-navigation-list,
+    .nitro-catalog-navigation-node,
+    .nitro-catalog-navigation-item {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .nitro-catalog-navigation-item {
+        position: relative !important;
+        z-index: 5 !important;
+        min-height: 32px !important;
+        height: 32px !important;
+        line-height: 30px !important;
+        cursor: pointer !important;
+        pointer-events: auto !important;
+        touch-action: manipulation !important;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
+    .nitro-catalog-navigation-icon {
+        pointer-events: none !important;
+    }
+
+    .nitro-catalog-navigation-label,
+    .nitro-catalog-navigation-caret {
+        pointer-events: none !important;
+    }
+
+    .nitro-catalog-layout-shell {
+        position: relative !important;
+        z-index: 1 !important;
+        display: flex !important;
+        flex: 0 0 auto !important;
+        width: 100% !important;
+        height: 460px !important;
+        min-height: 460px !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    .nitro-catalog-layout-container,
+    .nitro-catalog-default-layout {
+        position: relative !important;
+        display: block !important;
+        flex: 0 0 auto !important;
+        width: 100% !important;
+        height: 460px !important;
+        min-height: 460px !important;
+        max-height: 460px !important;
+        overflow: hidden !important;
+    }
+
+    /* When no item is selected, use the freed preview space for the grid. */
+    .nitro-catalog-default-layout:has(.nitro-catalog-welcome) .nitro-catalog-grid-shell {
+        top: 0 !important;
+        height: 414px !important;
+        min-height: 414px !important;
+    }
+
+    .nitro-catalog-grid-shell {
+        z-index: 2 !important;
+        pointer-events: auto !important;
+        touch-action: pan-y;
+    }
+
+    .nitro-catalog-grid-shell .layout-grid-item,
+    .nitro-catalog-grid-shell [role="button"] {
+        pointer-events: auto !important;
+        touch-action: manipulation;
+    }
+}
+
+/* Forced mobile mode can be wider than the media-query breakpoint on some
+   devices/browser zoom levels, so mirror the important structural overrides. */
+html.nitro-mobile-mode .nitro-catalog-main-shell {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-window .nitro-catalog-stage,
+html.nitro-mobile-mode .nitro-catalog-window .nitro-catalog-stage.is-navigation-hidden {
+    display: flex !important;
+    flex-direction: column !important;
+    height: auto !important;
+    overflow: visible !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-window .nitro-catalog-sidebar {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    height: 220px !important;
+    max-height: 220px !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-window .nitro-catalog-layout-shell {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    height: 460px !important;
+    min-height: 460px !important;
+    overflow: visible !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-window .nitro-catalog-navigation-item {
+    pointer-events: auto !important;
+    touch-action: manipulation !important;
+}
+
+/* ============================================================================
+   MOBILE CATALOG V2 - COMPACT PHONE-FIRST LAYOUT
+   Deliberately departs from desktop proportions so categories, furniture grid,
+   preview and purchase controls all remain usable on a phone.
+   ============================================================================ */
+@media (max-width: 760px) {
+    .nitro-catalog-window {
+        max-width: calc(100vw - 8px) !important;
+    }
+
+    .nitro-catalog-standard-header {
+        flex: 0 0 66px !important;
+        height: 66px !important;
+        min-height: 66px !important;
+        max-height: 66px !important;
+    }
+
+    .nitro-catalog-standard-header-icon {
+        left: 18px !important;
+        top: 16px !important;
+        width: 34px !important;
+        height: 34px !important;
+    }
+
+    .nitro-catalog-standard-header-icon img {
+        transform: scale(1.65) !important;
+    }
+
+    .nitro-catalog-standard-header-copy {
+        left: 64px !important;
+        top: 9px !important;
+        right: 10px !important;
+        width: auto !important;
+    }
+
+    .nitro-catalog-standard-header-title {
+        height: 25px !important;
+        min-height: 25px !important;
+        font-size: 19px !important;
+        line-height: 25px !important;
+    }
+
+    .nitro-catalog-standard-header-description {
+        margin-top: 1px !important;
+        max-height: 28px !important;
+        font-size: 10px !important;
+        line-height: 14px !important;
+        -webkit-line-clamp: 2 !important;
+        line-clamp: 2 !important;
+    }
+
+    .nitro-catalog-content-shell {
+        padding: 5px !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .nitro-catalog-main-shell,
+    .nitro-catalog-stage,
+    .nitro-catalog-stage.is-navigation-hidden {
+        width: 100% !important;
+        min-width: 0 !important;
+        height: auto !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+    }
+
+    .nitro-catalog-stage,
+    .nitro-catalog-stage.is-navigation-hidden {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 6px !important;
+    }
+
+    /* Compact category picker: search + roughly four visible rows. */
+    .nitro-catalog-sidebar {
+        display: flex !important;
+        flex: 0 0 184px !important;
+        width: 100% !important;
+        height: 184px !important;
+        min-height: 184px !important;
+        max-height: 184px !important;
+        overflow: hidden !important;
+        border-radius: 4px !important;
+    }
+
+    .nitro-catalog-search-shell {
+        flex: 0 0 46px !important;
+        height: 46px !important;
+        min-height: 46px !important;
+        padding: 3px !important;
+    }
+
+    .nitro-catalog-search-shell input {
+        height: 40px !important;
+        min-height: 40px !important;
+        font-size: 15px !important;
+        line-height: 40px !important;
+    }
+
+    .nitro-catalog-navigation-shell {
+        flex: 1 1 auto !important;
+        width: 100% !important;
+        min-height: 0 !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        overscroll-behavior: contain;
+        touch-action: pan-y !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .nitro-catalog-navigation-item {
+        min-height: 33px !important;
+        height: 33px !important;
+        line-height: 31px !important;
+        pointer-events: auto !important;
+        touch-action: manipulation !important;
+        cursor: pointer !important;
+    }
+
+    /* The product area is intentionally shorter than desktop. */
+    .nitro-catalog-layout-shell,
+    .nitro-catalog-layout-container,
+    .nitro-catalog-default-layout {
+        flex: 0 0 360px !important;
+        width: 100% !important;
+        height: 360px !important;
+        min-height: 360px !important;
+        max-height: 360px !important;
+        overflow: hidden !important;
+    }
+
+    .nitro-catalog-layout-header-shell {
+        display: none !important;
+    }
+
+    .nitro-catalog-product-view {
+        position: relative !important;
+        width: 100% !important;
+        height: 145px !important;
+        min-height: 145px !important;
+        max-height: 145px !important;
+        overflow: hidden !important;
+    }
+
+    .nitro-catalog-offer-panel,
+    .nitro-catalog-offer-panel > .nitro-catalog-offer-preview {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        height: 145px !important;
+        min-height: 145px !important;
+        max-height: 145px !important;
+        overflow: hidden !important;
+    }
+
+    .nitro-catalog-offer-preview > .shadow-room-previewer {
+        top: -42px !important;
+        width: 100% !important;
+        height: 225px !important;
+        min-height: 225px !important;
+        max-height: 225px !important;
+    }
+
+    .nitro-catalog-preview-title {
+        top: 6px !important;
+        left: 8px !important;
+        max-width: calc(100% - 16px) !important;
+        font-size: 11px !important;
+        line-height: 14px !important;
+    }
+
+    /* Furniture choices get the biggest useful portion of the phone layout. */
+    .nitro-catalog-grid-shell {
+        position: absolute !important;
+        left: 0 !important;
+        right: 0 !important;
+        top: 149px !important;
+        width: 100% !important;
+        height: 166px !important;
+        min-height: 166px !important;
+        max-height: 166px !important;
+        padding: 3px !important;
+        overflow: hidden !important;
+        pointer-events: auto !important;
+        touch-action: pan-y !important;
+    }
+
+    .nitro-catalog-grid-shell .nitro-catalog-item-grid-scroll-area,
+    .nitro-catalog-grid-shell .nitro-catalog-grid-virtual,
+    .nitro-catalog-grid-shell [class*="infinite"] {
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 0 !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Six tiles per row gives a much easier touch target than desktop's eight. */
+    .nitro-catalog-window .nitro-catalog-grid-shell .w-\[12\.5\%\] {
+        width: 16.6667% !important;
+        min-width: 16.6667% !important;
+        max-width: 16.6667% !important;
+        flex: 0 0 16.6667% !important;
+    }
+
+    .nitro-catalog-purchase-row {
+        position: absolute !important;
+        left: 0 !important;
+        right: 0 !important;
+        top: 317px !important;
+        width: 100% !important;
+        height: 43px !important;
+        min-height: 43px !important;
+        max-height: 43px !important;
+        padding: 4px 6px !important;
+        overflow: visible !important;
+    }
+
+    .nitro-catalog-offer-actions {
+        gap: 5px !important;
+    }
+
+    .nitro-catalog-default-layout .nitro-catalog-offer-actions > .nitro-catalog-standard-button {
+        min-width: 78px !important;
+        height: 30px !important;
+        min-height: 30px !important;
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+    }
+
+    /* Pages with no selected product can devote almost everything to the grid. */
+    .nitro-catalog-default-layout:has(.nitro-catalog-welcome) .nitro-catalog-product-view {
+        display: none !important;
+    }
+
+    .nitro-catalog-default-layout:has(.nitro-catalog-welcome) .nitro-catalog-grid-shell {
+        top: 0 !important;
+        height: 315px !important;
+        min-height: 315px !important;
+        max-height: 315px !important;
+    }
+}
+
+/* The site's ?mobile=1 mode must receive the same compact structure even if
+   device CSS pixels happen to report wider than the normal media breakpoint. */
+html.nitro-mobile-mode .nitro-catalog-standard-header {
+    flex-basis: 66px !important;
+    height: 66px !important;
+    min-height: 66px !important;
+    max-height: 66px !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-window .nitro-catalog-sidebar {
+    flex: 0 0 184px !important;
+    height: 184px !important;
+    min-height: 184px !important;
+    max-height: 184px !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-window .nitro-catalog-layout-shell,
+html.nitro-mobile-mode .nitro-catalog-window .nitro-catalog-layout-container,
+html.nitro-mobile-mode .nitro-catalog-window .nitro-catalog-default-layout {
+    flex: 0 0 360px !important;
+    height: 360px !important;
+    min-height: 360px !important;
+    max-height: 360px !important;
+    overflow: hidden !important;
+}
+
+
+/* ============================================================================
+   XERO MOBILE PURCHASE ACTIONS V3
+   Keep Buy and Buy as Gift inside the narrow mobile details card.
+   ============================================================================ */
+@media (max-width: 760px) {
+    .nitro-catalog-default-layout .nitro-catalog-offer-details .nitro-catalog-offer-actions {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: stretch !important;
+        justify-content: stretch !important;
+        gap: 4px !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        overflow: visible !important;
+    }
+
+    .nitro-catalog-default-layout .nitro-catalog-offer-details .nitro-catalog-offer-actions > .nitro-catalog-standard-button {
+        flex: 1 1 0 !important;
+        width: 0 !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        height: 30px !important;
+        min-height: 30px !important;
+        padding: 0 3px !important;
+        margin: 0 !important;
+        font-size: 9px !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+
+    .nitro-catalog-default-layout .nitro-catalog-offer-details .nitro-catalog-standard-gift-button {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    .nitro-catalog-default-layout .nitro-catalog-offer-details .nitro-catalog-standard-buy-button {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+}
+
+html.nitro-mobile-mode .nitro-catalog-default-layout .nitro-catalog-offer-details .nitro-catalog-offer-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    gap: 4px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    overflow: visible !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-default-layout .nitro-catalog-offer-details .nitro-catalog-offer-actions > .nitro-catalog-standard-button {
+    flex: 1 1 0 !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: 30px !important;
+    min-height: 30px !important;
+    padding: 0 3px !important;
+    margin: 0 !important;
+    font-size: 9px !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* ============================================================================
+   XERO MOBILE CATALOG V6 - SAFE PURCHASE CONTROLS ONLY
+   IMPORTANT: this block deliberately does NOT change the mobile catalog shell,
+   sidebar, product-grid position, grid height, or navigation stacking. V3 was
+   the last known-good layout for page/item selection, so only the selected
+   offer details card and its quantity/actions are adjusted here.
+   ============================================================================ */
+@media (max-width: 760px) {
+    /* Give the controls enough horizontal room without changing panel height. */
+    .nitro-catalog-default-layout .nitro-catalog-product-view > .nitro-catalog-offer-preview {
+        width: 56% !important;
+        min-width: 0 !important;
+        max-width: 56% !important;
+    }
+
+    .nitro-catalog-default-layout .nitro-catalog-product-view > .nitro-catalog-offer-details {
+        width: 44% !important;
+        min-width: 0 !important;
+        max-width: 44% !important;
+        padding: 5px !important;
+        overflow: hidden !important;
+    }
+
+    .nitro-catalog-default-layout .nitro-catalog-offer-details > div:first-child {
+        gap: 1px !important;
+        min-height: 0 !important;
+    }
+
+    .nitro-catalog-default-layout .nitro-catalog-offer-details > div:first-child h3 {
+        font-size: 9px !important;
+        line-height: 11px !important;
+        min-height: 11px !important;
+        margin: 0 !important;
+    }
+
+    .nitro-catalog-default-layout .nitro-catalog-offer-details > div:first-child > div {
+        min-height: 18px !important;
+        margin-top: 0 !important;
+    }
+
+    /* Keep Price -> Qty -> buttons in the existing 145px selected-item panel. */
+    .nitro-catalog-default-layout .nitro-catalog-offer-details > div:last-child {
+        gap: 3px !important;
+        padding-top: 3px !important;
+        margin-top: auto !important;
+        overflow: visible !important;
+    }
+
+    .nitro-catalog-default-layout .nitro-catalog-offer-details > div:last-child > div:first-child {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 3px !important;
+        width: 100% !important;
+        min-height: 24px !important;
+        overflow: visible !important;
+    }
+
+    .nitro-catalog-default-layout .nitro-catalog-spinner-box {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        flex: 0 0 82px !important;
+        width: 82px !important;
+        min-width: 82px !important;
+        max-width: 82px !important;
+        height: 24px !important;
+        overflow: visible !important;
+    }
+
+    .nitro-catalog-default-layout .nitro-catalog-spinner-box .nitro-catalog-standard-spinner {
+        display: block !important;
+        position: relative !important;
+        width: 82px !important;
+        min-width: 82px !important;
+        max-width: 82px !important;
+        height: 24px !important;
+        overflow: visible !important;
+    }
+
+    /* Qty is already printed by CatalogLayoutDefaultView, so hide AIR's duplicate label. */
+    .nitro-catalog-default-layout .nitro-catalog-spinner-box .nitro-catalog-standard-spinner-label,
+    .nitro-catalog-default-layout .nitro-catalog-spinner-box .nitro-catalog-standard-spinner-discount {
+        display: none !important;
+    }
+
+    .nitro-catalog-default-layout .nitro-catalog-spinner-box button.nitro-catalog-standard-spinner-button {
+        top: 1px !important;
+        width: 22px !important;
+        min-width: 22px !important;
+        height: 22px !important;
+        min-height: 22px !important;
+        touch-action: manipulation !important;
+        pointer-events: auto !important;
+    }
+
+    .nitro-catalog-default-layout .nitro-catalog-spinner-box button.nitro-catalog-standard-spinner-button-less {
+        left: 0 !important;
+    }
+
+    .nitro-catalog-default-layout .nitro-catalog-spinner-box .nitro-catalog-standard-spinner-input-frame {
+        left: 25px !important;
+        top: 0 !important;
+        width: 32px !important;
+        height: 24px !important;
+    }
+
+    .nitro-catalog-default-layout .nitro-catalog-spinner-box .nitro-catalog-standard-spinner-value {
+        left: 3px !important;
+        top: 4px !important;
+        width: 26px !important;
+        height: 16px !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+        font-size: 10px !important;
+        line-height: 16px !important;
+        text-align: center !important;
+        pointer-events: auto !important;
+        touch-action: manipulation !important;
+    }
+
+    .nitro-catalog-default-layout .nitro-catalog-spinner-box button.nitro-catalog-standard-spinner-button-more {
+        left: 60px !important;
+    }
+
+    /* Gift + Buy get equal space; allow the gift caption to wrap instead of clipping. */
+    .nitro-catalog-default-layout .nitro-catalog-offer-details .nitro-catalog-offer-actions {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+        gap: 3px !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        overflow: visible !important;
+    }
+
+    .nitro-catalog-default-layout .nitro-catalog-offer-details .nitro-catalog-offer-actions > .nitro-catalog-standard-button {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        height: 29px !important;
+        min-height: 29px !important;
+        padding: 0 2px !important;
+        margin: 0 !important;
+        font-size: 8px !important;
+        line-height: 9px !important;
+        white-space: normal !important;
+        text-align: center !important;
+        overflow: hidden !important;
+        text-overflow: clip !important;
+        pointer-events: auto !important;
+        touch-action: manipulation !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+}
+
+/* Same details-only changes when the site's explicit mobile mode is active. */
+html.nitro-mobile-mode .nitro-catalog-default-layout .nitro-catalog-product-view > .nitro-catalog-offer-preview {
+    width: 56% !important;
+    max-width: 56% !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-default-layout .nitro-catalog-product-view > .nitro-catalog-offer-details {
+    width: 44% !important;
+    max-width: 44% !important;
+    padding: 5px !important;
+    overflow: hidden !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-default-layout .nitro-catalog-offer-details > div:last-child {
+    gap: 3px !important;
+    padding-top: 3px !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-default-layout .nitro-catalog-spinner-box {
+    display: flex !important;
+    flex: 0 0 82px !important;
+    width: 82px !important;
+    min-width: 82px !important;
+    max-width: 82px !important;
+    height: 24px !important;
+    overflow: visible !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-default-layout .nitro-catalog-spinner-box .nitro-catalog-standard-spinner {
+    display: block !important;
+    position: relative !important;
+    width: 82px !important;
+    min-width: 82px !important;
+    max-width: 82px !important;
+    height: 24px !important;
+    overflow: visible !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-default-layout .nitro-catalog-spinner-box .nitro-catalog-standard-spinner-label,
+html.nitro-mobile-mode .nitro-catalog-default-layout .nitro-catalog-spinner-box .nitro-catalog-standard-spinner-discount {
+    display: none !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-default-layout .nitro-catalog-spinner-box button.nitro-catalog-standard-spinner-button-less {
+    left: 0 !important;
+    top: 1px !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-default-layout .nitro-catalog-spinner-box .nitro-catalog-standard-spinner-input-frame {
+    left: 25px !important;
+    top: 0 !important;
+    width: 32px !important;
+    height: 24px !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-default-layout .nitro-catalog-spinner-box button.nitro-catalog-standard-spinner-button-more {
+    left: 60px !important;
+    top: 1px !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-default-layout .nitro-catalog-offer-details .nitro-catalog-offer-actions {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    gap: 3px !important;
+    width: 100% !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-default-layout .nitro-catalog-offer-details .nitro-catalog-offer-actions > .nitro-catalog-standard-button {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    height: 29px !important;
+    min-height: 29px !important;
+    padding: 0 2px !important;
+    font-size: 8px !important;
+    line-height: 9px !important;
+    white-space: normal !important;
+    overflow: hidden !important;
+    pointer-events: auto !important;
+    touch-action: manipulation !important;
+}
+
+/* ============================================================================
+   XERO MOBILE CATALOG V7 - TALLER CATALOG + LARGER ITEM PREVIEW
+   Cosmetic-only extension built on the working V6 layout.  Navigation/touch
+   rules are intentionally untouched.
+   ============================================================================ */
+@media (max-width: 760px) {
+    /* Add 60px to the working product area without changing the category pane. */
+    .nitro-catalog-layout-shell,
+    .nitro-catalog-layout-container,
+    .nitro-catalog-default-layout {
+        flex-basis: 420px !important;
+        height: 420px !important;
+        min-height: 420px !important;
+        max-height: 420px !important;
+    }
+
+    /* Give the selected furniture preview more vertical room. */
+    .nitro-catalog-product-view,
+    .nitro-catalog-offer-panel,
+    .nitro-catalog-offer-panel > .nitro-catalog-offer-preview {
+        height: 190px !important;
+        min-height: 190px !important;
+        max-height: 190px !important;
+    }
+
+    .nitro-catalog-offer-preview > .shadow-room-previewer {
+        top: -28px !important;
+        height: 250px !important;
+        min-height: 250px !important;
+        max-height: 250px !important;
+    }
+
+    /* Preserve a useful, scrollable furniture grid below the larger preview. */
+    .nitro-catalog-grid-shell {
+        top: 194px !important;
+        height: 176px !important;
+        min-height: 176px !important;
+        max-height: 176px !important;
+    }
+
+    /* Keep Qty / Gift / Buy in their own strip at the bottom. */
+    .nitro-catalog-purchase-row {
+        top: 372px !important;
+        height: 48px !important;
+        min-height: 48px !important;
+        max-height: 48px !important;
+    }
+
+    /* If nothing is selected, use the extra height for browsing furniture. */
+    .nitro-catalog-default-layout:has(.nitro-catalog-welcome) .nitro-catalog-grid-shell {
+        top: 0 !important;
+        height: 372px !important;
+        min-height: 372px !important;
+        max-height: 372px !important;
+    }
+}
+
+html.nitro-mobile-mode .nitro-catalog-window .nitro-catalog-layout-shell,
+html.nitro-mobile-mode .nitro-catalog-window .nitro-catalog-layout-container,
+html.nitro-mobile-mode .nitro-catalog-window .nitro-catalog-default-layout {
+    flex-basis: 420px !important;
+    height: 420px !important;
+    min-height: 420px !important;
+    max-height: 420px !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-window .nitro-catalog-product-view,
+html.nitro-mobile-mode .nitro-catalog-window .nitro-catalog-offer-panel,
+html.nitro-mobile-mode .nitro-catalog-window .nitro-catalog-offer-panel > .nitro-catalog-offer-preview {
+    height: 190px !important;
+    min-height: 190px !important;
+    max-height: 190px !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-window .nitro-catalog-offer-preview > .shadow-room-previewer {
+    top: -28px !important;
+    height: 250px !important;
+    min-height: 250px !important;
+    max-height: 250px !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-window .nitro-catalog-grid-shell {
+    top: 194px !important;
+    height: 176px !important;
+    min-height: 176px !important;
+    max-height: 176px !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-window .nitro-catalog-purchase-row {
+    top: 372px !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    max-height: 48px !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-window .nitro-catalog-default-layout:has(.nitro-catalog-welcome) .nitro-catalog-grid-shell {
+    top: 0 !important;
+    height: 372px !important;
+    min-height: 372px !important;
+    max-height: 372px !important;
+}
+
+/* ============================================================================
+   XERO MOBILE CATALOG V8 - TRUE TALLER WINDOW
+   Keep the working V7 internals, but enlarge the actual draggable Shop shell
+   by 60px and move it upward by the same amount. This preserves the bottom
+   position while exposing the larger preview and purchase controls.
+   ============================================================================ */
+@media (max-width: 760px) {
+    .draggable-window:has(> .nitro-catalog-window) {
+        width: calc(100vw - 8px) !important;
+        min-width: 0 !important;
+        max-width: calc(100vw - 8px) !important;
+        height: 640px !important;
+        min-height: 640px !important;
+        max-height: 640px !important;
+        margin-top: -60px !important;
+    }
+
+    .nitro-catalog-window {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        height: 640px !important;
+        min-height: 640px !important;
+        max-height: 640px !important;
+    }
+
+    /* Keep the catalogue content clipped by the newly enlarged window only,
+       rather than by the old 580px desktop shell. */
+    .nitro-catalog-content-shell {
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+    }
+}
+
+/* Explicit ?mobile=1 mode can be active outside the normal CSS breakpoint. */
+html.nitro-mobile-mode .draggable-window:has(> .nitro-catalog-window) {
+    width: calc(100vw - 8px) !important;
+    min-width: 0 !important;
+    max-width: calc(100vw - 8px) !important;
+    height: 640px !important;
+    min-height: 640px !important;
+    max-height: 640px !important;
+    margin-top: -60px !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-window {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    height: 640px !important;
+    min-height: 640px !important;
+    max-height: 640px !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-window .nitro-catalog-content-shell {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+}
+
+/* ============================================================================
+   XERO MOBILE CATALOG V9 - COSMETIC PURCHASE PANEL POLISH
+   Built directly on V8. Keeps all V8 sizing/positioning/touch behaviour intact.
+   Only adjusts the selected-offer split, Qty alignment and action button sizing.
+   ============================================================================ */
+@media (max-width: 760px) {
+    /* Give the purchase/details side a little more width without materially
+       reducing the large furniture preview introduced in V8. */
+    .nitro-catalog-default-layout .nitro-catalog-product-view > .nitro-catalog-offer-preview {
+        width: 53% !important;
+        max-width: 53% !important;
+    }
+
+    .nitro-catalog-default-layout .nitro-catalog-product-view > .nitro-catalog-offer-details {
+        width: 47% !important;
+        max-width: 47% !important;
+        padding: 6px !important;
+    }
+
+    /* Keep Qty label/value neatly aligned and easy to tap. */
+    .nitro-catalog-default-layout .nitro-catalog-spinner-box {
+        width: 88px !important;
+        min-width: 88px !important;
+        max-width: 88px !important;
+    }
+
+    .nitro-catalog-default-layout .nitro-catalog-spinner-box .nitro-catalog-standard-spinner {
+        width: 88px !important;
+        min-width: 88px !important;
+        max-width: 88px !important;
+    }
+
+    .nitro-catalog-default-layout .nitro-catalog-spinner-box .nitro-catalog-standard-spinner-input-frame {
+        left: 27px !important;
+        width: 34px !important;
+    }
+
+    .nitro-catalog-default-layout .nitro-catalog-spinner-box button.nitro-catalog-standard-spinner-button-more {
+        left: 64px !important;
+    }
+
+    /* Gift needs more horizontal space than Buy. Keep both on one line. */
+    .nitro-catalog-default-layout .nitro-catalog-offer-details .nitro-catalog-offer-actions {
+        grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) !important;
+        gap: 4px !important;
+    }
+
+    .nitro-catalog-default-layout .nitro-catalog-offer-details .nitro-catalog-offer-actions > .nitro-catalog-standard-button {
+        height: 30px !important;
+        min-height: 30px !important;
+        padding: 0 3px !important;
+        font-size: 7px !important;
+        line-height: 30px !important;
+        white-space: nowrap !important;
+        text-align: center !important;
+        overflow: hidden !important;
+        text-overflow: clip !important;
+    }
+}
+
+/* Mirror V9 when the explicit mobile-mode class is used. */
+html.nitro-mobile-mode .nitro-catalog-default-layout .nitro-catalog-product-view > .nitro-catalog-offer-preview {
+    width: 53% !important;
+    max-width: 53% !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-default-layout .nitro-catalog-product-view > .nitro-catalog-offer-details {
+    width: 47% !important;
+    max-width: 47% !important;
+    padding: 6px !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-default-layout .nitro-catalog-spinner-box {
+    width: 88px !important;
+    min-width: 88px !important;
+    max-width: 88px !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-default-layout .nitro-catalog-spinner-box .nitro-catalog-standard-spinner {
+    width: 88px !important;
+    min-width: 88px !important;
+    max-width: 88px !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-default-layout .nitro-catalog-spinner-box .nitro-catalog-standard-spinner-input-frame {
+    left: 27px !important;
+    width: 34px !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-default-layout .nitro-catalog-spinner-box button.nitro-catalog-standard-spinner-button-more {
+    left: 64px !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-default-layout .nitro-catalog-offer-details .nitro-catalog-offer-actions {
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) !important;
+    gap: 4px !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-default-layout .nitro-catalog-offer-details .nitro-catalog-offer-actions > .nitro-catalog-standard-button {
+    height: 30px !important;
+    min-height: 30px !important;
+    padding: 0 3px !important;
+    font-size: 7px !important;
+    line-height: 30px !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+    overflow: hidden !important;
+    text-overflow: clip !important;
+}
+
+/* ============================================================================
+   XERO MOBILE CATALOG V10 - FINAL SAFE POLISH
+   Cosmetic-only additions on top of the working V9 layout.
+   Does not alter catalogue selection, touch handling, page loading or grid logic.
+   ============================================================================ */
+@media (max-width: 760px) {
+    /* Slightly clearer separation between the preview/purchase card and item grid. */
+    .nitro-catalog-default-layout {
+        gap: 7px !important;
+    }
+
+    .nitro-catalog-default-layout .nitro-catalog-product-view {
+        gap: 7px !important;
+    }
+
+    /* Make the Qty row feel intentional and keep the number control aligned. */
+    .nitro-catalog-default-layout .nitro-catalog-offer-details > div:last-child {
+        gap: 6px !important;
+        padding-top: 7px !important;
+    }
+
+    .nitro-catalog-default-layout .nitro-catalog-spinner-box {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+    }
+
+    /* Equal visual rhythm for the action row while preserving extra Gift width. */
+    .nitro-catalog-default-layout .nitro-catalog-offer-details .nitro-catalog-offer-actions {
+        align-items: stretch !important;
+        min-height: 30px !important;
+    }
+
+    .nitro-catalog-default-layout .nitro-catalog-offer-details .nitro-catalog-offer-actions > .nitro-catalog-standard-button {
+        border-radius: 4px !important;
+        font-weight: 700 !important;
+    }
+
+    /* Give the furniture browser a tiny bottom inset so the last row does not
+       visually collide with the window edge / phone navigation area. */
+    .nitro-catalog-default-layout .nitro-catalog-grid-shell {
+        padding-bottom: 8px !important;
+    }
+}
+
+html.nitro-mobile-mode .nitro-catalog-default-layout {
+    gap: 7px !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-default-layout .nitro-catalog-product-view {
+    gap: 7px !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-default-layout .nitro-catalog-offer-details > div:last-child {
+    gap: 6px !important;
+    padding-top: 7px !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-default-layout .nitro-catalog-spinner-box {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-default-layout .nitro-catalog-offer-details .nitro-catalog-offer-actions {
+    align-items: stretch !important;
+    min-height: 30px !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-default-layout .nitro-catalog-offer-details .nitro-catalog-offer-actions > .nitro-catalog-standard-button {
+    border-radius: 4px !important;
+    font-weight: 700 !important;
+}
+
+html.nitro-mobile-mode .nitro-catalog-default-layout .nitro-catalog-grid-shell {
+    padding-bottom: 8px !important;
+}

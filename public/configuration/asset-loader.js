@@ -57,6 +57,9 @@
   const renderShell = () => {
     const root = document.getElementById("root");
     if(!root || root.firstChild) return;
+    // Match the React LoadingView background so the pre-React shell paints
+    // the same gradient — no light-blue login-skeleton flash before the
+    // loader takes over.
     root.innerHTML = '<div style="position:fixed;inset:0;background:radial-gradient(#1d1a24,#003a6b);overflow:hidden;z-index:1"></div>';
   };
 
@@ -254,6 +257,9 @@
           manifestBase = new URL("..", manifestBase);
         }
         const jsPath = resolveManifestPath(manifestBase, entry.js);
+        // A manifest left over from a previous deploy names hashed files that
+        // no longer exist — verify before committing, so a stale copy falls
+        // through to the next manifest source instead of a hard 404.
         const verifyTarget = mode.distObfuscationEnabled ? jsPath + ".dat" : jsPath;
         if(!(await assetLikelyExists(verifyTarget))) {
           debug("loader: stale manifest " + candidate.href + " (missing " + verifyTarget + ")");

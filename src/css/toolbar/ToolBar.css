@@ -277,3 +277,319 @@
         transform: translateY(0);
     }
 }
+
+/* V21 mobile: stable four-button primary dock + compact utility side rail */
+@media (pointer: coarse), (hover: none) {
+    .nitro-toolbar-mobile-hobba {
+        width: auto !important;
+        max-width: calc(100vw - 24px) !important;
+        min-width: 0 !important;
+        left: 50% !important;
+        right: auto !important;
+        padding-left: 4px !important;
+        padding-right: 4px !important;
+    }
+
+    .tb-mobile-primary-dock {
+        display: flex !important;
+        flex: 0 0 auto !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        gap: 2px !important;
+        overflow: visible !important;
+        justify-content: center !important;
+    }
+
+    .tb-mobile-primary-slot {
+        position: relative;
+        display: flex;
+        flex: 0 0 48px !important;
+        width: 48px !important;
+        min-width: 48px !important;
+        height: 46px;
+        align-items: center;
+        justify-content: center;
+        overflow: visible;
+    }
+
+    .tb-mobile-primary-slot.tb-slot-memenu {
+        flex-basis: 48px !important;
+        width: 48px !important;
+    }
+
+    /* The utility rail can hold the overflow shortcuts without covering half the room. */
+    .nitro-toolbar-mobile-side,
+    .tb-mobile-side-stack {
+        gap: 1px !important;
+    }
+}
+
+/* ============================================================
+   V22 MOBILE — FIXED FOUR-SLOT BOTTOM DOCK
+   Side rail is intentionally untouched.
+   ============================================================ */
+@media (pointer: coarse), (hover: none) {
+    html.nitro-mobile-mode .nitro-toolbar-mobile-hobba,
+    .nitro-toolbar-mobile-hobba {
+        width: 224px !important;
+        min-width: 224px !important;
+        max-width: 224px !important;
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%) !important;
+        box-sizing: border-box !important;
+        padding: 3px 6px !important;
+        overflow: visible !important;
+    }
+
+    html.nitro-mobile-mode .nitro-toolbar-mobile-hobba > .tb-mobile-primary-dock,
+    .nitro-toolbar-mobile-hobba > .tb-mobile-primary-dock {
+        display: grid !important;
+        grid-template-columns: repeat(4, 50px) !important;
+        column-gap: 2px !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 212px !important;
+        min-width: 212px !important;
+        max-width: 212px !important;
+        height: 48px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: visible !important;
+        touch-action: auto !important;
+    }
+
+    html.nitro-mobile-mode .tb-mobile-primary-dock > .tb-mobile-primary-slot,
+    .tb-mobile-primary-dock > .tb-mobile-primary-slot {
+        position: relative !important;
+        display: flex !important;
+        width: 50px !important;
+        min-width: 50px !important;
+        max-width: 50px !important;
+        height: 46px !important;
+        flex: none !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        transform: none !important;
+    }
+
+    html.nitro-mobile-mode .tb-mobile-primary-dock > .tb-mobile-primary-slot.tb-slot-memenu,
+    .tb-mobile-primary-dock > .tb-mobile-primary-slot.tb-slot-memenu {
+        width: 50px !important;
+        min-width: 50px !important;
+        max-width: 50px !important;
+    }
+}
+
+/* ============================================================
+   V23 MOBILE — POSITION-ONLY FIX FOR FOUR-ICON BOTTOM DOCK
+   Keep V21/V22 icon sizing/order and side rail untouched.
+   Use viewport-based left positioning so Framer/Tailwind transforms
+   cannot pull the dock off the left edge.
+   ============================================================ */
+@media (pointer: coarse), (hover: none) {
+    html.nitro-mobile-mode .nitro-toolbar-mobile-hobba,
+    .nitro-toolbar-mobile-hobba {
+        position: fixed !important;
+        width: 224px !important;
+        min-width: 224px !important;
+        max-width: 224px !important;
+        left: calc(50vw - 112px) !important;
+        right: auto !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        transform: none !important;
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+        box-sizing: border-box !important;
+    }
+
+    html.nitro-mobile-mode .nitro-toolbar-mobile-hobba > .tb-mobile-primary-dock,
+    .nitro-toolbar-mobile-hobba > .tb-mobile-primary-dock {
+        width: 208px !important;
+        min-width: 208px !important;
+        max-width: 208px !important;
+        grid-template-columns: repeat(4, 50px) !important;
+        column-gap: 2px !important;
+        justify-content: center !important;
+        margin: 0 auto !important;
+    }
+}
+
+/* ============================================================
+   V24 MOBILE — FINAL FOUR-ICON DOCK POSITIONING
+   The primary mobile dock wrapper is now a plain div (not a motion
+   element), so Framer Motion cannot overwrite its horizontal transform.
+   Side toolbar styles are intentionally untouched.
+   ============================================================ */
+@media (pointer: coarse), (hover: none) {
+    html.nitro-mobile-mode .tb-mobile-primary-wrapper.nitro-toolbar-mobile-hobba,
+    .tb-mobile-primary-wrapper.nitro-toolbar-mobile-hobba {
+        position: fixed !important;
+        left: 50% !important;
+        right: auto !important;
+        bottom: max(3px, env(safe-area-inset-bottom, 0px)) !important;
+        transform: translateX(-50%) !important;
+        width: 232px !important;
+        min-width: 232px !important;
+        max-width: 232px !important;
+        height: 56px !important;
+        margin: 0 !important;
+        padding: 4px 8px !important;
+        box-sizing: border-box !important;
+        overflow: visible !important;
+    }
+
+    html.nitro-mobile-mode .tb-mobile-primary-wrapper > .tb-mobile-primary-dock,
+    .tb-mobile-primary-wrapper > .tb-mobile-primary-dock {
+        display: grid !important;
+        grid-template-columns: repeat(4, 50px) !important;
+        gap: 4px !important;
+        width: 212px !important;
+        min-width: 212px !important;
+        max-width: 212px !important;
+        height: 48px !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        justify-content: center !important;
+        align-items: center !important;
+        touch-action: auto !important;
+    }
+
+    html.nitro-mobile-mode .tb-mobile-primary-wrapper .tb-mobile-primary-slot,
+    .tb-mobile-primary-wrapper .tb-mobile-primary-slot {
+        width: 50px !important;
+        min-width: 50px !important;
+        max-width: 50px !important;
+        height: 46px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        flex: none !important;
+        transform: none !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        overflow: visible !important;
+    }
+}
+
+
+/* ============================================================
+   V25 MOBILE — SIX-ICON PRIMARY DOCK
+   Shop | Inventory | Avatar | Friends | Messenger | Fortune Wheel
+   Side rail remains for room utilities, Friend Search and Mentions.
+   ============================================================ */
+@media (pointer: coarse), (hover: none) {
+    html.nitro-mobile-mode .tb-mobile-primary-wrapper.nitro-toolbar-mobile-hobba,
+    .tb-mobile-primary-wrapper.nitro-toolbar-mobile-hobba {
+        width: 340px !important;
+        min-width: 340px !important;
+        max-width: min(340px, calc(100vw - 24px)) !important;
+        height: 56px !important;
+        padding: 4px 8px !important;
+    }
+
+    html.nitro-mobile-mode .tb-mobile-primary-wrapper > .tb-mobile-primary-dock,
+    .tb-mobile-primary-wrapper > .tb-mobile-primary-dock {
+        display: grid !important;
+        grid-template-columns: repeat(6, 50px) !important;
+        gap: 4px !important;
+        width: 320px !important;
+        min-width: 320px !important;
+        max-width: 320px !important;
+        height: 48px !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        justify-content: center !important;
+        align-items: center !important;
+    }
+
+    html.nitro-mobile-mode .tb-mobile-primary-wrapper .tb-mobile-primary-slot,
+    .tb-mobile-primary-wrapper .tb-mobile-primary-slot {
+        width: 50px !important;
+        min-width: 50px !important;
+        max-width: 50px !important;
+        height: 46px !important;
+    }
+}
+
+
+/* ============================================================
+   V26 MOBILE — Navigator on bottom, wheel on collapsible side rail
+   ============================================================ */
+@media (pointer: coarse), (hover: none) {
+    html.nitro-mobile-mode .tb-mobile-primary-wrapper.nitro-toolbar-mobile-hobba,
+    .tb-mobile-primary-wrapper.nitro-toolbar-mobile-hobba {
+        width: 330px !important;
+        min-width: 330px !important;
+        max-width: min(330px, calc(100vw - 20px)) !important;
+        padding-left: 5px !important;
+        padding-right: 5px !important;
+    }
+
+    html.nitro-mobile-mode .tb-mobile-primary-wrapper > .tb-mobile-primary-dock,
+    .tb-mobile-primary-wrapper > .tb-mobile-primary-dock {
+        grid-template-columns: repeat(6, 48px) !important;
+        gap: 3px !important;
+        width: 303px !important;
+        min-width: 303px !important;
+        max-width: 303px !important;
+        justify-content: center !important;
+    }
+
+    html.nitro-mobile-mode .tb-mobile-primary-wrapper .tb-mobile-primary-slot,
+    .tb-mobile-primary-wrapper .tb-mobile-primary-slot {
+        width: 48px !important;
+        min-width: 48px !important;
+        max-width: 48px !important;
+    }
+
+    .nitro-toolbar-mobile-side {
+        overflow: visible !important;
+        transition: translate 160ms ease, opacity 160ms ease !important;
+    }
+
+    .nitro-toolbar-mobile-side .tb-mobile-side-content {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 2px !important;
+    }
+
+    .nitro-toolbar-mobile-side .tb-mobile-side-toggle {
+        position: absolute !important;
+        top: 50% !important;
+        right: -20px !important;
+        transform: translateY(-50%) !important;
+        width: 20px !important;
+        height: 42px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 !important;
+        border: 1px solid rgba(255,255,255,.16) !important;
+        border-left: 0 !important;
+        border-radius: 0 8px 8px 0 !important;
+        background: rgba(24,23,21,.94) !important;
+        z-index: 5 !important;
+    }
+
+    .nitro-toolbar-mobile-side .tb-mobile-side-toggle img {
+        max-width: 12px !important;
+        max-height: 20px !important;
+    }
+
+    .nitro-toolbar-mobile-side.is-collapsed {
+        translate: calc(-100% + 2px) 0 !important;
+    }
+
+    .nitro-toolbar-mobile-side.is-collapsed .tb-mobile-side-content {
+        pointer-events: none !important;
+    }
+}

@@ -77,8 +77,23 @@ const CatalogViewInner: FC<{}> = () => {
         activeCatalogNode?.pageId
     );
 
-    // Expand catalog window to 860px and apply site font
+    // Desktop catalog stays 860px.
+    // Forced mobile client uses the available phone width.
     const catalogWindowStyle = useMemo(() => {
+        const isMobileClient =
+            typeof window !== 'undefined' &&
+            new URLSearchParams(window.location.search).get('mobile') === '1';
+
+        if (isMobileClient) {
+            return {
+                ...dynamicWindowStyle,
+                width: 'calc(100vw - 12px)',
+                minWidth: '0',
+                maxWidth: 'calc(100vw - 12px)',
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+            };
+        }
+
         return {
             ...dynamicWindowStyle,
             minWidth: '860px',
@@ -254,11 +269,6 @@ const CatalogViewInner: FC<{}> = () => {
                                 <CatalogBuildersClubStatusView />
                             ) : (
                                 <>
-                                    <div className="nitro-catalog-standard-header-title">
-                                        {searchResult
-                                            ? LocalizeText('catalog.search.header')
-                                            : getSwfTabLabel(activeCatalogNode?.localization ?? LocalizeText('catalog.title'))}
-                                    </div>
                                     <div
                                         className="nitro-catalog-standard-header-description"
                                         dangerouslySetInnerHTML={{
@@ -281,10 +291,10 @@ const CatalogViewInner: FC<{}> = () => {
                         <CatalogBuildersClubStatusView />
                         
                         {/* Wrapper fixes the overlapping sidebar and layout shell without crashing Nitro tab calculations */}
-                        <div style={{ display: 'flex', flexDirection: 'row', width: '100%', height: '100%', gap: '12px', overflow: 'hidden' }}>
-                            <div className={`nitro-catalog-stage ${navigationHidden ? 'is-navigation-hidden' : ''}`} style={{ display: 'flex', flexDirection: 'row', width: '100%', height: '100%', gap: '12px' }}>
+                        <div className="nitro-catalog-main-shell">
+                            <div className={`nitro-catalog-stage ${navigationHidden ? 'is-navigation-hidden' : ''}`}>
                                 {!navigationHidden && (
-                                    <div className="nitro-catalog-sidebar" style={{ width: '220px', minWidth: '220px', flexShrink: 0 }}>
+                                    <div className="nitro-catalog-sidebar">
                                         <div className="nitro-catalog-search-shell">
                                             <CatalogSearchView />
                                         </div>

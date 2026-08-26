@@ -1330,3 +1330,57 @@
     background: #000;
     image-rendering: pixelated;
 }
+
+/* ================================================================
+ * V15 MOBILE CHAT CLEANUP
+ * Hide the sticky-note / Habbicon selector beside the chat field on touch
+ * devices. Desktop keeps the selector unchanged.
+ * ================================================================ */
+@media (max-width: 767px), (pointer: coarse) {
+    .swf-chat-input .habbicon-chat-trigger {
+        display: none !important;
+    }
+
+    .nitro-chat-input-container.swf-chat-input .swf-chat-input-sizer,
+    .nitro-chat-input-container.swf-chat-input .swf-chat-flood {
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+}
+
+/* ============================================================
+   V24 MOBILE — ROOM TOOLS POPUP
+   Keep the Zoom / Settings / Chat history panel clear of the chat input
+   and bottom toolbar instead of using the desktop bottom:69px position.
+   ============================================================ */
+@media (pointer: coarse), (hover: none) {
+    html.nitro-mobile-mode .nitro-room-tools-container {
+        position: fixed !important;
+        left: 6px !important;
+        right: auto !important;
+        bottom: calc(168px + env(safe-area-inset-bottom, 0px)) !important;
+        max-width: calc(100vw - 12px) !important;
+        z-index: 72 !important;
+    }
+
+    html.nitro-mobile-mode .nitro-room-tools-container .nitro-room-tools {
+        width: 158px !important;
+        min-height: 0 !important;
+        max-height: calc(100vh - 230px) !important;
+        overflow-y: auto !important;
+        padding-top: 7px !important;
+        padding-bottom: 7px !important;
+    }
+
+    html.nitro-mobile-mode .nitro-room-tools-container.is-collapsed {
+        position: fixed !important;
+        left: 0 !important;
+        bottom: calc(168px + env(safe-area-inset-bottom, 0px)) !important;
+        width: 20px !important;
+        height: 44px !important;
+    }
+
+    html.nitro-mobile-mode .nitro-room-tools-container.is-collapsed .room-tools-collapse-toggle {
+        top: 50% !important;
+    }
+}

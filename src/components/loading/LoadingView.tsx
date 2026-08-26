@@ -42,12 +42,20 @@ export const LoadingView: FC<LoadingViewProps> = (props) => {
     const { isError = false, message = '', homeUrl = '', progress, currentTask = '' } = props;
 
     const customLogoUrl = useMemo(() => resolveConfigUrl('loading.logo.url'), []);
-    const customBackground = useMemo(() => resolveConfigString('loading.background', ''), []);
+    const customBackground = useMemo(() => resolveConfigUrl('loading.background'), []);
     const progressBarColor = useMemo(() => resolveConfigString('loading.progress.color', 'linear-gradient(90deg,#4f8cff,#2563eb)'), []);
 
     const clampedProgress = typeof progress === 'number' && Number.isFinite(progress) ? Math.max(0, Math.min(100, Math.round(progress))) : null;
 
-    const backgroundStyle = customBackground ? { background: customBackground } : undefined;
+    const backgroundStyle = customBackground
+        ? {
+            backgroundImage: `url("${customBackground}")`,
+            backgroundPosition: 'center center',
+            backgroundRepeat: 'no-repeat',
+            backgroundSize: 'cover',
+            backgroundColor: '#000'
+        }
+        : undefined;
 
     const backgroundClassName = customBackground ? 'fixed inset-0 z-[2147483000]' : 'fixed inset-0 z-[2147483000] bg-[radial-gradient(#1d1a24,#003a6b)]';
 
@@ -73,8 +81,8 @@ export const LoadingView: FC<LoadingViewProps> = (props) => {
                         <>
                             <Column alignItems="center" justifyContent="center" className="z-[3] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
                                 <img
-                                    src={customLogoUrl || octaneLogo}
-                                    alt="Octane"
+                                    src={customLogoUrl || nitroV3Logo}
+                                    alt="Lounge Hotel"
                                     draggable={false}
                                     className="block w-auto h-auto max-w-[min(80vw,780px)] max-h-[32vh] select-none pointer-events-none drop-shadow-[0_10px_24px_rgba(0,0,0,0.5)]"
                                 />

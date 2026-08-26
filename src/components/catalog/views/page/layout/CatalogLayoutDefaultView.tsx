@@ -1,7 +1,7 @@
 import { FC } from 'react';
-import { CatalogType, GetConfigurationValue, LocalizeText, ProductTypeEnum, SanitizeHtml } from '../../../../../api';
+import { GetConfigurationValue, LocalizeText, ProductTypeEnum, SanitizeHtml } from '../../../../../api';
 import { Text } from '../../../../../common';
-import { getCatalogGridMetrics, useCatalogData, useCatalogDisplayPreferences, useCatalogUiState } from '../../../../../hooks';
+import { getCatalogGridMetrics, useCatalogData, useCatalogDisplayPreferences } from '../../../../../hooks';
 import { CatalogHeaderView } from '../../catalog-header/CatalogHeaderView';
 import { CatalogAddOnBadgeWidgetView } from '../widgets/CatalogAddOnBadgeWidgetView';
 import { CatalogItemGridWidgetView } from '../widgets/CatalogItemGridWidgetView';
@@ -20,16 +20,15 @@ export const CatalogLayoutDefaultView: FC<CatalogLayoutProps> = (props) => {
     const { density = 'standard', showTilePrices = true } = useCatalogDisplayPreferences();
     const gridMetrics = getCatalogGridMetrics(density);
 
-
     return (
         <div className="nitro-catalog-default-layout flex flex-col h-full w-full gap-2 overflow-hidden flex-1 min-w-0">
             
-            {/* TOP PANEL: Preview & Action Controls */}
-            <div className="nitro-catalog-product-view w-full h-[220px] min-h-[220px] max-h-[220px] shrink-0 flex gap-2 p-2.5 rounded-xl bg-[#1e1b18] border border-[#d49400]/40 box-border">
+            {/* TOP PANEL: Room Stage & Purchase Panel */}
+            <div className="nitro-catalog-product-view w-full h-[220px] min-h-[220px] max-h-[220px] shrink-0 flex gap-2 p-2 rounded-xl bg-[#1e1b18] border border-[#d49400]/40 box-border">
                 {currentOffer ? (
                     <>
-                        {/* Left: Room Stage */}
-                        <div className="nitro-catalog-offer-preview relative w-[50%] h-full flex items-center justify-center rounded-lg bg-[#12100e] border border-[#2e2822] overflow-hidden">
+                        {/* Left Stage (68% Width for wide room preview) */}
+                        <div className="nitro-catalog-offer-preview relative w-[68%] h-full flex items-center justify-center rounded-lg bg-[#12100e] border border-[#2e2822] overflow-hidden">
                             <CatalogProductDetailsView offer={currentOffer} />
                             <CatalogLimitedItemWidgetView />
                             {currentOffer.product?.productType !== ProductTypeEnum.BADGE ? (
@@ -43,29 +42,36 @@ export const CatalogLayoutDefaultView: FC<CatalogLayoutProps> = (props) => {
                             )}
                         </div>
 
-                        {/* Right: Controls & Purchase Panel */}
-                        <div className="nitro-catalog-offer-details w-[50%] h-full flex flex-col justify-between p-3 rounded-lg bg-[#151311] border border-[#2e2822] box-border">
-                            <div>
-                                <h3 className="text-[15px] font-bold text-[#ffb800]! truncate mb-1">
+                        {/* Right Details Card (32% Width) */}
+                        <div className="nitro-catalog-offer-details w-[32%] h-full flex flex-col justify-between p-3 rounded-lg bg-[#151311] border border-[#2e2822] box-border overflow-hidden">
+                            
+                            {/* Title & Price */}
+                            <div className="flex flex-col gap-1 overflow-hidden">
+                                <h3 className="text-[14px] font-bold text-[#ffb800] truncate">
                                     {currentOffer.localizationName || currentOffer.product?.furnitureData?.name || ''}
                                 </h3>
-                                <div className="flex items-center gap-1.5 mb-2">
-                                    <span className="text-[11px] font-bold text-[#ffb800]! uppercase">{LocalizeText('catalog.bundlewidget.price')}:</span>
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                    <span className="text-[10px] font-bold text-[#ffb800] uppercase">{LocalizeText('catalog.bundlewidget.price')}:</span>
                                     <CatalogTotalPriceWidget />
                                 </div>
                             </div>
 
-                            {/* INLINE ROW: Stepper + Buy Buttons */}
-                            <div className="flex items-center justify-between gap-2 w-full pt-1">
-                                <div className="nitro-catalog-spinner-box flex items-center gap-1.5 px-2 py-1 rounded-md bg-[#1e1b18] border border-[#d49400]/30">
-                                    <span className="text-[10px] font-bold text-[#ffb800]! shrink-0">Qty</span>
-                                    <CatalogSpinnerWidgetView />
+                            {/* Bottom Actions Stack */}
+                            <div className="flex flex-col gap-2 w-full mt-auto pt-2 border-t border-[#2e2822]">
+                                {/* Qty Row */}
+                                <div className="flex items-center justify-between w-full">
+                                    <span className="text-[11px] font-bold text-white shrink-0">Qty</span>
+                                    <div className="nitro-catalog-spinner-box flex items-center justify-end">
+                                        <CatalogSpinnerWidgetView />
+                                    </div>
                                 </div>
 
-                                <div className="nitro-catalog-offer-actions flex items-center gap-1.5 shrink-0">
+                                {/* Stacked Buy & Gift Buttons */}
+                                <div className="nitro-catalog-offer-actions flex flex-col w-full">
                                     <CatalogPurchaseWidgetView />
                                 </div>
                             </div>
+
                         </div>
                     </>
                 ) : (

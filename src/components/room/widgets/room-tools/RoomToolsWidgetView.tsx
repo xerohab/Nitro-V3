@@ -60,7 +60,7 @@ const getZoomText = (scale: number) => (Math.round(Math.log(getNearestZoomScale(
 export const RoomToolsWidgetView: FC<{}> = (props) => {
     const [zoomScale, setZoomScale] = useState<number>(1);
     const [hasLikedRoom, setHasLikedRoom] = useState<boolean>(false);
-    const [isToolsOpen, setIsToolsOpen] = useState<boolean>(true);
+    const [isToolsOpen, setIsToolsOpen] = useState<boolean>(() => typeof window === 'undefined' ? true : !window.matchMedia('(pointer: coarse), (hover: none)').matches);
     const [isOpenHistory, setIsOpenHistory] = useState<boolean>(false);
     const [roomHistory, setRoomHistory] = useState<RoomHistoryEntry[]>([]);
     const [plugins, setPlugins] = useState<INitroPlugin[]>([]);

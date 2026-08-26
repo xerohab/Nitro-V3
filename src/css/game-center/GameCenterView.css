@@ -1848,3 +1848,127 @@
   stroke-dasharray: 4 2;
   stroke-linejoin: round;
 }
+
+/* ============================================================
+   LOUNGE HOTEL - MOBILE CATALOG INTERNAL LAYOUT V2
+   Only active with html.nitro-mobile-mode
+   ============================================================ */
+
+/* Main catalog content */
+html.nitro-mobile-mode .nitro-catalog-main-shell {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    overflow: hidden !important;
+}
+
+/*
+ * Desktop uses:
+ * sidebar | catalog page
+ *
+ * Mobile uses:
+ * sidebar
+ * catalog page
+ */
+html.nitro-mobile-mode .nitro-catalog-stage {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    gap: 6px !important;
+    overflow: hidden !important;
+}
+
+/* Category/sidebar becomes a horizontal mobile section */
+html.nitro-mobile-mode .nitro-catalog-sidebar {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    flex: 0 0 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+}
+
+/* Search remains full width */
+html.nitro-mobile-mode .nitro-catalog-search-shell {
+    width: 100% !important;
+    min-width: 0 !important;
+    flex: 0 0 auto !important;
+}
+
+/*
+ * Don't let navigation consume the entire phone.
+ * It gets its own scrollable strip/area.
+ */
+html.nitro-mobile-mode .nitro-catalog-navigation-shell {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    max-height: 130px !important;
+    overflow: auto !important;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Actual selected catalog page receives the full phone width */
+html.nitro-mobile-mode .nitro-catalog-layout-shell {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    flex: 1 1 auto !important;
+    overflow: hidden !important;
+}
+
+/* Page contents */
+html.nitro-mobile-mode .nitro-catalog-layout-container {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Top catalog tabs: swipe sideways instead of crushing them */
+html.nitro-mobile-mode .nitro-catalog-window .nitro-card-tabs {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Never shrink individual tabs */
+html.nitro-mobile-mode .nitro-catalog-window .nitro-card-tabs > * {
+    flex-shrink: 0 !important;
+}
+
+/* Header must stay inside phone */
+html.nitro-mobile-mode .nitro-catalog-standard-header {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Long category labels */
+html.nitro-mobile-mode .nitro-catalog-navigation-label {
+    max-width: none !important;
+}
+
+/* Breadcrumb/header area */
+html.nitro-mobile-mode .nitro-catalog-layout-header-shell {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+}
+
+/* Generic product grids must stay within mobile width */
+html.nitro-mobile-mode .nitro-catalog-grid,
+html.nitro-mobile-mode .nitro-catalog-grid-shell {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+

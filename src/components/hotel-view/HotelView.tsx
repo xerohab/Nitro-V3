@@ -473,7 +473,7 @@ export const HotelView: FC = () => {
     };
 
     return (
-        <div ref={containerRef} className="nitro-hotel-view block fixed w-full h-[calc(100%-55px)]" style={containerStyle}>
+        <div ref={containerRef} className="nitro-hotel-view block fixed w-full h-[calc(100%_-_50px)]" style={containerStyle}>
             {scene.leftUrl
                 ? <div className="hotelview-edge hotelview-edge-left" style={getScenePositionStyle('left')}><img src={resolveImageUrl(scene.leftUrl, imageLibraryUrl, assetUrl)} alt="" /><LayoutAvatarImageView classNames={['hotelview-avatar']} figure={GetSessionDataManager().figure} gender={GetSessionDataManager().gender} direction={2} />{landingData.canEdit && <button type="button" className="hotelview-scene-drag-handle" onPointerDown={(event) => startSceneDrag(event, 'left')} onPointerMove={moveSceneDrag} onPointerUp={finishSceneDrag} onPointerCancel={finishSceneDrag} title="Drag left artwork">↕</button>}</div>
                 : <LayoutAvatarImageView classNames={['hotelview-avatar hotelview-avatar-fallback']} figure={GetSessionDataManager().figure} gender={GetSessionDataManager().gender} direction={2} />}
