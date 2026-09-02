@@ -1,0 +1,3867 @@
+@font-face {
+    font-family: MessengerUbuntu;
+    src: url("@/assets/webfonts/Ubuntu.ttf") format("truetype");
+    font-style: normal;
+    font-weight: 400;
+    font-display: block;
+}
+
+@font-face {
+    font-family: MessengerUbuntu;
+    src: url("@/assets/webfonts/Ubuntu-b.ttf") format("truetype");
+    font-style: normal;
+    font-weight: 700;
+    font-display: block;
+}
+
+.messenger-window,
+.messenger-window *:not(.avatar-image) {
+    box-sizing: border-box;
+}
+
+.messenger-window {
+    position: relative;
+    width: 282px;
+    min-width: 282px;
+    height: 385px;
+    min-height: 275px;
+    max-width: calc(100vw - 10px);
+    max-height: calc(100vh - 10px);
+    overflow: hidden;
+    resize: both;
+    border: 1px solid #777771;
+    border-radius: 5px;
+    background: #e4e4e4;
+    box-shadow: inset 0 0 0 1px #fff, 0 2px 5px rgba(0, 0, 0, .42);
+    color: #000;
+    font-family: MessengerUbuntu, Arial, sans-serif;
+    font-kerning: normal;
+    font-synthesis: none;
+    image-rendering: pixelated;
+    text-rendering: geometricPrecision;
+    text-shadow: none;
+}
+
+.messenger-window button,
+.messenger-window input {
+    font-family: MessengerUbuntu, Arial, sans-serif;
+}
+
+.messenger-window button {
+    cursor: pointer;
+}
+
+.messenger-window .messenger-drag {
+    position: absolute;
+    z-index: 1;
+    inset: 0 0 auto;
+    height: 36px;
+    cursor: move;
+}
+
+.messenger-window .messenger-open-title {
+    position: absolute;
+    top: 11px;
+    left: 9px;
+    height: 15px;
+    overflow: hidden;
+    color: #000;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.messenger-window .messenger-minimize,
+.messenger-window .messenger-btn.close-btn {
+    width: 20px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: url("@/assets/images/friends/swf/illumina_light_button_frame_minimize.png") 0 0 / auto 20px no-repeat;
+    color: transparent;
+}
+
+.messenger-window .messenger-minimize {
+    position: absolute;
+    z-index: 3;
+    top: 8px;
+    right: 15px;
+}
+
+.messenger-window .messenger-minimize:hover,
+.messenger-window .messenger-btn.close-btn:hover { background-position: -52px 0; }
+.messenger-window .messenger-minimize:active,
+.messenger-window .messenger-btn.close-btn:active { background-position: -26px 0; }
+
+.messenger-window .messenger-avatar-navigation {
+    position: absolute;
+    top: 36px;
+    right: 1px;
+    left: 1px;
+    display: flex;
+    height: 35px;
+    align-items: stretch;
+}
+
+.messenger-window .messenger-avatar-bar {
+    position: static;
+    display: flex;
+    min-width: 0;
+    height: 35px;
+    flex: 1 1 auto;
+    padding: 0 !important;
+    background: transparent !important;
+    gap: 0;
+    overflow: hidden;
+}
+
+.messenger-window .messenger-avatar-scroll {
+    position: relative;
+    width: 15px;
+    min-width: 15px;
+    height: 35px;
+    padding: 0;
+    border: 0;
+    background-color: transparent;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.messenger-window .messenger-avatar-scroll.left {
+    background-image: url("@/assets/images/friends/swf/arrow_right_black.png");
+    transform: scaleX(-1);
+}
+
+.messenger-window .messenger-avatar-scroll.right {
+    background-image: url("@/assets/images/friends/swf/arrow_right_black.png");
+}
+
+.messenger-window .messenger-avatar-scroll:disabled {
+    visibility: hidden;
+}
+
+.messenger-window .messenger-avatar-tab,
+.messenger-window .messenger-avatar-tab.active {
+    position: relative;
+    width: 35px !important;
+    min-width: 35px !important;
+    height: 35px !important;
+    padding: 0 !important;
+    border: 1px solid transparent !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    overflow: hidden;
+}
+
+.messenger-window .messenger-avatar-tab.active {
+    border-color: #c5c5c5 !important;
+    background: #ebebeb !important;
+    box-shadow: inset 1px 1px 0 #fff !important;
+}
+
+.messenger-window .messenger-avatar-tab .avatar-image.compact-head {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 35px !important;
+    height: 35px !important;
+    margin: 0 !important;
+    background-position: center !important;
+    background-size: 35px 35px !important;
+    image-rendering: auto !important;
+    transform: none !important;
+}
+
+.messenger-window .messenger-avatar-tab.unread::after {
+    position: absolute;
+    z-index: 2;
+    top: 6px;
+    right: 3px;
+    width: 13px;
+    height: 12px;
+    background: url("@/assets/images/friends/chat-indicator.svg") no-repeat;
+    content: "";
+}
+
+.messenger-window .messenger-thread-header {
+    position: absolute;
+    top: 80px;
+    right: 9px;
+    left: 8px;
+    height: 31px;
+    padding: 0;
+    background: #e4e4e4;
+}
+
+.messenger-window .messenger-thread-name {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    width: 100%;
+    height: 14px;
+    min-width: 0;
+    align-items: flex-start;
+    overflow: hidden;
+    color: #4a4a4a;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.messenger-window .messenger-thread-name::after {
+    height: 1px;
+    min-width: 16px;
+    flex: 1;
+    margin: 7px 0 0 5px;
+    background: #b8b8b8;
+    content: "";
+}
+
+.messenger-window .messenger-actions {
+    position: absolute;
+    top: 13px;
+    right: 0;
+    left: 0;
+    display: flex;
+    height: 20px;
+    align-items: center;
+    gap: 4px;
+}
+
+.messenger-window .messenger-btn {
+    height: 20px;
+    min-height: 20px;
+    padding: 0 6px;
+    border: 5px solid transparent;
+    border-image: url("@/assets/images/friends/swf/illumina_light_button_plain_default.png") 5 fill stretch;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    color: #000;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 10px;
+}
+
+.messenger-window .messenger-btn:hover {
+    border-image: url("@/assets/images/friends/swf/illumina_light_button_plain_hover.png") 5 fill stretch;
+}
+
+.messenger-window .messenger-btn:active {
+    border-image: url("@/assets/images/friends/swf/illumina_light_button_plain_pressed.png") 5 fill stretch;
+}
+
+.messenger-window .messenger-btn.icon-btn {
+    padding: 0;
+}
+
+.messenger-window .messenger-btn.icon-btn.follow { width: 21px; min-width: 21px; }
+.messenger-window .messenger-btn.icon-btn.profile { width: 30px; min-width: 30px; }
+
+.messenger-window .messenger-btn.icon-btn::before {
+    display: block;
+    margin: auto;
+    background-position: center;
+    background-repeat: no-repeat;
+    content: "";
+}
+
+.messenger-window .messenger-btn.icon-btn.follow::before {
+    width: 9px;
+    height: 10px;
+    background-image: url("@/assets/images/friends/swf/messenger_visit_icon.png");
+}
+
+.messenger-window .messenger-btn.icon-btn.profile::before {
+    width: 16px;
+    height: 12px;
+    background-image: url("@/assets/images/friends/swf/messenger_profile_icon.png");
+}
+
+.messenger-window .messenger-btn.danger {
+    width: auto;
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.messenger-window .messenger-btn.close-btn {
+    margin-left: auto;
+    border-image: none;
+    background-image: url("@/assets/images/friends/swf/illumina_light_button_frame_close.png");
+}
+
+.messenger-window .chat-messages {
+    position: absolute;
+    top: 122px;
+    right: 9px;
+    bottom: 49px;
+    left: 7px;
+    padding: 4px 1px 4px 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    background: #e4e4e4;
+}
+
+.messenger-window:has(.messenger-typing-indicator) .chat-messages {
+    bottom: 53px;
+}
+
+.messenger-window .messenger-message-row {
+    display: flex;
+    width: 259px;
+    max-width: 100%;
+    min-height: 65px;
+    align-items: flex-start;
+    margin: 0;
+    gap: 0;
+}
+
+.messenger-window .message-avatar {
+    position: relative;
+    width: 52px;
+    min-width: 52px;
+    height: 56px;
+    flex: 0 0 52px;
+    overflow: hidden;
+}
+
+.messenger-window .message-avatar .avatar-image {
+    position: absolute !important;
+    top: -21px !important;
+    left: -19px !important;
+    width: 90px !important;
+    height: 130px !important;
+    margin: 0 !important;
+    background-position: 0 0 !important;
+    background-size: auto !important;
+    image-rendering: pixelated !important;
+    transform: none !important;
+}
+
+.messenger-window .messenger-message-body {
+    display: flex;
+    width: 207px;
+    max-width: calc(100% - 52px);
+    min-width: 0;
+    flex: 0 0 207px;
+    flex-direction: column;
+    align-items: stretch;
+    padding-top: 15px;
+}
+
+.messenger-window .messenger-message-name {
+    height: 15px;
+    color: #555;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 15px;
+}
+
+.messenger-window .messenger-message-bubble {
+    position: relative;
+    width: 100%;
+    min-height: 18px;
+    padding: 2px 6px 0;
+    border: solid transparent;
+    border-width: 5px 4px 7px;
+    border-image: url("@/assets/images/friends/chat-bubble-frame.svg") 5 4 7 4 fill stretch;
+    background: transparent;
+    color: #000;
+    overflow-wrap: break-word;
+    font-size: 11px;
+    line-height: 13px;
+}
+
+.messenger-window .messenger-message-bubble::after {
+    position: absolute;
+    top: 9px;
+    width: 5px;
+    height: 10px;
+    background: url("@/assets/images/friends/chat-bubble-arrow.svg") no-repeat;
+    content: "";
+}
+
+.messenger-window .messenger-message-row:not(.own) .messenger-message-bubble::after {
+    right: -5px;
+}
+
+.messenger-window .messenger-message-row.own .messenger-message-bubble::after {
+    left: -5px;
+    transform: scaleX(-1);
+}
+
+.messenger-window .messenger-message-time {
+    width: 131px;
+    height: 16px;
+    color: #555;
+    font-size: 10px;
+    line-height: 16px;
+}
+
+.messenger-window .messenger-translation-block + .messenger-translation-block {
+    margin-top: 5px;
+}
+
+.messenger-window .messenger-notification {
+    display: flex;
+    min-height: 50px;
+    align-items: center;
+    margin-bottom: 4px;
+    padding: 4px 8px;
+    border: 1px solid #c4c4c4;
+    border-radius: 4px;
+    background: #d1efde;
+    gap: 8px;
+    font-size: 10px;
+}
+
+.messenger-window .messenger-notification img {
+    width: auto;
+    min-width: 25px;
+    height: auto;
+    image-rendering: pixelated;
+}
+
+.messenger-window .messenger-status-notification {
+    margin: 6px 0;
+    color: #666;
+    font-size: 10px;
+    text-align: center;
+}
+
+.messenger-window .messenger-typing-indicator {
+    position: absolute;
+    right: 10px;
+    bottom: 39px;
+    left: 8px;
+    height: 14px;
+    color: #666;
+    font-size: 9px;
+    line-height: 14px;
+}
+
+.messenger-window .messenger-input-row {
+    position: absolute;
+    right: 9px;
+    bottom: 7px;
+    left: 7px;
+    display: flex;
+    height: 30px;
+    align-items: center;
+    padding: 0;
+    background: #e4e4e4;
+    gap: 3px;
+}
+
+.messenger-window .messenger-input-row input {
+    width: auto;
+    min-width: 0;
+    height: 29px;
+    min-height: 29px;
+    flex: 1 1 auto;
+    padding: 4px 7px;
+    border: 1px solid #b8b8b8;
+    border-radius: 5px;
+    outline: 0;
+    background: #fff;
+    color: #555;
+    font-size: 11px;
+}
+
+.messenger-window .messenger-btn.send {
+    width: 55px;
+    min-width: 55px;
+    height: 28px;
+}
+
+.messenger-window .messenger-btn.habbicon {
+    display: flex;
+    width: 30px;
+    min-width: 30px;
+    height: 28px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.messenger-window .messenger-btn.habbicon img {
+    display: block;
+    max-width: 24px;
+    max-height: 24px;
+}
+
+.messenger-window .messenger-habbicon-picker {
+    position: absolute;
+    z-index: 20;
+    right: 13px;
+    bottom: 41px;
+    box-sizing: border-box;
+    width: 256px;
+    padding: 0 1px 1px;
+    border-style: solid;
+    border-width: 10px 5px 5px;
+    border-color: transparent;
+    border-image: url("@/assets/images/friends/swf/illumina_light_balloon.png") 10 5 5 5 fill stretch;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    image-rendering: pixelated;
+}
+
+.messenger-window .messenger-habbicon-controls {
+    display: flex;
+    width: 242px;
+    height: 28px;
+    margin: 0 0 7px;
+    gap: 9px;
+}
+
+.messenger-window .messenger-habbicon-search {
+    position: relative;
+    box-sizing: border-box;
+    width: 143px;
+    height: 24px;
+    margin-top: 4px;
+    border-style: solid;
+    border-width: 8px 5px 4px;
+    border-color: transparent;
+    border-image: url("@/assets/images/friends/swf/illumina_light_input_fill.png") 8 5 4 5 fill stretch;
+    background: transparent;
+}
+
+.messenger-window .messenger-habbicon-search input {
+    position: absolute;
+    top: -4px;
+    left: 1px;
+    width: 111px;
+    height: 17px;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    box-shadow: none;
+    color: #333;
+    font-size: 11px;
+    line-height: 17px;
+}
+
+.messenger-window .messenger-habbicon-search span {
+    position: absolute;
+    top: -4px;
+    left: 1px;
+    width: 111px;
+    height: 17px;
+    color: #888;
+    font-size: 11px;
+    line-height: 17px;
+    pointer-events: none;
+}
+
+.messenger-window .messenger-habbicon-search button {
+    position: absolute;
+    top: -4px;
+    right: -1px;
+    width: 17px;
+    height: 17px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent url("@/assets/images/habbicons/slices/promo-arrow-close.png") center no-repeat;
+    opacity: .7;
+    image-rendering: pixelated;
+}
+
+.messenger-window .messenger-btn.messenger-habbicon-get-more {
+    width: 90px;
+    min-width: 90px;
+    height: 24px;
+    margin-top: 4px;
+    padding: 0;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 14px;
+}
+
+.messenger-window .messenger-habbicon-scroll {
+    width: 244px;
+    margin-top: 0;
+    padding-right: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.messenger-window .messenger-habbicon-scroll section {
+    width: 230px;
+    margin: 0 0 4px;
+}
+
+.messenger-window .messenger-habbicon-scroll strong {
+    display: block;
+    height: 18px;
+    margin: 0 0 2px;
+    color: #111;
+    font-size: 10px;
+    font-weight: 400;
+    line-height: 18px;
+}
+
+.messenger-window .messenger-habbicon-grid {
+    display: grid;
+    width: 230px;
+    grid-template-columns: repeat(5, 44px);
+    gap: 2px;
+}
+
+.messenger-window .messenger-habbicon-grid button,
+.messenger-window .messenger-habbicon-grid .empty {
+    position: relative;
+    box-sizing: border-box;
+    width: 44px;
+    height: 45px;
+    min-height: 45px;
+    padding: 0;
+    overflow: hidden;
+    border-style: solid;
+    border-width: 4px 4px 5px;
+    border-color: transparent;
+    border-image: url("@/assets/images/friends/swf/illumina_light_border_raised_edge.png") 4 4 5 4 stretch;
+    border-radius: 0;
+    background: rgba(255, 255, 255, .85);
+    box-shadow: none;
+    image-rendering: pixelated;
+}
+
+.messenger-window .messenger-habbicon-grid .empty {
+    background: rgba(221, 221, 221, .4);
+}
+
+.messenger-window .messenger-habbicon-grid button:hover {
+    background: #eeeeee;
+}
+
+.messenger-window .messenger-habbicon-grid button span {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    display: block;
+    width: 40px;
+    height: 40px;
+    overflow: hidden;
+    background-repeat: no-repeat;
+    image-rendering: pixelated;
+    pointer-events: none;
+}
+
+.messenger-window .messenger-habbicon-empty {
+    display: flex;
+    width: 256px;
+    height: 96px;
+    margin: -3px -6px 0;
+    align-items: center;
+    justify-content: center;
+    color: rgba(0, 0, 0, .83);
+    font-size: 11px;
+    text-align: center;
+}
+
+.messenger-window .messenger-message-bubble:has(.messenger-habbicon-message) {
+    padding: 7px 0;
+}
+
+.messenger-window .messenger-habbicon-message {
+    display: block;
+    width: 80px;
+    height: 80px;
+    margin-left: 10px;
+    overflow: hidden;
+    background-repeat: no-repeat;
+    image-rendering: pixelated;
+}
+
+.messenger-window .messenger-habbicon-message.mirrored {
+    transform: scaleX(-1);
+}
+
+
+/* ========================================================================
+   PHONE MESSENGER
+   Presentation-only skin for FriendsMessengerView.
+   ======================================================================== */
+
+.phone-messenger-window {
+    width: 390px;
+    min-width: 350px;
+    height: 650px;
+    min-height: 520px;
+    max-width: calc(100vw - 16px);
+    max-height: calc(100vh - 16px);
+    resize: both;
+    overflow: hidden;
+    border: 7px solid #17191d;
+    border-radius: 38px;
+    background: #f4f6f8;
+    box-shadow:
+        0 18px 45px rgba(0, 0, 0, .38),
+        inset 0 0 0 1px rgba(255, 255, 255, .14);
+    color: #17191d;
+    image-rendering: auto;
+}
+
+/* phone speaker / dynamic-island style detail */
+.phone-messenger-window::before {
+    position: absolute;
+    z-index: 30;
+    top: 8px;
+    left: 50%;
+    width: 92px;
+    height: 19px;
+    border-radius: 20px;
+    background: #17191d;
+    content: "";
+    pointer-events: none;
+    transform: translateX(-50%);
+}
+
+.phone-messenger-window .messenger-drag {
+    z-index: 25;
+    height: 34px;
+    cursor: move;
+}
+
+.phone-messenger-window .messenger-open-title {
+    top: 12px;
+    left: 22px;
+    z-index: 26;
+    max-width: 95px;
+    color: #59636e;
+    font-size: 10px;
+    line-height: 15px;
+}
+
+.phone-messenger-window .messenger-minimize {
+    z-index: 31;
+    top: 10px;
+    right: 18px;
+    width: 24px;
+    min-width: 24px;
+    height: 24px;
+    border: 0;
+    border-radius: 50%;
+    background: #e2e6ea;
+    color: #30363d;
+}
+
+.phone-messenger-window .messenger-minimize::after {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 10px;
+    height: 2px;
+    border-radius: 2px;
+    background: #30363d;
+    content: "";
+    transform: translate(-50%, -50%);
+}
+
+.phone-messenger-window .messenger-minimize:hover {
+    background: #d3d8dd;
+}
+
+.phone-messenger-window .messenger-minimize:active {
+    background: #c6ccd2;
+}
+
+
+/* ------------------------------------------------------------------------
+   Conversation strip
+   ------------------------------------------------------------------------ */
+
+.phone-messenger-window .messenger-avatar-navigation {
+    position: absolute;
+    z-index: 10;
+    top: 37px;
+    right: 12px;
+    left: 12px;
+    height: 54px;
+    padding: 5px 4px;
+    border-bottom: 1px solid #e1e5e9;
+    background: #fff;
+    align-items: center;
+}
+
+.phone-messenger-window .messenger-avatar-bar {
+    height: 44px;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 5px;
+}
+
+.phone-messenger-window .messenger-avatar-scroll {
+    width: 20px;
+    min-width: 20px;
+    height: 44px;
+    border: 0;
+    opacity: .6;
+}
+
+.phone-messenger-window .messenger-avatar-scroll:hover {
+    opacity: 1;
+}
+
+.phone-messenger-window .messenger-avatar-tab,
+.phone-messenger-window .messenger-avatar-tab.active {
+    width: 42px !important;
+    min-width: 42px !important;
+    height: 42px !important;
+    border: 2px solid transparent !important;
+    border-radius: 50% !important;
+    background: #edf0f3 !important;
+    overflow: hidden;
+}
+
+.phone-messenger-window .messenger-avatar-tab.active {
+    border-color: #4f8cff !important;
+    background: #e9f1ff !important;
+    box-shadow: 0 0 0 2px rgba(79, 140, 255, .16) !important;
+}
+
+.phone-messenger-window .messenger-avatar-tab .avatar-image.compact-head {
+    inset: 2px !important;
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 50%;
+    background-size: 34px 34px !important;
+    image-rendering: auto !important;
+}
+
+.phone-messenger-window .messenger-avatar-tab.unread::after {
+    top: 0;
+    right: 0;
+    width: 10px;
+    height: 10px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    background: #ff4d67;
+    content: "";
+}
+
+
+/* ------------------------------------------------------------------------
+   Active conversation header
+   ------------------------------------------------------------------------ */
+
+.phone-messenger-window .messenger-thread-header {
+    position: absolute;
+    z-index: 9;
+    top: 91px;
+    right: 0;
+    left: 0;
+    height: 70px;
+    padding: 8px 13px;
+    border-bottom: 1px solid #dde2e7;
+    background: rgba(255, 255, 255, .98);
+}
+
+.phone-messenger-window .phone-conversation-identity {
+    position: absolute;
+    top: 7px;
+    left: 14px;
+    display: flex;
+    max-width: calc(100% - 150px);
+    height: 50px;
+    align-items: center;
+    gap: 9px;
+}
+
+.phone-messenger-window .phone-conversation-avatar {
+    position: relative;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    overflow: hidden;
+    border-radius: 50%;
+    background: #e8edf2;
+}
+
+.phone-messenger-window .phone-conversation-avatar .avatar-image.compact-head {
+    position: absolute !important;
+    inset: 3px !important;
+    width: 38px !important;
+    height: 38px !important;
+    margin: 0 !important;
+    background-position: center !important;
+    background-size: 38px 38px !important;
+    image-rendering: auto !important;
+}
+
+.phone-messenger-window .phone-conversation-text {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.phone-messenger-window .messenger-thread-name {
+    position: static;
+    display: block;
+    width: auto;
+    height: auto;
+    overflow: hidden;
+    color: #17191d;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 18px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.phone-messenger-window .messenger-thread-name::after {
+    display: none;
+}
+
+.phone-messenger-window .phone-conversation-status {
+    display: block;
+    max-width: 150px;
+    overflow: hidden;
+    color: #7a858f;
+    font-size: 9px;
+    line-height: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.phone-messenger-window .messenger-actions {
+    position: absolute;
+    top: 20px;
+    right: 12px;
+    left: auto;
+    display: flex;
+    width: auto;
+    height: 30px;
+    align-items: center;
+    gap: 5px;
+}
+
+.phone-messenger-window .messenger-btn {
+    border: 0;
+    border-radius: 16px;
+    background: #e9edf1;
+    color: #313840;
+    box-shadow: none;
+}
+
+.phone-messenger-window .messenger-btn:hover {
+    border: 0;
+    background: #dce2e7;
+}
+
+.phone-messenger-window .messenger-btn:active {
+    border: 0;
+    background: #cfd6dc;
+}
+
+.phone-messenger-window .messenger-btn.icon-btn {
+    width: 29px !important;
+    min-width: 29px !important;
+    height: 29px;
+    padding: 0;
+}
+
+.phone-messenger-window .messenger-btn.icon-btn.follow::before,
+.phone-messenger-window .messenger-btn.icon-btn.profile::before {
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.phone-messenger-window .messenger-btn.danger {
+    width: 31px;
+    min-width: 31px;
+    max-width: 31px;
+    height: 29px;
+    padding: 0;
+    overflow: hidden;
+    color: transparent;
+    font-size: 0;
+}
+
+.phone-messenger-window .messenger-btn.danger::after {
+    color: #d8485b;
+    content: "!";
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.phone-messenger-window .messenger-btn.close-btn {
+    position: relative;
+    width: 29px;
+    min-width: 29px;
+    height: 29px;
+    margin: 0;
+    border: 0;
+    border-radius: 50%;
+    background: #f1e4e6;
+    color: #b53c4d;
+}
+
+.phone-messenger-window .messenger-btn.close-btn svg {
+    display: block;
+    margin: auto;
+}
+
+
+/* ------------------------------------------------------------------------
+   Message conversation
+   ------------------------------------------------------------------------ */
+
+.phone-messenger-window .chat-messages {
+    position: absolute;
+    top: 161px;
+    right: 0;
+    bottom: 79px;
+    left: 0;
+    padding: 16px 13px 12px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    background:
+        linear-gradient(rgba(247, 249, 251, .94), rgba(247, 249, 251, .94));
+    scroll-behavior: smooth;
+}
+
+.phone-messenger-window:has(.messenger-typing-indicator) .chat-messages {
+    bottom: 91px;
+}
+
+.phone-messenger-window .phone-message-row {
+    display: flex;
+    width: 100%;
+    max-width: 100%;
+    min-height: 0;
+    align-items: flex-end;
+    margin: 0 0 11px;
+    gap: 7px;
+}
+
+.phone-messenger-window .phone-message-row.own {
+    justify-content: flex-end;
+}
+
+.phone-messenger-window .phone-message-row.incoming {
+    justify-content: flex-start;
+}
+
+.phone-messenger-window .message-avatar {
+    position: relative;
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    overflow: hidden;
+    border-radius: 50%;
+    background: #e5eaef;
+}
+
+.phone-messenger-window .message-avatar .avatar-image {
+    position: absolute !important;
+    top: -27px !important;
+    left: -27px !important;
+    width: 88px !important;
+    height: 120px !important;
+    margin: 0 !important;
+    background-position: center !important;
+    background-size: auto !important;
+    image-rendering: pixelated !important;
+}
+
+.phone-messenger-window .phone-message-body {
+    display: flex;
+    width: auto;
+    max-width: 76%;
+    min-width: 0;
+    flex: 0 1 auto;
+    flex-direction: column;
+    padding: 0;
+}
+
+.phone-messenger-window .phone-message-row.own .phone-message-body {
+    align-items: flex-end;
+}
+
+.phone-messenger-window .phone-message-row.incoming .phone-message-body {
+    align-items: flex-start;
+}
+
+.phone-messenger-window .phone-message-name {
+    height: auto;
+    margin: 0 7px 3px;
+    color: #7b858f;
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 12px;
+}
+
+.phone-messenger-window .phone-message-bubble {
+    position: relative;
+    width: auto;
+    max-width: 100%;
+    min-height: 34px;
+    padding: 9px 12px;
+    border: 0;
+    border-radius: 17px;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(23, 25, 29, .10);
+    color: #20252a;
+    overflow-wrap: anywhere;
+    font-size: 12px;
+    line-height: 17px;
+}
+
+.phone-messenger-window .phone-message-row.own .phone-message-bubble {
+    border-bottom-right-radius: 5px;
+    background: #4f8cff;
+    color: #fff;
+}
+
+.phone-messenger-window .phone-message-row.incoming .phone-message-bubble {
+    border-bottom-left-radius: 5px;
+}
+
+.phone-messenger-window .phone-message-bubble::after {
+    display: none;
+}
+
+.phone-messenger-window .messenger-message-time {
+    width: auto;
+    height: auto;
+    margin: 3px 7px 0;
+    color: #8b949d;
+    font-size: 8px;
+    line-height: 11px;
+}
+
+.phone-messenger-window .phone-message-row.own .messenger-message-time {
+    text-align: right;
+}
+
+.phone-messenger-window .messenger-translation-block {
+    min-width: 100px;
+}
+
+.phone-messenger-window .messenger-translation-block + .messenger-translation-block {
+    margin-top: 7px;
+}
+
+.phone-messenger-window .messenger-message-bubble:has(.messenger-habbicon-message) {
+    padding: 8px;
+    background: transparent;
+    box-shadow: none;
+}
+
+.phone-messenger-window .messenger-habbicon-message {
+    margin: 0;
+}
+
+
+/* notifications */
+
+.phone-messenger-window .messenger-notification {
+    min-height: 45px;
+    margin: 8px auto;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 14px;
+    background: #e3f5ea;
+    color: #326347;
+    font-size: 10px;
+}
+
+.phone-messenger-window .messenger-status-notification {
+    margin: 8px 0;
+    color: #929aa2;
+    font-size: 9px;
+}
+
+
+/* ------------------------------------------------------------------------
+   Typing + composer
+   ------------------------------------------------------------------------ */
+
+.phone-messenger-window .messenger-typing-indicator {
+    position: absolute;
+    right: 18px;
+    bottom: 69px;
+    left: 18px;
+    height: 17px;
+    overflow: hidden;
+    color: #7b858f;
+    font-size: 9px;
+    font-style: italic;
+    line-height: 17px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.phone-messenger-window .phone-composer {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    height: 70px;
+    align-items: center;
+    padding: 10px 12px 14px;
+    border-top: 1px solid #e0e4e8;
+    background: #fff;
+    gap: 7px;
+}
+
+.phone-messenger-window .phone-composer input {
+    width: auto;
+    min-width: 0;
+    height: 40px;
+    min-height: 40px;
+    flex: 1 1 auto;
+    padding: 0 14px;
+    border: 1px solid #dce1e6;
+    border-radius: 21px;
+    outline: 0;
+    background: #f1f3f5;
+    color: #242a30;
+    font-size: 12px;
+}
+
+.phone-messenger-window .phone-composer input:focus {
+    border-color: #9cbcff;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(79, 140, 255, .10);
+}
+
+.phone-messenger-window .phone-composer input::placeholder {
+    color: #98a1aa;
+}
+
+.phone-messenger-window .messenger-btn.send {
+    position: relative;
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: #4f8cff;
+    color: transparent;
+    font-size: 0;
+}
+
+.phone-messenger-window .messenger-btn.send::after {
+    position: absolute;
+    top: 50%;
+    left: 48%;
+    color: #fff;
+    content: "➤";
+    font-family: Arial, sans-serif;
+    font-size: 18px;
+    line-height: 18px;
+    transform: translate(-50%, -50%);
+}
+
+.phone-messenger-window .messenger-btn.send:hover {
+    background: #3d7df2;
+}
+
+.phone-messenger-window .messenger-btn.send:active {
+    background: #326ed7;
+}
+
+.phone-messenger-window .messenger-btn.habbicon {
+    display: flex;
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: #eef1f4;
+}
+
+.phone-messenger-window .messenger-btn.habbicon img {
+    display: block;
+    max-width: 27px;
+    max-height: 27px;
+}
+
+.phone-messenger-window .messenger-btn.habbicon:hover {
+    background: #e1e6eb;
+}
+
+
+/* ------------------------------------------------------------------------
+   Habbicon popup stays functional but follows phone surface
+   ------------------------------------------------------------------------ */
+
+.phone-messenger-window .messenger-habbicon-picker {
+    right: 10px;
+    bottom: 67px;
+    width: 300px;
+    max-width: calc(100% - 20px);
+    padding: 10px;
+    border: 1px solid #d8dde2;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .20);
+    image-rendering: pixelated;
+}
+
+.phone-messenger-window .messenger-habbicon-controls {
+    width: 100%;
+}
+
+.phone-messenger-window .messenger-habbicon-scroll {
+    width: 100%;
+}
+
+.phone-messenger-window .messenger-habbicon-scroll section {
+    width: 100%;
+}
+
+.phone-messenger-window .messenger-habbicon-grid {
+    width: 100%;
+    grid-template-columns: repeat(5, 44px);
+    justify-content: center;
+}
+
+.phone-messenger-window .messenger-habbicon-empty {
+    width: 100%;
+}
+
+
+/* ------------------------------------------------------------------------
+   Scrollbar
+   ------------------------------------------------------------------------ */
+
+.phone-messenger-window .chat-messages::-webkit-scrollbar {
+    width: 5px;
+}
+
+.phone-messenger-window .chat-messages::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.phone-messenger-window .chat-messages::-webkit-scrollbar-thumb {
+    border-radius: 8px;
+    background: #c7cdd3;
+}
+
+
+/* ------------------------------------------------------------------------
+   Compact viewport
+   ------------------------------------------------------------------------ */
+
+@media (max-width: 520px), (max-height: 650px) {
+    .phone-messenger-window {
+        width: min(370px, calc(100vw - 10px));
+        min-width: min(350px, calc(100vw - 10px));
+        height: min(590px, calc(100vh - 10px));
+        min-height: 470px;
+        border-width: 5px;
+        border-radius: 28px;
+    }
+
+    .phone-messenger-window .messenger-thread-header {
+        height: 64px;
+    }
+
+    .phone-messenger-window .chat-messages {
+        top: 155px;
+    }
+}
+
+/* ========================================================================
+   PHONE MESSENGER - POLISH V2
+   Compact mobile layout / presentation only.
+   ======================================================================== */
+
+.phone-messenger-window {
+    width: 382px;
+    min-width: 340px;
+    height: 640px;
+    min-height: 500px;
+    border-width: 6px;
+    border-radius: 34px;
+    background: #f7f8fa;
+}
+
+/* Top phone chrome */
+.phone-messenger-window::before {
+    top: 7px;
+    width: 82px;
+    height: 17px;
+}
+
+.phone-messenger-window .messenger-open-title {
+    top: 11px;
+    left: 18px;
+    max-width: 90px;
+    font-size: 9px;
+}
+
+.phone-messenger-window .messenger-minimize {
+    top: 8px;
+    right: 15px;
+    width: 25px;
+    min-width: 25px;
+    height: 25px;
+    box-shadow: none;
+}
+
+/* ------------------------------------------------------------------------
+   Compact conversation selector
+   ------------------------------------------------------------------------ */
+
+.phone-messenger-window .messenger-avatar-navigation {
+    top: 34px;
+    right: 10px;
+    left: 10px;
+    height: 45px;
+    padding: 3px 4px;
+    border-bottom: 1px solid #e7e9ed;
+    background: #fff;
+}
+
+.phone-messenger-window .messenger-avatar-bar {
+    height: 38px;
+    gap: 6px;
+}
+
+.phone-messenger-window .messenger-avatar-scroll {
+    width: 17px;
+    min-width: 17px;
+    height: 38px;
+    opacity: .45;
+}
+
+.phone-messenger-window .messenger-avatar-tab,
+.phone-messenger-window .messenger-avatar-tab.active {
+    width: 36px !important;
+    min-width: 36px !important;
+    height: 36px !important;
+    border-width: 2px !important;
+}
+
+.phone-messenger-window .messenger-avatar-tab .avatar-image.compact-head {
+    inset: 2px !important;
+    width: 28px !important;
+    height: 28px !important;
+    background-size: 28px 28px !important;
+}
+
+.phone-messenger-window .messenger-avatar-tab.unread::after {
+    top: -1px;
+    right: -1px;
+    width: 9px;
+    height: 9px;
+}
+
+/* ------------------------------------------------------------------------
+   Active conversation header
+   ------------------------------------------------------------------------ */
+
+.phone-messenger-window .messenger-thread-header {
+    top: 79px;
+    height: 60px;
+    padding: 6px 12px;
+    border-bottom: 1px solid #e4e7eb;
+    background: #fff;
+}
+
+.phone-messenger-window .phone-conversation-identity {
+    top: 6px;
+    left: 13px;
+    max-width: calc(100% - 152px);
+    height: 47px;
+    gap: 8px;
+}
+
+.phone-messenger-window .phone-conversation-avatar {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+}
+
+.phone-messenger-window .phone-conversation-avatar .avatar-image.compact-head {
+    inset: 2px !important;
+    width: 36px !important;
+    height: 36px !important;
+    background-size: 36px 36px !important;
+}
+
+.phone-messenger-window .phone-conversation-text {
+    min-width: 0;
+    padding: 0;
+}
+
+.phone-messenger-window .messenger-thread-name {
+    position: static;
+    display: block;
+    width: auto;
+    height: auto;
+    color: #17191d;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 17px;
+}
+
+.phone-messenger-window .messenger-thread-name::after {
+    display: none;
+}
+
+.phone-messenger-window .phone-conversation-status {
+    display: block;
+    max-width: 150px;
+    margin-top: 1px;
+    overflow: hidden;
+    color: #8a929b;
+    font-size: 9px;
+    line-height: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Header actions become compact circular phone controls */
+.phone-messenger-window .messenger-actions {
+    top: 13px;
+    right: 11px;
+    left: auto;
+    width: auto;
+    height: 34px;
+    gap: 5px;
+}
+
+.phone-messenger-window .messenger-btn {
+    border: 0;
+    border-image: none;
+    background: #eef1f4;
+    box-shadow: none;
+}
+
+.phone-messenger-window .messenger-btn:hover {
+    border-image: none;
+    background: #e2e7ec;
+}
+
+.phone-messenger-window .messenger-btn:active {
+    border-image: none;
+    background: #d7dde3;
+    transform: scale(.96);
+}
+
+.phone-messenger-window .messenger-btn.icon-btn {
+    width: 30px !important;
+    min-width: 30px !important;
+    height: 30px;
+    min-height: 30px;
+    padding: 0;
+    border-radius: 50%;
+}
+
+.phone-messenger-window .messenger-btn.icon-btn.follow::before,
+.phone-messenger-window .messenger-btn.icon-btn.profile::before {
+    filter: none;
+}
+
+.phone-messenger-window .messenger-btn.danger {
+    position: relative;
+    width: 30px;
+    min-width: 30px;
+    max-width: 30px;
+    height: 30px;
+    min-height: 30px;
+    flex: 0 0 30px;
+    padding: 0;
+    overflow: hidden;
+    border-radius: 50%;
+    background: #fff0f1;
+    color: transparent;
+    font-size: 0;
+}
+
+.phone-messenger-window .messenger-btn.danger::after {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    color: #e34c59;
+    content: "!";
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1;
+    transform: translate(-50%, -52%);
+}
+
+.phone-messenger-window .messenger-btn.close-btn {
+    position: relative;
+    width: 30px;
+    min-width: 30px;
+    height: 30px;
+    min-height: 30px;
+    margin-left: 0;
+    border: 0;
+    border-radius: 50%;
+    background: #eef1f4;
+}
+
+.phone-messenger-window .messenger-btn.close-btn svg {
+    display: block;
+    width: 11px;
+    height: 11px;
+    margin: auto;
+    color: #4d5660;
+}
+
+/* ------------------------------------------------------------------------
+   Message area
+   ------------------------------------------------------------------------ */
+
+.phone-messenger-window .chat-messages {
+    top: 139px;
+    right: 4px;
+    bottom: 63px;
+    left: 4px;
+    padding: 12px 10px 10px;
+    background: #f7f8fa;
+    scrollbar-width: thin;
+    scrollbar-color: #c6ccd3 transparent;
+}
+
+.phone-messenger-window:has(.messenger-typing-indicator) .chat-messages {
+    bottom: 77px;
+}
+
+.phone-messenger-window .phone-message-row {
+    display: flex;
+    width: 100%;
+    min-height: 0;
+    align-items: flex-end;
+    margin: 0 0 10px;
+    gap: 7px;
+}
+
+.phone-messenger-window .phone-message-row.own {
+    flex-direction: row-reverse;
+    justify-content: flex-start;
+}
+
+.phone-messenger-window .phone-message-row.incoming {
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+}
+
+/*
+ * Compact head bubbles instead of the old full-body avatar crop.
+ * This prevents avatars from overlapping the message bubble.
+ */
+.phone-messenger-window .message-avatar {
+    position: relative;
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    overflow: hidden;
+    border-radius: 50%;
+    background: #e8ebef;
+}
+
+.phone-messenger-window .message-avatar .avatar-image {
+    position: absolute !important;
+    top: -18px !important;
+    left: -28px !important;
+    width: 90px !important;
+    height: 130px !important;
+    margin: 0 !important;
+    transform: scale(.72) !important;
+    transform-origin: center top !important;
+}
+
+.phone-messenger-window .phone-message-body {
+    display: flex;
+    width: auto;
+    max-width: 72%;
+    min-width: 0;
+    flex: 0 1 auto;
+    flex-direction: column;
+    padding: 0;
+}
+
+.phone-messenger-window .phone-message-row.own .phone-message-body {
+    align-items: flex-end;
+}
+
+.phone-messenger-window .phone-message-row.incoming .phone-message-body {
+    align-items: flex-start;
+}
+
+.phone-messenger-window .phone-message-name {
+    width: auto;
+    height: auto;
+    margin: 0 7px 3px;
+    color: #89919a;
+    font-size: 9px;
+    font-weight: 600;
+    line-height: 11px;
+}
+
+.phone-messenger-window .phone-message-bubble {
+    position: relative;
+    width: auto;
+    max-width: 100%;
+    min-height: 34px;
+    padding: 9px 12px;
+    border: 0;
+    border-image: none;
+    border-radius: 17px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .06);
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    font-size: 12px;
+    line-height: 16px;
+}
+
+.phone-messenger-window .phone-message-row.own .phone-message-bubble {
+    border-bottom-right-radius: 5px;
+    background: #4f8cff;
+    color: #fff;
+}
+
+.phone-messenger-window .phone-message-row.incoming .phone-message-bubble {
+    border-bottom-left-radius: 5px;
+    background: #fff;
+    color: #22272d;
+}
+
+.phone-messenger-window .phone-message-bubble::after {
+    display: none;
+}
+
+.phone-messenger-window .messenger-message-time {
+    width: auto;
+    height: auto;
+    margin: 3px 7px 0;
+    color: #a0a7af;
+    font-size: 8px;
+    line-height: 10px;
+}
+
+.phone-messenger-window .phone-message-row.own .messenger-message-time {
+    text-align: right;
+}
+
+/* Habbicons still work inside the new message bubbles */
+.phone-messenger-window .messenger-message-bubble:has(.messenger-habbicon-message) {
+    min-width: 96px;
+    padding: 8px;
+}
+
+.phone-messenger-window .messenger-habbicon-message {
+    margin: 0 auto;
+}
+
+/* ------------------------------------------------------------------------
+   Typing
+   ------------------------------------------------------------------------ */
+
+.phone-messenger-window .messenger-typing-indicator {
+    right: 15px;
+    bottom: 58px;
+    left: 15px;
+    height: 14px;
+    color: #929aa3;
+    font-size: 9px;
+    line-height: 14px;
+}
+
+/* ------------------------------------------------------------------------
+   Composer
+   ------------------------------------------------------------------------ */
+
+.phone-messenger-window .phone-composer {
+    right: 10px;
+    bottom: 10px;
+    left: 10px;
+    height: 45px;
+    padding: 5px;
+    border: 1px solid #e1e5e9;
+    border-radius: 24px;
+    background: #fff;
+    box-shadow: 0 2px 9px rgba(0, 0, 0, .06);
+    gap: 5px;
+}
+
+.phone-messenger-window .phone-composer input {
+    height: 33px;
+    min-height: 33px;
+    padding: 5px 9px;
+    border: 0;
+    border-radius: 17px;
+    outline: none;
+    background: transparent;
+    color: #252a30;
+    font-size: 11px;
+}
+
+.phone-messenger-window .phone-composer input:focus {
+    border: 0;
+    box-shadow: none;
+}
+
+.phone-messenger-window .messenger-btn.send,
+.phone-messenger-window .messenger-btn.habbicon {
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    min-height: 34px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+}
+
+.phone-messenger-window .messenger-btn.send {
+    position: relative;
+    background: #4f8cff;
+    color: transparent;
+    font-size: 0;
+}
+
+.phone-messenger-window .messenger-btn.send::after {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    color: #fff;
+    content: "➤";
+    font-size: 15px;
+    line-height: 1;
+    transform: translate(-54%, -50%);
+}
+
+.phone-messenger-window .messenger-btn.send:hover {
+    background: #407fe9;
+}
+
+.phone-messenger-window .messenger-btn.habbicon {
+    background: #eef1f4;
+}
+
+.phone-messenger-window .messenger-btn.habbicon img {
+    max-width: 23px;
+    max-height: 23px;
+}
+
+/* ------------------------------------------------------------------------
+   Modern narrow scrollbar
+   ------------------------------------------------------------------------ */
+
+.phone-messenger-window .chat-messages::-webkit-scrollbar {
+    width: 5px;
+}
+
+.phone-messenger-window .chat-messages::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.phone-messenger-window .chat-messages::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    background: #c6ccd3;
+}
+
+.phone-messenger-window .chat-messages::-webkit-scrollbar-thumb:hover {
+    background: #aeb6bf;
+}
+
+/* Picker sits directly above composer */
+.phone-messenger-window .messenger-habbicon-picker {
+    right: 11px;
+    bottom: 58px;
+    max-height: 355px;
+}
+
+/* Small screens */
+@media (max-width: 430px), (max-height: 700px) {
+    .phone-messenger-window {
+        width: min(372px, calc(100vw - 10px));
+        min-width: 320px;
+        height: min(610px, calc(100vh - 10px));
+        min-height: 470px;
+        border-width: 5px;
+        border-radius: 30px;
+    }
+
+    .phone-messenger-window .phone-message-body {
+        max-width: 76%;
+    }
+}
+
+
+/* ========================================================================
+   PHONE MESSENGER - CONCEPT MATCH V3
+   Dark phone controls + Emoji/GIF composer
+   ======================================================================== */
+
+.phone-messenger-window {
+    width: 390px;
+    height: 650px;
+    border: 7px solid #202326;
+    border-radius: 38px;
+    background: #f7f8fa;
+}
+
+/* Dark phone controls */
+.phone-messenger-window .messenger-minimize {
+    background: #262a2e !important;
+}
+
+.phone-messenger-window .messenger-minimize::after {
+    background: #fff !important;
+}
+
+.phone-messenger-window .messenger-minimize:hover {
+    background: #34393e !important;
+}
+
+.phone-messenger-window .messenger-actions {
+    gap: 7px;
+}
+
+.phone-messenger-window .messenger-btn.icon-btn,
+.phone-messenger-window .messenger-btn.danger,
+.phone-messenger-window .messenger-btn.close-btn {
+    width: 34px !important;
+    min-width: 34px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    border: 0 !important;
+    border-radius: 50% !important;
+    background: #292d31 !important;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, .16) !important;
+}
+
+.phone-messenger-window .messenger-btn.icon-btn:hover,
+.phone-messenger-window .messenger-btn.danger:hover,
+.phone-messenger-window .messenger-btn.close-btn:hover {
+    background: #3a4046 !important;
+}
+
+.phone-messenger-window .messenger-btn.icon-btn.follow::before,
+.phone-messenger-window .messenger-btn.icon-btn.profile::before {
+    filter: brightness(0) invert(1) !important;
+}
+
+.phone-messenger-window .messenger-btn.close-btn {
+    color: #fff !important;
+}
+
+.phone-messenger-window .messenger-btn.danger::after {
+    color: #ff626c !important;
+}
+
+/* Give the concept header controls enough room */
+.phone-messenger-window .phone-conversation-identity {
+    max-width: calc(100% - 178px);
+}
+
+.phone-messenger-window .phone-conversation-status {
+    max-width: 125px;
+}
+
+/* Clean conversation surface */
+.phone-messenger-window .chat-messages {
+    background: #f7f8fa !important;
+    padding-right: 14px;
+}
+
+/* GIF messages */
+.phone-messenger-window .messenger-giphy-message {
+    display: block;
+    width: auto;
+    max-width: 190px;
+    max-height: 190px;
+    border-radius: 14px;
+    object-fit: contain;
+}
+
+.phone-messenger-window .phone-message-bubble:has(.messenger-giphy-message) {
+    padding: 0 !important;
+    overflow: hidden;
+    border-radius: 14px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+/* Composer becomes the dark concept bar */
+.phone-messenger-window .phone-composer {
+    right: 8px !important;
+    bottom: 8px !important;
+    left: 8px !important;
+    height: 54px !important;
+    padding: 6px !important;
+    border: 0 !important;
+    border-radius: 28px !important;
+    background: #2a2e32 !important;
+    box-shadow:
+        0 2px 7px rgba(0, 0, 0, .20),
+        inset 0 0 0 1px rgba(255, 255, 255, .06) !important;
+    gap: 6px !important;
+}
+
+.phone-messenger-window .phone-composer-media {
+    display: flex;
+    height: 42px;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 4px;
+}
+
+/*
+ * Override the room-chat trigger artwork.
+ * The phone gets clean dark circular media buttons.
+ */
+.phone-messenger-window .phone-composer-media .swf-chat-emoji-trigger,
+.phone-messenger-window .phone-composer-media .swf-chat-gif-trigger {
+    position: relative !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    display: flex !important;
+    width: 38px !important;
+    min-width: 38px !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 1px solid #555c63 !important;
+    border-radius: 50% !important;
+    background: #34393e !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    color: #fff !important;
+    font-family: Arial, sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    text-shadow: none !important;
+}
+
+.phone-messenger-window .phone-composer-media .swf-chat-emoji-trigger {
+    font-size: 24px !important;
+    font-weight: 400 !important;
+}
+
+.phone-messenger-window .phone-composer-media .swf-chat-emoji-trigger:hover,
+.phone-messenger-window .phone-composer-media .swf-chat-gif-trigger:hover {
+    border-color: #747d86 !important;
+    background: #454b51 !important;
+}
+
+/* Input embedded into dark composer */
+.phone-messenger-window .phone-composer input {
+    width: 0 !important;
+    min-width: 0 !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    flex: 1 1 auto !important;
+    padding: 0 12px !important;
+    border: 1px solid #555c63 !important;
+    border-radius: 21px !important;
+    background: #34393e !important;
+    box-shadow: none !important;
+    color: #fff !important;
+}
+
+.phone-messenger-window .phone-composer input::placeholder {
+    color: #aeb5bc !important;
+}
+
+.phone-messenger-window .phone-composer input:focus {
+    border-color: #6f96e8 !important;
+    background: #393f45 !important;
+    box-shadow: none !important;
+}
+
+/* Send button */
+.phone-messenger-window .messenger-btn.send {
+    width: 40px !important;
+    min-width: 40px !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    flex: 0 0 40px;
+    border-radius: 50% !important;
+    background: #4f8cff !important;
+}
+
+.phone-messenger-window .messenger-btn.send:hover {
+    background: #3978ed !important;
+}
+
+/* Old Habbicon composer UI is intentionally not part of phone V3 */
+.phone-messenger-window .messenger-btn.habbicon,
+.phone-messenger-window .messenger-habbicon-picker {
+    display: none !important;
+}
+
+/* Leave room for the slightly taller concept composer */
+.phone-messenger-window .chat-messages {
+    bottom: 72px !important;
+}
+
+.phone-messenger-window:has(.messenger-typing-indicator) .chat-messages {
+    bottom: 86px !important;
+}
+
+.phone-messenger-window .messenger-typing-indicator {
+    bottom: 66px !important;
+}
+
+/* GIPHY popup should sit over Messenger, not behind the room UI */
+.swf-chat-gif-popover {
+    z-index: 1200;
+}
+
+/* Phone-sized GIF picker */
+.phone-messenger-window ~ * .swf-chat-gif-popover {
+    max-width: 340px;
+}
+
+
+/* ========================================================================
+   PHONE MESSENGER - TARGETED FINAL POLISH
+   Only:
+   1. modern scrollbar
+   2. slightly wider phone
+   3. larger Emoji/GIF controls
+   4. improved conversation strip
+   5. taller/cleaner contact header
+   Dark header controls intentionally preserved.
+   ======================================================================== */
+
+/* ------------------------------------------------------------------------
+   1. Modern scrollbar - fully override classic Habbo scrollbar
+   ------------------------------------------------------------------------ */
+
+.phone-messenger-window .chat-messages {
+    scrollbar-width: thin !important;
+    scrollbar-color: #9ca4ac transparent !important;
+}
+
+/* Explicitly kill classic up/down scrollbar buttons */
+.phone-messenger-window .chat-messages::-webkit-scrollbar-button,
+.has-classic-scrollbar .phone-messenger-window .chat-messages::-webkit-scrollbar-button,
+.has-classic-scrollbar .phone-messenger-window .chat-messages::-webkit-scrollbar-button:single-button,
+.has-classic-scrollbar .phone-messenger-window .chat-messages::-webkit-scrollbar-button:single-button:vertical,
+.has-classic-scrollbar .phone-messenger-window .chat-messages::-webkit-scrollbar-button:single-button:vertical:decrement,
+.has-classic-scrollbar .phone-messenger-window .chat-messages::-webkit-scrollbar-button:single-button:vertical:increment {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    background: none !important;
+    background-image: none !important;
+    border: 0 !important;
+}
+
+/* Narrow native-style scrollbar */
+.phone-messenger-window .chat-messages::-webkit-scrollbar,
+.has-classic-scrollbar .phone-messenger-window .chat-messages::-webkit-scrollbar {
+    width: 7px !important;
+    height: 7px !important;
+    background: transparent !important;
+}
+
+.phone-messenger-window .chat-messages::-webkit-scrollbar-track,
+.has-classic-scrollbar .phone-messenger-window .chat-messages::-webkit-scrollbar-track,
+.has-classic-scrollbar .phone-messenger-window .chat-messages::-webkit-scrollbar-track:vertical {
+    margin: 5px 0 !important;
+    border: 0 !important;
+    border-radius: 10px !important;
+    background: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+}
+
+.phone-messenger-window .chat-messages::-webkit-scrollbar-thumb,
+.has-classic-scrollbar .phone-messenger-window .chat-messages::-webkit-scrollbar-thumb,
+.has-classic-scrollbar .phone-messenger-window .chat-messages::-webkit-scrollbar-thumb:vertical {
+    min-height: 28px !important;
+    border: 2px solid transparent !important;
+    border-radius: 10px !important;
+    background: #9ca4ac !important;
+    background-image: none !important;
+    background-clip: padding-box !important;
+    box-shadow: none !important;
+}
+
+.phone-messenger-window .chat-messages::-webkit-scrollbar-thumb:hover,
+.has-classic-scrollbar .phone-messenger-window .chat-messages::-webkit-scrollbar-thumb:vertical:hover {
+    background: #858e97 !important;
+    background-image: none !important;
+    background-clip: padding-box !important;
+}
+
+.phone-messenger-window .chat-messages::-webkit-scrollbar-thumb:active,
+.has-classic-scrollbar .phone-messenger-window .chat-messages::-webkit-scrollbar-thumb:vertical:active {
+    background: #737c85 !important;
+    background-image: none !important;
+    background-clip: padding-box !important;
+}
+
+/* ------------------------------------------------------------------------
+   2. Slightly wider phone
+   ------------------------------------------------------------------------ */
+
+.phone-messenger-window {
+    width: 420px !important;
+    min-width: 370px !important;
+}
+
+/* ------------------------------------------------------------------------
+   3. Larger Emoji / GIF controls
+   ------------------------------------------------------------------------ */
+
+.phone-messenger-window .phone-composer-media {
+    gap: 6px !important;
+}
+
+.phone-messenger-window .phone-composer-media .swf-chat-emoji-trigger,
+.phone-messenger-window .phone-composer-media .swf-chat-gif-trigger {
+    width: 42px !important;
+    min-width: 42px !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    border-radius: 50% !important;
+}
+
+.phone-messenger-window .phone-composer-media .swf-chat-emoji-trigger {
+    font-size: 27px !important;
+}
+
+.phone-messenger-window .phone-composer-media .swf-chat-gif-trigger {
+    border-radius: 14px !important;
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    letter-spacing: .3px !important;
+}
+
+/* Give text input the extra width created by wider phone */
+.phone-messenger-window .phone-composer input {
+    padding-right: 14px !important;
+    padding-left: 14px !important;
+}
+
+/* ------------------------------------------------------------------------
+   4. Improve top conversation strip
+   ------------------------------------------------------------------------ */
+
+.phone-messenger-window .messenger-avatar-navigation {
+    top: 34px !important;
+    right: 10px !important;
+    left: 10px !important;
+    height: 52px !important;
+    padding: 5px 8px !important;
+    border-bottom: 1px solid #e2e5e8 !important;
+    border-radius: 12px 12px 0 0 !important;
+    background: #ffffff !important;
+}
+
+.phone-messenger-window .messenger-avatar-bar {
+    height: 42px !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+.phone-messenger-window .messenger-avatar-tab,
+.phone-messenger-window .messenger-avatar-tab.active {
+    width: 40px !important;
+    min-width: 40px !important;
+    height: 40px !important;
+}
+
+.phone-messenger-window .messenger-avatar-tab .avatar-image.compact-head {
+    inset: 2px !important;
+    width: 32px !important;
+    height: 32px !important;
+    background-size: 32px 32px !important;
+}
+
+.phone-messenger-window .messenger-avatar-scroll {
+    height: 40px !important;
+}
+
+/* ------------------------------------------------------------------------
+   5. Slightly taller / cleaner contact header
+   ------------------------------------------------------------------------ */
+
+.phone-messenger-window .messenger-thread-header {
+    top: 86px !important;
+    height: 67px !important;
+    padding: 8px 14px !important;
+    border-bottom: 1px solid #dfe3e7 !important;
+    background: #ffffff !important;
+}
+
+.phone-messenger-window .phone-conversation-identity {
+    top: 8px !important;
+    left: 14px !important;
+    height: 51px !important;
+    gap: 10px !important;
+}
+
+.phone-messenger-window .phone-conversation-avatar {
+    width: 44px !important;
+    min-width: 44px !important;
+    height: 44px !important;
+}
+
+.phone-messenger-window .phone-conversation-avatar .avatar-image.compact-head {
+    inset: 3px !important;
+    width: 38px !important;
+    height: 38px !important;
+    background-size: 38px 38px !important;
+}
+
+.phone-messenger-window .messenger-thread-name {
+    font-size: 14px !important;
+    line-height: 18px !important;
+}
+
+.phone-messenger-window .phone-conversation-status {
+    margin-top: 2px !important;
+    font-size: 9px !important;
+    line-height: 13px !important;
+}
+
+/* Move conversation body down to match the taller header */
+.phone-messenger-window .chat-messages {
+    top: 153px !important;
+}
+
+/* Keep dark header buttons exactly as they are */
+.phone-messenger-window .messenger-actions {
+    top: 16px !important;
+}
+
+/* Wider phone on regular desktop but still fit small viewports */
+@media (max-width: 440px) {
+    .phone-messenger-window {
+        width: calc(100vw - 10px) !important;
+        min-width: 320px !important;
+    }
+}
+
+
+
+/* ========================================================================
+   PHONE MESSENGER - GROUP CHAT CREATOR
+   ======================================================================== */
+
+.phone-messenger-window .messenger-avatar-navigation {
+    padding-right: 52px !important;
+}
+
+.phone-messenger-window .messenger-new-group-button {
+    position: absolute;
+    top: 5px;
+    right: 7px;
+    display: flex;
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: #292d31;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, .16);
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    z-index: 4;
+}
+
+.phone-messenger-window .messenger-new-group-button:hover {
+    background: #3a4046;
+}
+
+.phone-messenger-window .messenger-group-overlay {
+    position: absolute;
+    top: 86px;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    padding: 10px;
+    background: rgba(24, 28, 32, .38);
+    backdrop-filter: blur(2px);
+}
+
+.phone-messenger-window .messenger-group-panel {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid #d8dde2;
+    border-radius: 18px;
+    background: #f7f8fa;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .22);
+}
+
+.phone-messenger-window .messenger-group-panel-header {
+    display: flex;
+    min-height: 68px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border-bottom: 1px solid #dfe3e7;
+    background: #fff;
+}
+
+.phone-messenger-window .messenger-group-panel-header > div {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+}
+
+.phone-messenger-window .messenger-group-panel-header strong {
+    color: #24282c;
+    font-size: 16px;
+    line-height: 20px;
+}
+
+.phone-messenger-window .messenger-group-panel-header span {
+    margin-top: 2px;
+    color: #7b848d;
+    font-size: 10px;
+}
+
+.phone-messenger-window .messenger-group-panel-close {
+    display: flex;
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: #292d31;
+    color: #fff;
+    cursor: pointer;
+}
+
+.phone-messenger-window .messenger-group-panel-close:hover {
+    background: #3a4046;
+}
+
+.phone-messenger-window .messenger-group-form {
+    display: flex;
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    padding: 12px;
+}
+
+.phone-messenger-window .messenger-group-form label,
+.phone-messenger-window .messenger-group-selection-heading {
+    color: #535b63;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.phone-messenger-window .messenger-group-form > input,
+.phone-messenger-window .messenger-group-search {
+    width: 100%;
+    height: 40px;
+    margin-top: 6px;
+    padding: 0 12px;
+    border: 1px solid #cfd5db;
+    border-radius: 12px;
+    outline: none;
+    background: #fff;
+    color: #25292d;
+    font-size: 12px;
+}
+
+.phone-messenger-window .messenger-group-form > input:focus,
+.phone-messenger-window .messenger-group-search:focus {
+    border-color: #6f96e8;
+    box-shadow: 0 0 0 2px rgba(79, 140, 255, .10);
+}
+
+.phone-messenger-window .messenger-group-selection-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 13px;
+}
+
+.phone-messenger-window .messenger-group-selection-heading strong {
+    color: #77818a;
+    font-size: 10px;
+}
+
+.phone-messenger-window .messenger-group-friends {
+    min-height: 0;
+    flex: 1 1 auto;
+    margin-top: 8px;
+    padding-right: 3px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #9ca4ac transparent;
+}
+
+.phone-messenger-window .messenger-group-friends::-webkit-scrollbar {
+    width: 6px;
+}
+
+.phone-messenger-window .messenger-group-friends::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.phone-messenger-window .messenger-group-friends::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    background: #9ca4ac;
+}
+
+.phone-messenger-window .messenger-group-friend {
+    display: flex;
+    width: 100%;
+    min-height: 52px;
+    align-items: center;
+    margin-bottom: 5px;
+    padding: 5px 8px;
+    border: 1px solid #e0e4e8;
+    border-radius: 13px;
+    background: #fff;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.phone-messenger-window .messenger-group-friend:hover {
+    border-color: #c5ccd3;
+    background: #f1f4f6;
+}
+
+.phone-messenger-window .messenger-group-friend.selected {
+    border-color: #4f8cff;
+    background: #edf4ff;
+}
+
+.phone-messenger-window .messenger-group-friend-avatar {
+    position: relative;
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    overflow: hidden;
+    border-radius: 50%;
+    background: #e8ebee;
+}
+
+.phone-messenger-window .messenger-group-friend-avatar .avatar-image.compact-head {
+    position: absolute;
+    inset: 3px;
+    width: 34px;
+    height: 34px;
+    background-size: 34px 34px;
+}
+
+.phone-messenger-window .messenger-group-friend-details {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    padding: 0 9px;
+}
+
+.phone-messenger-window .messenger-group-friend-details strong {
+    overflow: hidden;
+    color: #272b2f;
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.phone-messenger-window .messenger-group-friend-details span {
+    margin-top: 2px;
+    color: #89929a;
+    font-size: 9px;
+}
+
+.phone-messenger-window .messenger-group-check {
+    display: flex;
+    width: 24px;
+    min-width: 24px;
+    height: 24px;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #c8ced4;
+    border-radius: 50%;
+    background: #fff;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.phone-messenger-window .messenger-group-friend.selected .messenger-group-check {
+    border-color: #4f8cff;
+    background: #4f8cff;
+}
+
+.phone-messenger-window .messenger-group-empty {
+    padding: 30px 10px;
+    color: #818a92;
+    font-size: 11px;
+    text-align: center;
+}
+
+.phone-messenger-window .messenger-group-footer {
+    display: flex;
+    flex: 0 0 auto;
+    justify-content: flex-end;
+    padding-top: 10px;
+    gap: 8px;
+}
+
+.phone-messenger-window .messenger-group-cancel,
+.phone-messenger-window .messenger-group-create {
+    height: 38px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 19px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.phone-messenger-window .messenger-group-cancel {
+    background: #e1e5e9;
+    color: #3e454b;
+}
+
+.phone-messenger-window .messenger-group-cancel:hover {
+    background: #d4d9de;
+}
+
+.phone-messenger-window .messenger-group-create {
+    background: #4f8cff;
+    color: #fff;
+}
+
+.phone-messenger-window .messenger-group-create:hover:not(:disabled) {
+    background: #3978ed;
+}
+
+.phone-messenger-window .messenger-group-create:disabled {
+    background: #b6bdc5;
+    cursor: default;
+    opacity: .7;
+}
+
+@media (max-width: 440px) {
+    .phone-messenger-window .messenger-group-overlay {
+        padding: 7px;
+    }
+}
+
+/* ========================================================================
+   PHONE SUPER BUILD - APP PLATFORM
+   Home / lock screen / notifications / store / settings / wallet / profile
+   ======================================================================== */
+
+.phone-messenger-window .phone-system-button {
+    position: absolute;
+    z-index: 40;
+    top: 10px;
+    display: flex;
+    width: 24px;
+    height: 24px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: #262a2e;
+    color: #fff;
+    font-size: 10px;
+}
+
+.phone-messenger-window .phone-home-button {
+    right: 78px;
+}
+
+.phone-messenger-window .phone-lock-button {
+    right: 48px;
+}
+
+.phone-messenger-window .phone-system-button:hover {
+    background: #353b40;
+}
+
+.phone-messenger-window .phone-app-overlay,
+.phone-messenger-window .phone-lock-screen {
+    position: absolute;
+    z-index: 150;
+    top: 38px;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    overflow: hidden;
+    background: #f5f7fa;
+    color: #20242a;
+}
+
+.phone-messenger-window .phone-app-overlay {
+    display: flex;
+    flex-direction: column;
+}
+
+.phone-messenger-window .phone-app-topbar {
+    display: grid;
+    height: 48px;
+    min-height: 48px;
+    grid-template-columns: 42px 1fr 42px;
+    align-items: center;
+    padding: 0 10px;
+    border-bottom: 1px solid #dde3ea;
+    background: #fff;
+}
+
+.phone-messenger-window .phone-app-topbar strong {
+    overflow: hidden;
+    font-size: 14px;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.phone-messenger-window .phone-app-topbar button {
+    display: flex;
+    width: 32px;
+    height: 32px;
+    align-items: center;
+    justify-content: center;
+    margin: auto;
+    padding: 0;
+    border: 0;
+    border-radius: 10px;
+    background: #262a2e;
+    color: #fff;
+}
+
+.phone-messenger-window .phone-app-error {
+    position: relative;
+    padding: 8px 34px 8px 12px;
+    background: #ffe5e9;
+    color: #a91d34;
+    font-size: 11px;
+}
+
+.phone-messenger-window .phone-app-error button {
+    position: absolute;
+    top: 3px;
+    right: 7px;
+    padding: 2px 6px;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font-size: 18px;
+}
+
+.phone-messenger-window .phone-app-loading {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    color: #65707c;
+    font-size: 12px;
+}
+
+.phone-messenger-window .phone-app-page {
+    flex: 1;
+    padding: 14px;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.phone-messenger-window .phone-home-page {
+    background:
+        radial-gradient(circle at top right, rgba(76, 130, 255, .18), transparent 35%),
+        linear-gradient(180deg, #f8f9fc 0%, #eef2f7 100%);
+}
+
+.phone-messenger-window .phone-home-profile {
+    display: flex;
+    align-items: center;
+    margin-bottom: 17px;
+    padding: 14px;
+    border: 1px solid #e1e6ec;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, .9);
+    box-shadow: 0 8px 25px rgba(35, 46, 61, .08);
+    gap: 11px;
+}
+
+.phone-messenger-window .phone-home-avatar,
+.phone-messenger-window .phone-lock-avatar,
+.phone-messenger-window .phone-contact-avatar {
+    position: relative;
+    overflow: hidden;
+    border-radius: 50%;
+    background: #e8edf4;
+}
+
+.phone-messenger-window .phone-home-avatar {
+    width: 62px;
+    min-width: 62px;
+    height: 62px;
+}
+
+.phone-messenger-window .phone-home-avatar .avatar-image.compact-head,
+.phone-messenger-window .phone-lock-avatar .avatar-image.compact-head,
+.phone-messenger-window .phone-contact-avatar .avatar-image.compact-head {
+    inset: 0 !important;
+    margin: auto !important;
+    image-rendering: auto !important;
+}
+
+.phone-messenger-window .phone-home-profile > div:last-child {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+}
+
+.phone-messenger-window .phone-home-profile strong {
+    overflow: hidden;
+    font-size: 17px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.phone-messenger-window .phone-home-profile span {
+    overflow: hidden;
+    margin-top: 3px;
+    color: #697482;
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.phone-messenger-window .phone-home-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.phone-messenger-window .phone-home-grid > button {
+    position: relative;
+    display: flex;
+    min-height: 100px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 5px;
+    border: 1px solid #e0e5eb;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, .93);
+    box-shadow: 0 6px 20px rgba(33, 45, 60, .07);
+    color: #27313c;
+    gap: 7px;
+}
+
+.phone-messenger-window .phone-home-grid > button:hover {
+    transform: translateY(-1px);
+}
+
+.phone-messenger-window .phone-home-grid > button > strong {
+    max-width: 95px;
+    overflow: hidden;
+    font-size: 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.phone-messenger-window .phone-home-grid > button > em {
+    position: absolute;
+    top: 7px;
+    right: 11px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border: 2px solid #fff;
+    border-radius: 20px;
+    background: #ff425e;
+    color: #fff;
+    font-size: 9px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 14px;
+}
+
+.phone-messenger-window .phone-app-icon {
+    display: flex;
+    width: 47px;
+    height: 47px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    color: #fff;
+    font-size: 21px;
+}
+
+.phone-messenger-window .phone-app-icon.messenger { background: #2478ff; }
+.phone-messenger-window .phone-app-icon.notifications { background: #ff4d68; }
+.phone-messenger-window .phone-app-icon.contacts { background: #20a76a; }
+.phone-messenger-window .phone-app-icon.profile { background: #8b62dd; }
+.phone-messenger-window .phone-app-icon.wallet { background: #e2a51a; }
+.phone-messenger-window .phone-app-icon.store { background: #dc5c39; }
+.phone-messenger-window .phone-app-icon.settings { background: #687582; }
+
+.phone-messenger-window .phone-home-status {
+    display: grid;
+    margin-top: 17px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 7px;
+}
+
+.phone-messenger-window .phone-home-status span {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    padding: 9px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .86);
+    color: #6d7884;
+    font-size: 9px;
+    text-align: center;
+}
+
+.phone-messenger-window .phone-home-status strong {
+    margin-top: 3px;
+    overflow: hidden;
+    color: #242d36;
+    font-size: 10px;
+    text-overflow: ellipsis;
+    text-transform: capitalize;
+    white-space: nowrap;
+}
+
+.phone-messenger-window .phone-section-heading {
+    display: flex;
+    min-height: 48px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    gap: 10px;
+}
+
+.phone-messenger-window .phone-section-heading > div {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+}
+
+.phone-messenger-window .phone-section-heading strong {
+    font-size: 15px;
+}
+
+.phone-messenger-window .phone-section-heading span {
+    margin-top: 2px;
+    color: #74808c;
+    font-size: 10px;
+}
+
+.phone-messenger-window .phone-section-heading > button,
+.phone-messenger-window .phone-store-card button,
+.phone-messenger-window .phone-equipped-summary button,
+.phone-messenger-window .phone-contact-edit {
+    padding: 7px 10px;
+    border: 0;
+    border-radius: 9px;
+    background: #2478ff;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.phone-messenger-window .phone-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.phone-messenger-window .phone-empty-state {
+    display: flex;
+    min-height: 170px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    border: 1px dashed #cbd3dc;
+    border-radius: 15px;
+    color: #7a8590;
+    text-align: center;
+    gap: 7px;
+}
+
+.phone-messenger-window .phone-empty-state > svg {
+    font-size: 30px;
+}
+
+.phone-messenger-window .phone-empty-state strong {
+    color: #3a444e;
+    font-size: 12px;
+}
+
+.phone-messenger-window .phone-empty-state span {
+    max-width: 260px;
+    font-size: 10px;
+    line-height: 14px;
+}
+
+.phone-messenger-window .phone-notification-card {
+    position: relative;
+    display: flex;
+    width: 100%;
+    padding: 11px 12px 11px 19px;
+    border: 1px solid #e1e6eb;
+    border-radius: 13px;
+    background: #fff;
+    color: #29333d;
+    text-align: left;
+}
+
+.phone-messenger-window .phone-notification-card.unread {
+    border-color: #b8d2ff;
+    background: #f0f6ff;
+}
+
+.phone-messenger-window .phone-notification-dot {
+    position: absolute;
+    top: 15px;
+    left: 7px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: transparent;
+}
+
+.phone-messenger-window .phone-notification-card.unread .phone-notification-dot {
+    background: #2478ff;
+}
+
+.phone-messenger-window .phone-notification-card > div {
+    min-width: 0;
+}
+
+.phone-messenger-window .phone-notification-card strong {
+    display: block;
+    font-size: 11px;
+}
+
+.phone-messenger-window .phone-notification-card p {
+    margin: 3px 0;
+    color: #626e7a;
+    font-size: 10px;
+    line-height: 14px;
+}
+
+.phone-messenger-window .phone-notification-card small {
+    color: #929ba4;
+    font-size: 9px;
+}
+
+.phone-messenger-window .phone-store-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.phone-messenger-window .phone-store-card {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    padding: 9px;
+    border: 1px solid #dde3e9;
+    border-radius: 14px;
+    background: #fff;
+}
+
+.phone-messenger-window .phone-store-card.equipped {
+    border-color: #4d8fff;
+    box-shadow: inset 0 0 0 1px rgba(77, 143, 255, .22);
+}
+
+.phone-messenger-window .phone-store-preview {
+    position: relative;
+    height: 78px;
+    overflow: hidden;
+    margin-bottom: 8px;
+    border-radius: 10px;
+    background:
+        linear-gradient(135deg, #24374a, #42698e);
+}
+
+.phone-messenger-window .phone-store-preview span {
+    position: absolute;
+    right: 6px;
+    bottom: 5px;
+    padding: 2px 5px;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, .48);
+    color: #fff;
+    font-size: 8px;
+    text-transform: uppercase;
+}
+
+.phone-messenger-window .phone-preview-sunset {
+    background: linear-gradient(160deg, #63285d 0%, #e05f5c 52%, #ffbd68 100%);
+}
+
+.phone-messenger-window .phone-preview-neon-city,
+.phone-messenger-window .phone-preview-neon {
+    background:
+        linear-gradient(135deg, rgba(14, 241, 255, .42), transparent 45%),
+        linear-gradient(220deg, #f20db3, #13152b 60%);
+}
+
+.phone-messenger-window .phone-preview-cyber-grid,
+.phone-messenger-window .phone-preview-cyber {
+    background:
+        repeating-linear-gradient(0deg, transparent 0 12px, rgba(22, 240, 226, .22) 13px),
+        repeating-linear-gradient(90deg, transparent 0 12px, rgba(22, 240, 226, .22) 13px),
+        #111827;
+}
+
+.phone-messenger-window .phone-preview-beach {
+    background: linear-gradient(#55bce8 0 48%, #f4df9d 49% 100%);
+}
+
+.phone-messenger-window .phone-preview-gold {
+    background: linear-gradient(135deg, #6f5412, #e5c355 48%, #fff0a3 60%, #927020);
+}
+
+.phone-messenger-window .phone-preview-light,
+.phone-messenger-window .phone-preview-white {
+    background: linear-gradient(135deg, #fff, #e6eaf0);
+}
+
+.phone-messenger-window .phone-preview-dark,
+.phone-messenger-window .phone-preview-black {
+    background: linear-gradient(135deg, #11151a, #343b43);
+}
+
+.phone-messenger-window .phone-preview-pink {
+    background: linear-gradient(135deg, #ff94c7, #ef54a2);
+}
+
+.phone-messenger-window .phone-preview-transparent {
+    background:
+        linear-gradient(45deg, #dfe4e9 25%, transparent 25%),
+        linear-gradient(-45deg, #dfe4e9 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #dfe4e9 75%),
+        linear-gradient(-45deg, transparent 75%, #dfe4e9 75%),
+        #f7f8fa;
+    background-position: 0 0, 0 7px, 7px -7px, -7px 0;
+    background-size: 14px 14px;
+}
+
+.phone-messenger-window .phone-preview-retro,
+.phone-messenger-window .phone-preview-classic {
+    background: linear-gradient(135deg, #d9bc68, #8a7847 40%, #2e786f 41% 70%, #b5d5b3);
+}
+
+.phone-messenger-window .phone-store-card > strong {
+    overflow: hidden;
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.phone-messenger-window .phone-store-card > p {
+    min-height: 29px;
+    margin: 3px 0 7px;
+    overflow: hidden;
+    color: #707b86;
+    font-size: 9px;
+    line-height: 13px;
+}
+
+.phone-messenger-window .phone-store-card-footer {
+    display: flex;
+    min-height: 28px;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: auto;
+    gap: 5px;
+}
+
+.phone-messenger-window .phone-price,
+.phone-messenger-window .phone-owned-label {
+    min-width: 0;
+    overflow: hidden;
+    color: #596571;
+    font-size: 9px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.phone-messenger-window .phone-settings-list {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid #e0e5ea;
+    border-radius: 14px;
+    background: #fff;
+}
+
+.phone-messenger-window .phone-settings-list > label {
+    display: flex;
+    min-height: 58px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 12px;
+    border-bottom: 1px solid #edf0f3;
+    gap: 14px;
+}
+
+.phone-messenger-window .phone-settings-list > label:last-child {
+    border-bottom: 0;
+}
+
+.phone-messenger-window .phone-settings-list > label > div {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+}
+
+.phone-messenger-window .phone-settings-list strong {
+    font-size: 11px;
+}
+
+.phone-messenger-window .phone-settings-list span {
+    margin-top: 2px;
+    color: #7c8792;
+    font-size: 9px;
+}
+
+.phone-messenger-window .phone-settings-list select {
+    max-width: 120px;
+    height: 30px;
+    border: 1px solid #cfd6dd;
+    border-radius: 8px;
+    background: #fff;
+    color: #29323a;
+    font-size: 10px;
+}
+
+.phone-messenger-window .phone-settings-list input[type="checkbox"] {
+    width: 18px;
+    min-width: 18px;
+    height: 18px;
+}
+
+.phone-messenger-window .phone-equipped-summary {
+    display: flex;
+    flex-direction: column;
+    margin-top: 13px;
+    padding: 12px;
+    border: 1px solid #e0e5ea;
+    border-radius: 14px;
+    background: #fff;
+    gap: 7px;
+}
+
+.phone-messenger-window .phone-equipped-summary > strong {
+    margin-bottom: 2px;
+    font-size: 12px;
+}
+
+.phone-messenger-window .phone-equipped-summary > span {
+    display: flex;
+    justify-content: space-between;
+    color: #69747f;
+    font-size: 9px;
+    gap: 10px;
+}
+
+.phone-messenger-window .phone-equipped-summary b {
+    max-width: 185px;
+    overflow: hidden;
+    color: #2f3943;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.phone-messenger-window .phone-equipped-summary button {
+    margin-top: 5px;
+}
+
+.phone-messenger-window .phone-wallet-balances {
+    display: grid;
+    margin-bottom: 15px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.phone-messenger-window .phone-wallet-balances > div {
+    display: flex;
+    min-height: 85px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 5px 18px rgba(32, 45, 58, .08);
+}
+
+.phone-messenger-window .phone-wallet-balances span {
+    color: #77828d;
+    font-size: 10px;
+}
+
+.phone-messenger-window .phone-wallet-balances strong {
+    margin-top: 4px;
+    font-size: 22px;
+}
+
+.phone-messenger-window .phone-purchase-row {
+    display: flex;
+    min-height: 54px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 11px;
+    border: 1px solid #e0e5ea;
+    border-radius: 12px;
+    background: #fff;
+    gap: 10px;
+}
+
+.phone-messenger-window .phone-purchase-row > div {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+}
+
+.phone-messenger-window .phone-purchase-row > div:last-child {
+    align-items: flex-end;
+}
+
+.phone-messenger-window .phone-purchase-row strong {
+    overflow: hidden;
+    font-size: 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.phone-messenger-window .phone-purchase-row span {
+    margin-top: 2px;
+    color: #7e8994;
+    font-size: 9px;
+    text-transform: capitalize;
+}
+
+.phone-messenger-window .phone-profile-card {
+    display: flex;
+    min-height: 410px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    border-radius: 20px;
+    background:
+        radial-gradient(circle at top, rgba(72, 137, 255, .22), transparent 35%),
+        #fff;
+}
+
+.phone-messenger-window .phone-profile-avatar {
+    position: relative;
+    width: 130px;
+    height: 170px;
+    overflow: hidden;
+}
+
+.phone-messenger-window .phone-profile-avatar .avatar-image {
+    position: absolute !important;
+    inset: 0 !important;
+    margin: auto !important;
+}
+
+.phone-messenger-window .phone-profile-card > strong {
+    margin-top: 4px;
+    font-size: 20px;
+}
+
+.phone-messenger-window .phone-profile-card > p {
+    max-width: 270px;
+    margin: 4px 0 16px;
+    color: #727e89;
+    font-size: 11px;
+    text-align: center;
+}
+
+.phone-messenger-window .phone-profile-stats {
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 7px;
+}
+
+.phone-messenger-window .phone-profile-stats > span {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 5px;
+    border-radius: 10px;
+    background: #f1f4f7;
+    color: #7a8590;
+    font-size: 9px;
+    text-align: center;
+}
+
+.phone-messenger-window .phone-profile-stats b {
+    margin-top: 3px;
+    color: #29333d;
+    font-size: 12px;
+}
+
+.phone-messenger-window .phone-contact-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.phone-messenger-window .phone-contact-row {
+    display: flex;
+    min-height: 58px;
+    align-items: center;
+    padding: 7px;
+    border: 1px solid #e0e5ea;
+    border-radius: 13px;
+    background: #fff;
+    gap: 7px;
+}
+
+.phone-messenger-window .phone-contact-avatar {
+    width: 42px;
+    min-width: 42px;
+    height: 42px;
+}
+
+.phone-messenger-window .phone-contact-main {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #2d3741;
+    text-align: left;
+}
+
+.phone-messenger-window .phone-contact-main strong {
+    max-width: 145px;
+    overflow: hidden;
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.phone-messenger-window .phone-contact-main small,
+.phone-messenger-window .phone-contact-main span {
+    color: #7c8791;
+    font-size: 8px;
+}
+
+.phone-messenger-window .phone-contact-star {
+    display: flex;
+    width: 30px;
+    min-width: 30px;
+    height: 30px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #c5ccd3;
+}
+
+.phone-messenger-window .phone-contact-star.active {
+    color: #e4ae24;
+}
+
+.phone-messenger-window .phone-contact-edit {
+    padding: 6px 7px;
+    background: #eceff3;
+    color: #4d5965;
+}
+
+.phone-messenger-window .phone-lock-screen {
+    z-index: 300;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 34px 20px 20px;
+    background:
+        radial-gradient(circle at 78% 8%, rgba(61, 133, 255, .7), transparent 27%),
+        linear-gradient(160deg, #162238 0%, #273f64 47%, #101725 100%);
+    color: #fff;
+    cursor: pointer;
+}
+
+.phone-messenger-window .phone-lock-time {
+    font-size: 43px;
+    font-weight: 300;
+    letter-spacing: -2px;
+    line-height: 48px;
+}
+
+.phone-messenger-window .phone-lock-date {
+    margin-top: 2px;
+    color: rgba(255, 255, 255, .82);
+    font-size: 11px;
+}
+
+.phone-messenger-window .phone-lock-profile {
+    display: flex;
+    align-items: center;
+    margin-top: 28px;
+    gap: 10px;
+}
+
+.phone-messenger-window .phone-lock-avatar {
+    width: 58px;
+    height: 58px;
+    background: rgba(255, 255, 255, .18);
+}
+
+.phone-messenger-window .phone-lock-profile strong {
+    font-size: 15px;
+}
+
+.phone-messenger-window .phone-lock-notifications {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    margin-top: 25px;
+    gap: 8px;
+}
+
+.phone-messenger-window .phone-lock-notifications > div:not(.phone-lock-clear) {
+    display: flex;
+    min-height: 58px;
+    align-items: center;
+    padding: 10px 13px;
+    border: 1px solid rgba(255, 255, 255, .18);
+    border-radius: 15px;
+    background: rgba(255, 255, 255, .12);
+    backdrop-filter: blur(8px);
+    gap: 11px;
+}
+
+.phone-messenger-window .phone-lock-notifications svg {
+    min-width: 20px;
+    font-size: 20px;
+}
+
+.phone-messenger-window .phone-lock-notifications span {
+    display: flex;
+    flex-direction: column;
+    color: rgba(255, 255, 255, .78);
+    font-size: 9px;
+}
+
+.phone-messenger-window .phone-lock-notifications strong {
+    margin-bottom: 2px;
+    color: #fff;
+    font-size: 11px;
+}
+
+.phone-messenger-window .phone-lock-clear {
+    padding: 15px;
+    color: rgba(255, 255, 255, .7);
+    font-size: 10px;
+    text-align: center;
+}
+
+.phone-messenger-window .phone-unlock-hint {
+    margin-top: auto;
+    color: rgba(255, 255, 255, .7);
+    font-size: 9px;
+}
+
+@media (max-height: 720px) {
+    .phone-messenger-window {
+        height: min(650px, calc(100vh - 14px));
+    }
+
+    .phone-messenger-window .phone-app-page {
+        padding-bottom: 20px;
+    }
+}
+
+
+/* =========================================================
+   PHONE SUPER BUILD - PHASE 2C
+   Advanced Messenger / Groups / Reactions
+   ========================================================= */
+
+.phone-messenger-window .phone-group-manage-button {
+    display: flex;
+    width: 30px;
+    min-width: 30px;
+    height: 30px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.phone-messenger-window .phone-group-manager {
+    position: absolute;
+    z-index: 45;
+    top: 108px;
+    right: 9px;
+    width: 300px;
+    max-height: 455px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 11px;
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 15px;
+    background: #20252b;
+    box-shadow: 0 14px 35px rgba(0, 0, 0, .35);
+    color: #fff;
+}
+
+.phone-messenger-window .phone-group-manager-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    gap: 10px;
+}
+
+.phone-messenger-window .phone-group-manager-header > div {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+}
+
+.phone-messenger-window .phone-group-manager-header strong {
+    font-size: 13px;
+}
+
+.phone-messenger-window .phone-group-manager-header span {
+    overflow: hidden;
+    margin-top: 2px;
+    color: #aeb8c3;
+    font-size: 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.phone-messenger-window .phone-group-manager-header > button {
+    display: flex;
+    width: 28px;
+    height: 28px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: #353b42;
+    color: #fff;
+}
+
+.phone-messenger-window .phone-group-manager-error {
+    margin-bottom: 9px;
+    padding: 7px 9px;
+    border-radius: 8px;
+    background: #6b2631;
+    color: #ffdfe4;
+    font-size: 9px;
+}
+
+.phone-messenger-window .phone-group-manager-actions {
+    display: grid;
+    margin-bottom: 12px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.phone-messenger-window .phone-group-manager-actions button {
+    min-height: 32px;
+    padding: 5px;
+    border: 0;
+    border-radius: 8px;
+    background: #343b43;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+}
+
+.phone-messenger-window .phone-group-manager-actions button:hover {
+    background: #414a54;
+}
+
+.phone-messenger-window .phone-group-add-member {
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, .09);
+}
+
+.phone-messenger-window .phone-group-add-member > strong {
+    display: block;
+    margin-bottom: 7px;
+    font-size: 11px;
+}
+
+.phone-messenger-window .phone-group-add-member > input {
+    width: 100%;
+    height: 31px;
+    padding: 0 9px;
+    border: 1px solid #454e58;
+    border-radius: 8px;
+    outline: none;
+    background: #15191e;
+    color: #fff;
+    font-size: 10px;
+}
+
+.phone-messenger-window .phone-group-add-results {
+    display: flex;
+    max-height: 190px;
+    flex-direction: column;
+    margin-top: 7px;
+    overflow-y: auto;
+    gap: 4px;
+}
+
+.phone-messenger-window .phone-group-add-results > button {
+    display: grid;
+    min-height: 42px;
+    align-items: center;
+    padding: 4px 7px;
+    border: 0;
+    border-radius: 9px;
+    background: #2a3037;
+    color: #fff;
+    grid-template-columns: 34px 1fr 20px;
+    text-align: left;
+    gap: 6px;
+}
+
+.phone-messenger-window .phone-group-add-results > button:hover {
+    background: #343c45;
+}
+
+.phone-messenger-window .phone-group-add-results .avatar-image.compact-head {
+    position: relative !important;
+    inset: auto !important;
+    margin: auto !important;
+}
+
+.phone-messenger-window .phone-group-add-results > button > span {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+}
+
+.phone-messenger-window .phone-group-add-results strong {
+    overflow: hidden;
+    font-size: 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.phone-messenger-window .phone-group-add-results small {
+    color: #9da8b4;
+    font-size: 8px;
+}
+
+.phone-messenger-window .phone-group-leave {
+    width: 100%;
+    min-height: 33px;
+    margin-top: 11px;
+    border: 0;
+    border-radius: 9px;
+    background: #b52d42;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.phone-messenger-window .phone-group-leave:hover {
+    background: #ca354c;
+}
+
+.phone-messenger-window .phone-group-manager button:disabled {
+    cursor: default;
+    opacity: .55;
+}
+
+.phone-messenger-window .phone-message-body {
+    position: relative;
+}
+
+.phone-messenger-window .phone-message-actions {
+    display: flex;
+    width: max-content;
+    margin-top: 4px;
+    padding: 3px;
+    border: 1px solid rgba(0, 0, 0, .08);
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, .13);
+    gap: 2px;
+}
+
+.phone-messenger-window .phone-message-row.own .phone-message-actions {
+    margin-left: auto;
+}
+
+.phone-messenger-window .phone-message-actions button {
+    display: flex;
+    width: 29px;
+    height: 29px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    font-size: 16px;
+    line-height: 1;
+}
+
+.phone-messenger-window .phone-message-actions button:hover {
+    background: #edf2f7;
+}
+
+.phone-messenger-window .phone-message-actions button:disabled {
+    opacity: .45;
+}
+

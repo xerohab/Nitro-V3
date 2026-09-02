@@ -6,7 +6,8 @@ import { Text } from '../../../../common';
 import { useChatCommandSelector, useChatInputWidget, useChatMentions, useRoom, useSessionInfo, useUiEvent } from '../../../../hooks';
 import { ChatInputCommandSelectorView } from './ChatInputCommandSelectorView';
 import { ChatInputEmojiSelectorView } from './ChatInputEmojiSelectorView';
-import { ChatInputHabbiconSelectorView } from './ChatInputHabbiconSelectorView';
+import { ChatInputGifSelectorView } from './ChatInputGifSelectorView';
+import { ChatInputStickerSelectorView } from './ChatInputStickerSelectorView';
 import { ChatInputMentionSelectorView } from './ChatInputMentionSelectorView';
 import { ChatInputStyleSelectorView } from './ChatInputStyleSelectorView';
 
@@ -136,11 +137,39 @@ export const ChatInputView: FC<{}> = (props) => {
 
     const addChatEmoji = useCallback(
         (emoji: string) => {
-            setChatValue((prev) => prev + emoji);
+            const input = inputRef.current;
+            const currentValue = input?.value ?? chatValue;
+            const start = input?.selectionStart ?? currentValue.length;
+            const end = input?.selectionEnd ?? start;
+            const nextValue = currentValue.slice(0, start) + emoji + currentValue.slice(end);
+
+            if (nextValue.length > maxChatLength) return;
+
+            const nextCaret = start + emoji.length;
+
+            setChatValue(nextValue);
             setIsTyping(true);
+            setIsIdle(true);
+
+            window.requestAnimationFrame(() => {
+                inputRef.current?.focus();
+                inputRef.current?.setSelectionRange(nextCaret, nextCaret);
+            });
+        },
+        [chatValue, maxChatLength, setIsTyping, setIsIdle]
+    );
+
+    const sendGif = useCallback(
+        (gifId: string) => {
+            if (!roomSession || floodBlocked) return;
+            if (!/^[A-Za-z0-9_-]{1,100}$/.test(gifId)) return;
+
+            roomSession.sendChatMessage(`[giphy:${gifId}]`, chatStyleId);
+            setIsTyping(false);
+            setIsIdle(false);
             inputRef.current?.focus();
         },
-        [setIsTyping, inputRef]
+        [roomSession, floodBlocked, chatStyleId, setIsTyping, setIsIdle]
     );
 
     const onKeyDownEvent = useCallback(
@@ -388,8 +417,9 @@ export const ChatInputView: FC<{}> = (props) => {
                     </Text>
                 </div>
             )}
-            <ChatInputHabbiconSelectorView />
+            <ChatInputStickerSelectorView />
             <ChatInputEmojiSelectorView addChatEmoji={addChatEmoji} />
+            <ChatInputGifSelectorView sendGif={sendGif} />
         </div>,
         portalTarget
     );

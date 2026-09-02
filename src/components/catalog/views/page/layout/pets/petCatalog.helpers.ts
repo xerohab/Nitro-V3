@@ -16,7 +16,7 @@ export interface NewPetPaletteChoice<TPalette extends PetPaletteLike = PetPalett
     palette: TPalette;
 }
 
-export const isLegacyPetType = (petType: number) => petType >= 0 && petType <= 7;
+export const isLegacyPetType = (petType: number) => (petType >= 0 && petType <= 7) || petType === 36 || petType === 37;
 
 export const getPetNameMaxLength = (petType: number) => (isLegacyPetType(petType) ? 15 : 16);
 
@@ -33,13 +33,12 @@ export const buildNewPetPaletteChoices = <TPalette extends PetPaletteLike>(
     for (const palette of filterPetPalettes(petType, palettes)) {
         const result = getColorResult(petType, palette.paletteId);
 
-        if (!result) continue;
-
         choices.push({
-            colors:
-                result.primaryColor === result.secondaryColor
+            colors: result
+                ? result.primaryColor === result.secondaryColor
                     ? [result.primaryColor]
-                    : [result.primaryColor, result.secondaryColor],
+                    : [result.primaryColor, result.secondaryColor]
+                : [0xffffff],
             palette
         });
 

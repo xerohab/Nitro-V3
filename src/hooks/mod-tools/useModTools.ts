@@ -9,13 +9,26 @@ import {
     ModeratorActionResultMessageEvent,
     ModeratorInitData,
     ModeratorInitMessageEvent,
-    ModeratorToolPreferencesEvent
+    ModeratorToolPreferencesEvent,
+    SanctionBotProfilesEvent,
+    SanctionBotProfilesRequestComposer
 } from '@nitrots/nitro-renderer';
 import { useState } from 'react';
 import { registerSharedHook, useSharedHook } from '@/state/useSharedHook';
-import { NotificationAlertType, PlaySound, SoundNames } from '../../api';
+import { NotificationAlertType, PlaySound, SendMessageComposer, SoundNames } from '../../api';
 import { useMessageEvent } from '../events';
 import { useNotification } from '../notification';
+
+
+export interface ISanctionBotProfile
+{
+    id: number;
+    profileName: string;
+    botName: string;
+    botId: number;
+    speechEnabled: boolean;
+    speechInterval: number;
+}
 
 const useModToolsState = () => {
     const [settings, setSettings] = useState<ModeratorInitData>(null);
@@ -25,6 +38,7 @@ const useModToolsState = () => {
     const [openUserChatlogs, setOpenUserChatlogs] = useState<number[]>([]);
     const [tickets, setTickets] = useState<IssueMessageData[]>([]);
     const [cfhCategories, setCfhCategories] = useState<CallForHelpCategoryData[]>([]);
+    const [sanctionBots, setSanctionBots] = useState<ISanctionBotProfile[]>([]);
     const { simpleAlert = null } = useNotification();
 
     const openRoomInfo = (roomId: number) => {
@@ -179,6 +193,34 @@ const useModToolsState = () => {
         setCfhCategories(parser.callForHelpCategories);
     });
 
+
+    useMessageEvent<SanctionBotProfilesEvent>(
+        SanctionBotProfilesEvent,
+        (event) =>
+        {
+            const parser = event.getParser();
+
+            if(!parser) return;
+
+            setSanctionBots(
+                parser.profiles.map((profile) => ({
+                    id: profile.id,
+                    profileName: profile.profileName,
+                    botName: profile.botName,
+                    botId: profile.botId,
+                    speechEnabled: profile.speechEnabled,
+                    speechInterval: profile.speechInterval
+                }))
+            );
+        });
+
+    const refreshSanctionBots = () =>
+    {
+        SendMessageComposer(
+            new SanctionBotProfilesRequestComposer()
+        );
+    };
+
     useMessageEvent<CfhSanctionMessageEvent>(CfhSanctionMessageEvent, (event) => {
         const parser = event.getParser();
 
@@ -192,6 +234,8 @@ const useModToolsState = () => {
         openUserChatlogs,
         openUserInfos,
         cfhCategories,
+        sanctionBots,
+        refreshSanctionBots,
         tickets,
         openRoomInfo,
         closeRoomInfo,

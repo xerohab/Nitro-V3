@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { FaArrowCircleRight } from 'react-icons/fa';
+import { FaArrowCircleRight, FaExclamationTriangle } from 'react-icons/fa';
 import { CreateLinkEvent, LocalizeText } from '../../../api';
 import { NitroCardContentView, NitroCardHeaderView, NitroCardView } from '../../../common';
 import { useHelp } from '../../../hooks';
@@ -34,9 +34,22 @@ export const SanctionSatusView: FC<{}> = (props) => {
     if (!sanctionInfo) return null;
 
     return (
-        <NitroCardView className="nitro-help min-w-0 w-[min(420px,calc(100vw-16px))] max-w-[calc(100vw-16px)] max-h-[calc(100vh-16px)]" theme="primary-slim">
+        <NitroCardView className="lounge-sanction-notice" className="nitro-help min-w-0 w-[min(420px,calc(100vw-16px))] max-w-[calc(100vw-16px)] max-h-[calc(100vh-16px)]" theme="primary-slim">
             <NitroCardHeaderView headerText={LocalizeText('help.sanction.info.title')} onCloseClick={() => setSanctionInfo(null)} />
             <NitroCardContentView className="text-black">
+                <div className="lounge-sanction-heading">
+                    <div className="lounge-sanction-warning">
+                        <FaExclamationTriangle />
+                    </div>
+
+                    <div className="lounge-sanction-heading-copy">
+                        <strong>Lounge Hotel - Sanction Notice</strong>
+                        <span>
+                            This action has been issued by a member of hotel staff.
+                        </span>
+                    </div>
+                </div>
+
                 <div className="flex min-h-[170px] flex-col">
                     <div className="flex flex-col gap-1">
                         {sanctionInfo.sanctionReason === 'cfh.reason.EMPTY' ? (

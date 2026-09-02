@@ -1304,3 +1304,184 @@
         transition-duration: 0.01ms !important;
     }
 }
+/* =========================================================
+   PET CATALOG - PURCHASE BUTTON VISIBILITY FIX
+   ========================================================= */
+
+.nitro-catalog-pet-layout--legacy .nitro-catalog-pet-breed-selector {
+    top: 318px;
+}
+
+.nitro-catalog-pet-layout--legacy .nitro-catalog-pet-purchase {
+    top: 362px;
+}
+
+.nitro-catalog-pet-layout--new .nitro-catalog-pet-purchase {
+    top: 350px;
+}
+
+.nitro-catalog-pet-purchase-row {
+    position: static;
+    width: 100%;
+    height: 30px;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.nitro-catalog-pet-purchase-row .nitro-catalog-standard-buy-button {
+    display: block !important;
+    visibility: visible !important;
+    min-width: 116px;
+}
+/* =========================================================
+   PET CATALOG - FORCE BUY BUTTON INSIDE VISIBLE PANEL
+   ========================================================= */
+
+.nitro-catalog-pet-layout .nitro-catalog-pet-purchase {
+    bottom: 0 !important;
+}
+
+.nitro-catalog-pet-layout .nitro-catalog-pet-purchase-row {
+    position: fixed !important;
+    top: auto !important;
+    left: auto !important;
+    right: 10px !important;
+    bottom: 6px !important;
+    width: auto !important;
+    height: 30px !important;
+    margin: 0 !important;
+    z-index: 50 !important;
+}
+
+.nitro-catalog-pet-layout .nitro-catalog-pet-purchase-row .nitro-catalog-standard-buy-button {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    width: 116px !important;
+    min-width: 116px !important;
+    height: 24px !important;
+    z-index: 51 !important;
+}
+/* =========================================================
+   PET CATALOG - FIT COMPLETE PET UI INSIDE CATALOG WINDOW
+   ========================================================= */
+
+/* The real catalog content area is shorter than the old
+   460px pet layout. Keep everything inside ~405px instead. */
+.nitro-catalog-pet-layout {
+    height: 405px !important;
+    min-height: 405px !important;
+    max-height: 405px !important;
+    overflow: hidden !important;
+}
+
+/* Reduce the large empty preview area */
+.nitro-catalog-pet-preview {
+    height: 205px !important;
+    min-height: 205px !important;
+}
+
+.nitro-catalog-pet-preview-image {
+    height: 205px !important;
+}
+
+/* Keep the price inside the resized preview */
+.nitro-catalog-pet-preview-price {
+    bottom: 6px !important;
+}
+
+/* Badge also moves upward with the smaller preview */
+.nitro-catalog-pet-preview-badge {
+    top: 145px !important;
+}
+
+
+/* =========================
+   LEGACY PETS
+   Dogs, Cats, Crocs, etc.
+   ========================= */
+
+.nitro-catalog-pet-layout--legacy .nitro-catalog-pet-field {
+    top: 198px !important;
+}
+
+.nitro-catalog-pet-layout--legacy .nitro-catalog-pet-color-grid {
+    height: 65px !important;
+    max-height: 65px !important;
+}
+
+.nitro-catalog-pet-layout--legacy .nitro-catalog-pet-breed-selector {
+    top: 279px !important;
+}
+
+.nitro-catalog-pet-layout--legacy .nitro-catalog-pet-purchase {
+    top: 323px !important;
+}
+
+
+/* =========================
+   NEWER / CUSTOM PETS
+   ========================= */
+
+.nitro-catalog-pet-layout--new .nitro-catalog-pet-field {
+    top: 207px !important;
+}
+
+.nitro-catalog-pet-layout--new .nitro-catalog-pet-color-grid {
+    height: 65px !important;
+    max-height: 65px !important;
+}
+
+.nitro-catalog-pet-layout--new .nitro-catalog-pet-purchase {
+    top: 312px !important;
+}
+
+
+/* =========================
+   NAME + BUY AREA
+   ========================= */
+
+.nitro-catalog-pet-purchase {
+    position: absolute !important;
+    left: 10px !important;
+    width: 340px !important;
+    bottom: auto !important;
+}
+
+.nitro-catalog-pet-purchase-row {
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+
+    width: 100% !important;
+    height: 28px !important;
+
+    margin-top: 4px !important;
+    gap: 8px !important;
+
+    visibility: visible !important;
+    overflow: visible !important;
+}
+
+.nitro-catalog-pet-purchase-row .nitro-catalog-standard-buy-button {
+    display: block !important;
+    position: relative !important;
+    visibility: visible !important;
+
+    width: 116px !important;
+    min-width: 116px !important;
+    height: 24px !important;
+
+    opacity: 1 !important;
+    z-index: 10 !important;
+}

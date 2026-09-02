@@ -8,6 +8,9 @@ const FILTER_WALL = 'inventory.furni.tab.wall';
 
 const TAB_BADGES = 'inventory.badges';
 const TAB_FURNITURE = 'inventory.furni';
+const TAB_CLOTHING = 'inventory.clothing';
+
+const FURNITURE_TABS = [TAB_FURNITURE, TAB_CLOTHING];
 
 interface InventoryCategoryFilterViewProps {
     currentTab: string;
@@ -49,7 +52,7 @@ export const InventoryCategoryFilterView: FC<InventoryCategoryFilterViewProps> =
     }, [badgeCodes, currentTab, searchValue, setBadgeCodes]);
 
     useEffect(() => {
-        if (currentTab !== TAB_FURNITURE) return;
+        if (!FURNITURE_TABS.includes(currentTab)) return;
 
         const comparison = searchValue.toLocaleLowerCase();
 

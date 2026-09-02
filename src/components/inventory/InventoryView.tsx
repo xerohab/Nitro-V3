@@ -3,6 +3,7 @@ import {
     BadgePointLimitsEvent,
     GetLocalizationManager,
     GetRoomEngine,
+    GetSessionDataManager,
     ILinkEventTracker,
     IRoomSession,
     RemoveLinkEventTracker,
@@ -11,7 +12,7 @@ import {
     RoomPreviewer,
     RoomSessionEvent
 } from '@nitrots/nitro-renderer';
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useMemo, useState } from 'react';
 import { GroupItem, isObjectMoverRequested, LocalizeText, setObjectMoverRequested, UnseenItemCategory } from '../../api';
 import { NitroCardHeaderView, NitroCardTabsItemView, NitroCardTabsView, NitroCardView } from '../../common';
 import {
@@ -33,23 +34,97 @@ import { InventoryPetView } from './views/pet/InventoryPetView';
 import { InventoryPrefixView } from './views/prefix/InventoryPrefixView';
 
 const TAB_FURNITURE: string = 'inventory.furni';
+const TAB_CLOTHING: string = 'inventory.clothing';
 const TAB_BOTS: string = 'inventory.bots';
 const TAB_PETS: string = 'inventory.furni.tab.pets';
 const TAB_BADGES: string = 'inventory.badges';
 const TAB_PREFIXES: string = 'inventory.prefixes';
-const TABS = [TAB_FURNITURE, TAB_PETS, TAB_BADGES, TAB_PREFIXES, TAB_BOTS];
+
+const TABS = [
+    TAB_FURNITURE,
+    TAB_CLOTHING,
+    TAB_PETS,
+    TAB_BADGES,
+    TAB_PREFIXES,
+    TAB_BOTS
+];
+
+const getTabLabel = (tab: string): string => {
+    if (tab === TAB_CLOTHING) return 'Clothing';
+    if (tab === TAB_PREFIXES) return 'Prefixes';
+
+    return LocalizeText(tab);
+};
+
+const getFurnitureDataForGroup = (groupItem: GroupItem): any => {
+    if (!groupItem) return null;
+
+    const session = GetSessionDataManager();
+
+    return groupItem.isWallItem
+        ? session.getWallItemData(groupItem.type)
+        : session.getFloorItemData(groupItem.type);
+};
+
+const isClothingGroup = (groupItem: GroupItem): boolean => {
+    if (!groupItem) return false;
+
+    const furnitureData = getFurnitureDataForGroup(groupItem);
+
+    return furnitureData?.specialType === 23 || groupItem.category === 23;
+};
+
+
+
+const getInventoryFurnitureForTab = (tab: string, groupItems: GroupItem[]): GroupItem[] => {
+    switch (tab) {
+        case TAB_CLOTHING:
+            return groupItems.filter((item) => isClothingGroup(item));
+
+        case TAB_FURNITURE:
+        default:
+            return groupItems.filter((item) => !isClothingGroup(item));
+    }
+};
+
+const getUnseenCategoryForTab = (tab: string): number => {
+    switch (tab) {
+        case TAB_PETS:
+            return UnseenItemCategory.PET;
+
+        case TAB_BADGES:
+            return UnseenItemCategory.BADGE;
+
+        case TAB_PREFIXES:
+            return UnseenItemCategory.PREFIX;
+
+        case TAB_BOTS:
+            return UnseenItemCategory.BOT;
+
+        default:
+            return -1;
+    }
+};
+
+const getFurnitureTabUnseenCount = (tab: string, groupItems: GroupItem[]): number => {
+    if (tab !== TAB_FURNITURE && tab !== TAB_CLOTHING) return 0;
+
+    return getInventoryFurnitureForTab(tab, groupItems)
+        .filter((item) => item.hasUnseenItems)
+        .length;
+};
 // Maps an optional link code (inventory/show/<code>) to a tab so other views
 // (e.g. the profile "Change Badges" button) can deep-link to a specific tab.
 const TAB_BY_CODE: Record<string, string> = {
     furni: TAB_FURNITURE,
     furniture: TAB_FURNITURE,
+    clothing: TAB_CLOTHING,
+    clothes: TAB_CLOTHING,
     pets: TAB_PETS,
     badges: TAB_BADGES,
     prefixes: TAB_PREFIXES,
     bots: TAB_BOTS
 };
-const UNSEEN_CATEGORIES = [UnseenItemCategory.FURNI, UnseenItemCategory.PET, UnseenItemCategory.BADGE, UnseenItemCategory.PREFIX, UnseenItemCategory.BOT];
-
 export const InventoryView: FC<{}> = (props) => {
     const [isVisible, setIsVisible] = useState(false);
     const [currentTab, setCurrentTab] = useState<string>(TABS[0]);
@@ -139,9 +214,21 @@ export const InventoryView: FC<{}> = (props) => {
         if (!isVisible && isTrading) setIsVisible(true);
     }, [isVisible, isTrading]);
 
+    const isFurnitureTab =
+        currentTab === TAB_FURNITURE ||
+        currentTab === TAB_CLOTHING;
+
+    const tabGroupItems = useMemo(
+        () =>
+            isFurnitureTab
+                ? getInventoryFurnitureForTab(currentTab, groupItems)
+                : groupItems,
+        [currentTab, groupItems, isFurnitureTab]
+    );
+
     if (!isVisible) return null;
 
-    const showFilter = !isTrading && (currentTab === TAB_FURNITURE || currentTab === TAB_BADGES);
+    const showFilter = !isTrading && (isFurnitureTab || currentTab === TAB_BADGES);
 
     return (
         <>
@@ -153,15 +240,26 @@ export const InventoryView: FC<{}> = (props) => {
                 {!isTrading && (
                     <>
                         <NitroCardTabsView classNames={['nitro-inventory-tabs-shell']}>
-                            {TABS.map((name, index) => {
+                            {TABS.map((name) => {
+                                const unseenCategory = getUnseenCategoryForTab(name);
+                                const isFurnitureDerivedTab =
+                                    name === TAB_FURNITURE ||
+                                    name === TAB_CLOTHING;
+
+                                const unseenCount = isFurnitureDerivedTab
+                                    ? getFurnitureTabUnseenCount(name, groupItems)
+                                    : unseenCategory >= 0
+                                      ? getCount(unseenCategory)
+                                      : 0;
+
                                 return (
                                     <NitroCardTabsItemView
-                                        key={index}
-                                        count={getCount(UNSEEN_CATEGORIES[index])}
+                                        key={name}
+                                        count={unseenCount}
                                         isActive={currentTab === name}
                                         onClick={(event) => setCurrentTab(name)}
                                     >
-                                        <span className="nitro-inventory-tab-label">{LocalizeText(name)}</span>
+                                        <span className="nitro-inventory-tab-label">{getTabLabel(name)}</span>
                                     </NitroCardTabsItemView>
                                 );
                             })}
@@ -171,14 +269,18 @@ export const InventoryView: FC<{}> = (props) => {
                                 <InventoryCategoryFilterView
                                     badgeCodes={badgeCodes}
                                     currentTab={currentTab}
-                                    groupItems={groupItems}
+                                    groupItems={tabGroupItems}
                                     setBadgeCodes={setFilteredBadgeCodes}
                                     setGroupItems={setFilteredGroupItems}
                                 />
                             )}
                             <div className="flex-1 overflow-hidden">
-                                {currentTab === TAB_FURNITURE && (
-                                    <InventoryFurnitureView filteredGroupItems={filteredGroupItems} roomPreviewer={roomPreviewer} roomSession={roomSession} />
+                                {isFurnitureTab && (
+                                    <InventoryFurnitureView
+                                        filteredGroupItems={filteredGroupItems}
+                                        roomPreviewer={roomPreviewer}
+                                        roomSession={roomSession}
+                                    />
                                 )}
                                 {currentTab === TAB_PETS && <InventoryPetView roomPreviewer={roomPreviewer} roomSession={roomSession} />}
                                 {currentTab === TAB_BADGES && <InventoryBadgeView filteredBadgeCodes={filteredBadgeCodes} />}

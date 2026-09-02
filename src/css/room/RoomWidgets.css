@@ -1384,3 +1384,477 @@
         top: 50% !important;
     }
 }
+
+
+/* ==========================================================
+   ROOM CHAT EMOJI + GIPHY
+   ========================================================== */
+
+.swf-chat-input .swf-chat-emoji-trigger,
+.swf-chat-input .swf-chat-gif-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    height: 30px;
+    margin: 0 4px 0 0;
+    padding: 0;
+    border: 1px solid rgba(0, 0, 0, 0.55);
+    border-radius: 5px;
+    background: linear-gradient(#f7f7f7, #cfcfcf);
+    color: #333;
+    cursor: pointer;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        0 1px 1px rgba(0, 0, 0, 0.25);
+}
+
+.swf-chat-input .swf-chat-emoji-trigger {
+    width: 30px;
+    min-width: 30px;
+    font-family: Arial, sans-serif;
+    font-size: 20px;
+    line-height: 1;
+}
+
+.swf-chat-input .swf-chat-gif-trigger {
+    width: 38px;
+    min-width: 38px;
+    font-family: Arial, sans-serif;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: -0.2px;
+}
+
+.swf-chat-input .swf-chat-emoji-trigger:hover,
+.swf-chat-input .swf-chat-gif-trigger:hover {
+    background: linear-gradient(#ffffff, #dddddd);
+}
+
+.swf-chat-input .swf-chat-emoji-trigger:active,
+.swf-chat-input .swf-chat-gif-trigger:active {
+    transform: translateY(1px);
+}
+
+.swf-chat-gif-popover {
+    z-index: 1080;
+    width: min(370px, calc(100vw - 20px));
+    height: 420px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 2px solid #111;
+    border-radius: 8px;
+    background: #252525;
+    box-shadow:
+        0 5px 18px rgba(0, 0, 0, 0.5),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.swf-chat-gif-header {
+    flex: 0 0 auto;
+    padding: 8px;
+    border-bottom: 1px solid #444;
+    background: #313131;
+    color: white;
+}
+
+.swf-chat-gif-header strong {
+    display: block;
+    margin: 0 0 6px;
+    font-size: 13px;
+}
+
+.swf-chat-gif-header form {
+    margin: 0;
+}
+
+.swf-chat-gif-header input {
+    display: block;
+    width: 100%;
+    height: 31px;
+    padding: 4px 8px;
+    border: 1px solid #111;
+    border-radius: 5px;
+    outline: none;
+    background: white;
+    color: #222;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+}
+
+.swf-chat-gif-header input:focus {
+    box-shadow: 0 0 0 2px rgba(89, 167, 255, 0.45);
+}
+
+.swf-chat-gif-results {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 5px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-auto-rows: 105px;
+    gap: 4px;
+    align-content: start;
+}
+
+.swf-chat-gif-result {
+    position: relative;
+    display: block;
+    min-width: 0;
+    width: 100%;
+    height: 105px;
+    overflow: hidden;
+    padding: 0;
+    border: 0;
+    border-radius: 3px;
+    background: #111;
+    cursor: pointer;
+}
+
+.swf-chat-gif-result:hover {
+    outline: 2px solid white;
+    outline-offset: -2px;
+}
+
+.swf-chat-gif-result img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.swf-chat-gif-status {
+    grid-column: 1 / -1;
+    align-self: start;
+    padding: 30px 8px;
+    text-align: center;
+    color: #ddd;
+    font-size: 12px;
+}
+
+.swf-chat-gif-attribution {
+    flex: 0 0 auto;
+    padding: 5px 8px 6px;
+    border-top: 1px solid #444;
+    background: #1b1b1b;
+    color: #fff;
+    font-family: Arial, sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    text-align: right;
+    letter-spacing: 0.3px;
+}
+
+.swf-chat-gif-arrow {
+    fill: #252525;
+}
+
+.swf-room-gif-message {
+    display: inline-flex;
+    position: relative;
+    vertical-align: top;
+    margin-top: 4px;
+    max-width: 240px;
+    overflow: hidden;
+    border-radius: 5px;
+    background: #111;
+}
+
+.swf-room-gif-message img {
+    display: block;
+    width: auto;
+    max-width: 240px;
+    max-height: 180px;
+    object-fit: contain;
+}
+
+.swf-room-gif-branding {
+    position: absolute;
+    right: 3px;
+    bottom: 3px;
+    padding: 2px 4px;
+    border-radius: 3px;
+    background: rgba(0, 0, 0, 0.65);
+    color: white;
+    font-family: Arial, sans-serif;
+    font-size: 8px;
+    font-weight: 700;
+    line-height: 1;
+    pointer-events: none;
+}
+
+@media (max-width: 768px), (pointer: coarse) {
+    .swf-chat-input .swf-chat-emoji-trigger,
+    .swf-chat-input .swf-chat-gif-trigger {
+        display: flex;
+        height: 30px;
+    }
+
+    .swf-chat-gif-popover {
+        width: min(350px, calc(100vw - 12px));
+        height: min(420px, 65vh);
+    }
+
+    .swf-chat-gif-results {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-auto-rows: 120px;
+    }
+
+    .swf-room-gif-message,
+    .swf-room-gif-message img {
+        max-width: 200px;
+    }
+
+    .swf-room-gif-message img {
+        max-height: 150px;
+    }
+}
+
+
+/* ========================================================================
+   ROOM STICKERS
+   Replaces the visible Habbicon chat control.
+   Existing Habbicon protocol/files remain intact.
+   ======================================================================== */
+
+.swf-chat-input .swf-chat-sticker-trigger {
+    position: relative;
+    box-sizing: border-box;
+    width: 41px;
+    min-width: 41px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 41px;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    background: transparent url('@/assets/images/chat-input-swf/sticky_note.png') 0 0 / auto no-repeat;
+    cursor: pointer;
+    image-rendering: pixelated;
+}
+
+.swf-chat-input .swf-chat-sticker-trigger:hover {
+    filter: brightness(1.08);
+}
+
+.swf-chat-input .swf-chat-sticker-trigger:active {
+    transform: translateY(1px);
+}
+
+.swf-chat-input .swf-chat-sticker-trigger::before {
+    position: absolute;
+    z-index: 2;
+    top: 0;
+    left: 4px;
+    width: 33px;
+    height: 10px;
+    background: url('@/assets/images/chat-input-swf/clip.png') center / auto no-repeat;
+    content: "";
+    pointer-events: none;
+    image-rendering: pixelated;
+}
+
+.swf-chat-input .swf-chat-sticker-trigger::after {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    background: url('@/assets/images/chat-input-swf/sticky_note2.png') center / auto no-repeat;
+    content: "";
+    pointer-events: none;
+    image-rendering: pixelated;
+}
+
+.swf-chat-input .swf-chat-sticker-trigger-icon {
+    position: relative;
+    z-index: 3;
+    display: block;
+    margin-top: 4px;
+    color: #654719;
+    font-family: Arial, sans-serif;
+    font-size: 18px;
+    font-weight: 900;
+    line-height: 20px;
+    text-shadow: 0 1px rgba(255, 255, 255, .55);
+    pointer-events: none;
+}
+
+.swf-chat-sticker-popover {
+    z-index: 1075;
+    box-sizing: border-box;
+    width: 330px;
+    max-width: calc(100vw - 16px);
+    overflow: hidden;
+    border: 2px solid #1b1d20;
+    border-radius: 9px;
+    outline: 0;
+    background: #292a27;
+    box-shadow:
+        0 6px 18px rgba(0, 0, 0, .35),
+        inset 0 0 0 1px rgba(255, 255, 255, .08);
+    color: #fff;
+    font-family: Ubuntu, Verdana, sans-serif;
+}
+
+.swf-chat-sticker-header {
+    display: flex;
+    height: 47px;
+    align-items: center;
+    padding: 7px 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, .08);
+    gap: 8px;
+}
+
+.swf-chat-sticker-header strong {
+    flex: 0 0 auto;
+    font-size: 13px;
+    line-height: 20px;
+}
+
+.swf-chat-sticker-header input {
+    min-width: 0;
+    height: 30px;
+    flex: 1 1 auto;
+    padding: 0 9px;
+    border: 1px solid #111;
+    border-radius: 6px;
+    outline: 0;
+    background: #fff;
+    color: #222;
+    font-family: Ubuntu, Verdana, sans-serif;
+    font-size: 11px;
+}
+
+.swf-chat-sticker-header input:focus {
+    border-color: #6ca6c7;
+}
+
+.swf-chat-sticker-categories {
+    display: flex;
+    min-height: 38px;
+    padding: 6px 7px;
+    overflow-x: auto;
+    border-bottom: 1px solid rgba(255, 255, 255, .08);
+    gap: 5px;
+}
+
+.swf-chat-sticker-categories button {
+    height: 25px;
+    flex: 0 0 auto;
+    padding: 0 9px;
+    border: 1px solid #111;
+    border-radius: 5px;
+    background: #3a3b37;
+    color: #ddd;
+    font-family: Ubuntu, Verdana, sans-serif;
+    font-size: 10px;
+    cursor: pointer;
+}
+
+.swf-chat-sticker-categories button:hover {
+    background: #484a45;
+}
+
+.swf-chat-sticker-categories button.active {
+    border-color: #7eb6d4;
+    background: #477f9d;
+    color: #fff;
+}
+
+.swf-chat-sticker-grid {
+    display: grid;
+    max-height: 300px;
+    min-height: 112px;
+    padding: 8px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 7px;
+}
+
+.swf-chat-sticker-item {
+    position: relative;
+    box-sizing: border-box;
+    min-width: 0;
+    height: 88px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 5px 19px;
+    overflow: hidden;
+    border: 1px solid #111;
+    border-radius: 7px;
+    background: #353632;
+    cursor: pointer;
+}
+
+.swf-chat-sticker-item:hover {
+    border-color: #82bad8;
+    background: #444640;
+}
+
+.swf-chat-sticker-item:active {
+    transform: translateY(1px);
+}
+
+.swf-chat-sticker-item img {
+    display: block;
+    width: 62px;
+    max-width: 100%;
+    height: 57px;
+    object-fit: contain;
+    pointer-events: none;
+}
+
+.swf-chat-sticker-item span {
+    position: absolute;
+    right: 3px;
+    bottom: 3px;
+    left: 3px;
+    overflow: hidden;
+    color: #e9e9e9;
+    font-size: 9px;
+    line-height: 12px;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+.swf-chat-sticker-status {
+    min-height: 96px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    grid-column: 1 / -1;
+    padding: 12px;
+    color: rgba(255, 255, 255, .75);
+    font-size: 11px;
+    text-align: center;
+}
+
+.swf-chat-sticker-arrow {
+    fill: #292a27;
+}
+
+
+/* Keep Sticker available on smaller screens.
+   This deliberately overrides the old mobile Habbicon rule. */
+
+@media (max-width: 768px) {
+    .swf-chat-input .swf-chat-sticker-trigger {
+        display: flex;
+    }
+
+    .swf-chat-sticker-popover {
+        width: min(320px, calc(100vw - 12px));
+    }
+
+    .swf-chat-sticker-grid {
+        max-height: 240px;
+        grid-template-columns: repeat(3, 1fr);
+    }
+}

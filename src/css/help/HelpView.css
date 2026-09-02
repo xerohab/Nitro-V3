@@ -42,3 +42,86 @@
     color: #46a01e;
     font-size: 0.95rem;
 }
+
+/* ============================================================
+   LOUNGE HOTEL SANCTION NOTICE
+   ============================================================ */
+
+.lounge-sanction-notice {
+    width: min(520px, calc(100vw - 18px)) !important;
+    max-width: calc(100vw - 18px) !important;
+}
+
+.lounge-sanction-notice .nitro-card-header {
+    background:
+        linear-gradient(
+            180deg,
+            #174968 0%,
+            #0b344d 100%
+        ) !important;
+    color: white !important;
+}
+
+.lounge-sanction-notice .nitro-card-content {
+    background:
+        linear-gradient(
+            180deg,
+            #223b4c 0%,
+            #172d3d 100%
+        ) !important;
+    color: #fff !important;
+}
+
+.lounge-sanction-heading {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom:
+        1px solid rgba(255,255,255,.16);
+}
+
+.lounge-sanction-warning {
+    flex: 0 0 58px;
+    width: 58px;
+    height: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: #ffd74b;
+    border: 3px solid #4a3a00;
+    color: #252000;
+    font-size: 34px;
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.65),
+        0 2px 4px rgba(0,0,0,.35);
+}
+
+.lounge-sanction-heading-copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.lounge-sanction-heading-copy strong {
+    font-size: 17px;
+    line-height: 1.15;
+}
+
+.lounge-sanction-heading-copy span {
+    font-size: 11px;
+    opacity: .8;
+}
+
+.lounge-sanction-notice .help-link {
+    color: #f4f4f4 !important;
+    text-decoration: underline;
+}
+
+.lounge-sanction-notice .habbo-btn-green {
+    min-width: 68px;
+}
+

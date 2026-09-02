@@ -1,5 +1,5 @@
 import { AvatarEditorFigureCategory, AvatarFigurePartType, FigureDataContainer } from '@nitrots/nitro-renderer';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CreateLinkEvent, GetClubMemberLevel, IAvatarEditorCategory, LocalizeText } from '../../api';
 import { LayoutCurrencyIcon } from '../../common';
 import { useAvatarEditor } from '../../hooks';
@@ -14,6 +14,9 @@ export const AvatarEditorModelView: FC<{
     const { name = '', categories = [] } = props;
     const [activeSetType, setActiveSetType] = useState<string>(() => categories[0]?.setType ?? '');
     const [advancedColorMode, setAdvancedColorMode] = useState<boolean>(false);
+    const subcategoryRef = useRef<HTMLDivElement>(null);
+    const isPurchased = name === 'purchased';
+    const hasPagedSubcategories = isPurchased && categories.length > 5;
     const hasHC = GetClubMemberLevel() > 0;
     const {
         maxPaletteCount = 1,
@@ -57,9 +60,23 @@ export const AvatarEditorModelView: FC<{
 
     if (!activeCategory) return null;
 
+    const scrollSubcategories = (direction: number) => {
+        const container = subcategoryRef.current;
+
+        if (!container) return;
+
+        container.scrollBy({
+            left: direction * 104,
+            behavior: 'smooth'
+        });
+    };
+
     return (
         <div className="nitro-avatar-editor-model">
-            <div className={`nitro-avatar-editor-subcategories${name === AvatarEditorFigureCategory.GENERIC ? ' is-gender' : ''}`}>
+            <div
+                ref={subcategoryRef}
+                className={`nitro-avatar-editor-subcategories${name === AvatarEditorFigureCategory.GENERIC ? ' is-gender' : ''}${hasPagedSubcategories ? ' is-paged' : ''}`}
+            >
                 {name === AvatarEditorFigureCategory.GENERIC && (
                     <>
                         <button type="button" className="category-item gender-category-item" onClick={() => setGender(AvatarFigurePartType.MALE)}>
@@ -85,6 +102,23 @@ export const AvatarEditorModelView: FC<{
                         </button>
                     ))}
             </div>
+
+            {hasPagedSubcategories && (
+                <>
+                    <button
+                        type="button"
+                        className="nitro-avatar-editor-category-scroll is-left"
+                        aria-label="Previous purchased categories"
+                        onClick={() => scrollSubcategories(-1)}
+                    />
+                    <button
+                        type="button"
+                        className="nitro-avatar-editor-category-scroll is-right"
+                        aria-label="Next purchased categories"
+                        onClick={() => scrollSubcategories(1)}
+                    />
+                </>
+            )}
 
             <div className="nitro-avatar-editor-parts-grid">
                 <AvatarEditorFigureSetView category={activeCategory} columnCount={6} />

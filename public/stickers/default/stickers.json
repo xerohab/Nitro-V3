@@ -1,0 +1,38 @@
+{
+  "stickers": [
+    { "id": 1, "name": "LOL", "category": "Reactions", "image": "images/lol.svg" },
+    { "id": 2, "name": "LOVE", "category": "Reactions", "image": "images/love.svg" },
+    { "id": 3, "name": "WOW", "category": "Reactions", "image": "images/wow.svg" },
+
+    { "id": 4, "name": "GG", "category": "Chat", "image": "images/gg.svg" },
+    { "id": 5, "name": "BRB", "category": "Chat", "image": "images/brb.svg" },
+    { "id": 6, "name": "AFK", "category": "Chat", "image": "images/afk.svg" },
+    { "id": 7, "name": "HELLO", "category": "Chat", "image": "images/hello.svg" },
+
+    { "id": 8, "name": "PARTY", "category": "Fun", "image": "images/party.svg" },
+
+    { "id": 9, "name": "HAHA", "category": "Reactions", "image": "images/haha.svg" },
+    { "id": 10, "name": "CRY", "category": "Reactions", "image": "images/cry.svg" },
+    { "id": 11, "name": "ANGRY", "category": "Reactions", "image": "images/angry.svg" },
+    { "id": 12, "name": "SHOCKED", "category": "Reactions", "image": "images/shocked.svg" },
+    { "id": 13, "name": "HEART", "category": "Reactions", "image": "images/heart.svg" },
+    { "id": 14, "name": "THUMBS UP", "category": "Reactions", "image": "images/thumbsup.svg" },
+
+    { "id": 15, "name": "YES", "category": "Chat", "image": "images/yes.svg" },
+    { "id": 16, "name": "NO", "category": "Chat", "image": "images/no.svg" },
+    { "id": 17, "name": "THANKS", "category": "Chat", "image": "images/thanks.svg" },
+    { "id": 18, "name": "WELCOME", "category": "Chat", "image": "images/welcome.svg" },
+    { "id": 19, "name": "BACK SOON", "category": "Chat", "image": "images/backsoon.svg" },
+
+    { "id": 20, "name": "DANCE", "category": "Fun", "image": "images/dance.svg" },
+    { "id": 21, "name": "FIRE", "category": "Fun", "image": "images/fire.svg" },
+    { "id": 22, "name": "COOL", "category": "Fun", "image": "images/cool.svg" },
+    { "id": 23, "name": "WINNER", "category": "Fun", "image": "images/winner.svg" },
+    { "id": 24, "name": "OOPS", "category": "Fun", "image": "images/oops.svg" },
+
+    { "id": 25, "name": "STOP", "category": "Moderation", "image": "images/stop.svg" },
+    { "id": 26, "name": "WARNING", "category": "Moderation", "image": "images/warning.svg" },
+
+    { "id": 9001, "name": "SANCTIONED", "category": "Moderation", "image": "images/sanctioned.svg" }
+  ]
+}

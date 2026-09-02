@@ -1,8 +1,10 @@
 .nitro-hotel-view {
-    background: #27afcf;
+    background-color: #27afcf;
     background-image: var(--hotel-view-background);
-    background-position: bottom left;
+    background-position: center bottom;
     background-repeat: no-repeat;
+    background-size: cover;
+    image-rendering: pixelated;
     z-index: 0;
 }
 
@@ -23,6 +25,7 @@
     overflow: hidden;
     color: #fff;
     font-family: Ubuntu, Arial, sans-serif;
+    image-rendering: pixelated;
     transform: scale(var(--hotel-view-scale));
     transform-origin: top left;
 }
@@ -50,14 +53,19 @@
     display: block;
     width: auto;
     height: auto;
+    image-rendering: pixelated;
 }
 
 .hotelview-edge-left {
     left: 0;
+    transform: scale(var(--hotel-view-scene-scale));
+    transform-origin: bottom left;
 }
 
 .hotelview-edge-right {
     right: 0;
+    transform: scale(var(--hotel-view-scene-scale));
+    transform-origin: bottom right;
 }
 
 .hotelview-edge-drape {
@@ -68,6 +76,8 @@
     width: auto;
     height: auto;
     pointer-events: none;
+    transform: scale(var(--hotel-view-scene-scale));
+    transform-origin: top left;
 }
 
 .hotelview-scene-drag-handle,

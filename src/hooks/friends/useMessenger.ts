@@ -36,6 +36,7 @@ const useMessengerState = () => {
     // store drives the messenger icon state and history prefetch for the SWF window.
     const persistentState = useMessengerRealtime();
     const persistentHistory = useMessengerHistory();
+    const persistentActions = persistentState.actions;
     const [messageThreads, setMessageThreads] = useState<MessengerThread[]>([]);
     const [activeThreadId, setActiveThreadId] = useState<number>(-1);
     const [hiddenThreadIds, setHiddenThreadIds] = useState<number[]>([]);
@@ -92,6 +93,16 @@ const useMessengerState = () => {
         return thread;
     };
 
+    const getPersistentConversation = (participantId: number) =>
+        persistentState.conversationIds
+            .map((conversationId) =>
+                persistentState.conversationsById[conversationId])
+            .find(
+                (candidate) =>
+                    candidate?.type === 0 &&
+                    candidate.participantId === participantId
+            ) || null;
+
     const closeThread = (threadId: number) => {
         setHiddenThreadIds((prevValue) => {
             const newValue = [...prevValue];
@@ -113,13 +124,40 @@ const useMessengerState = () => {
         secondsSinceSent: number = 0,
         extraData: string = null,
         messageType: number = MessengerThreadChat.CHAT,
-        translation: IResolvedTranslation = null
+        translation: IResolvedTranslation = null,
+        replyToMessageId: number = 0
     ) => {
         if (!thread || !messageText || !messageText.length) return;
 
         const ownMessage = senderId === GetSessionDataManager().userId;
 
-        if (ownMessage && messageText.length <= 255) SendMessageComposer(new SendMessageComposerPacket(thread.participant.id, messageText));
+        if (ownMessage && messageText.length <= 255) {
+            const persistentConversation =
+                getPersistentConversation(thread.participant.id);
+
+            if (
+                persistentConversation?.id > 0 &&
+                persistentActions?.sendMessage
+            ) {
+                persistentActions.sendMessage(
+                    persistentConversation.id,
+                    thread.participant.id,
+                    messageText,
+                    messageType,
+                    extraData || '',
+                    replyToMessageId
+                );
+            } else {
+                // Compatibility fallback for conversations that have not yet
+                // received a persistent conversation id.
+                SendMessageComposer(
+                    new SendMessageComposerPacket(
+                        thread.participant.id,
+                        messageText
+                    )
+                );
+            }
+        }
 
         let addedChatId = -1;
 
@@ -139,7 +177,9 @@ const useMessengerState = () => {
                 messageText,
                 secondsSinceSent,
                 extraData,
-                messageType
+                messageType,
+                0,
+                replyToMessageId
             );
 
             addedChatId = addedChat?.id || -1;
@@ -284,7 +324,9 @@ const useMessengerState = () => {
                         message.message,
                         Math.max(0, now - message.createdAt),
                         message.metadata || null,
-                        message.type
+                        message.type,
+                        message.id,
+                        message.replyToMessageId || 0
                     );
                     knownMessageIds.add(message.id);
                 }
@@ -400,6 +442,8 @@ const useMessengerState = () => {
         setActiveThreadId,
         closeThread,
         sendMessage,
+        persistentState,
+        persistentActions,
         typingUserIds,
         sendTypingStatus
     };

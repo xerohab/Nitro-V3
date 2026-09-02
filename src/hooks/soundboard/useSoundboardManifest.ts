@@ -4,7 +4,7 @@ import { registerSharedHook, useSharedHook } from '@/state/useSharedHook';
 import { GetConfigurationValue } from '../../api';
 import { EMPTY_SOUNDBOARD_MANIFEST, normalizeSoundboardManifest, SoundboardManifest } from './soundboardManifest';
 
-const DEFAULT_MANIFEST_URL = 'nitro-assets/gamedata/SoundData.json';
+const DEFAULT_MANIFEST_URL = '/gamedata/config/SoundData.json';
 
 /**
  * Loads `gamedata/SoundData.json`, the asset pipeline's view of the soundboard.

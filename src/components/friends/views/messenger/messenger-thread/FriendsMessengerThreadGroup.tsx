@@ -14,6 +14,10 @@ import MessengerNotificationIcon from '../../../../../assets/images/friends/mess
 import { LayoutAvatarImageView } from '../../../../../common';
 import { useFriends } from '../../../../../hooks';
 import { resolveAvatarFigure } from '../../friends-list/resolveAvatarFigure';
+import {
+    PhoneMessengerReaction,
+    savePhoneReaction
+} from '../../../../../api/phone/PhoneApi';
 import { MessengerMessageStatusView } from '../MessengerMessageStatusView';
 import { getMessageStatusPresentation } from './messageStatus.helpers';
 
@@ -107,8 +111,29 @@ const MessengerHabbiconMessage: FC<{ id: number; assetRoot: string; own: boolean
     );
 };
 
-export const FriendsMessengerThreadGroup: FC<{ thread: MessengerThread; group: MessengerThreadChatGroup }> = ({ thread, group }) => {
+export const FriendsMessengerThreadGroup: FC<{
+    thread: MessengerThread;
+    group: MessengerThreadChatGroup;
+    reactions?: PhoneMessengerReaction[];
+    onReactionUpdate?: (
+        messageId: number,
+        reactions: PhoneMessengerReaction[]
+    ) => void;
+    onReply?: (
+        messageId: number,
+        senderName: string,
+        message: string
+    ) => void;
+}> = ({
+    thread,
+    group,
+    reactions = [],
+    onReactionUpdate = null,
+    onReply = null
+}) => {
     const { getFriend = null } = useFriends();
+    const [messageActionsOpen, setMessageActionsOpen] = useState(false);
+    const [reactionBusy, setReactionBusy] = useState(false);
     const groupChatData = useMemo(() => group.type === MessengerGroupType.GROUP_CHAT && GetGroupChatData(group.chats[0].extraData), [group]);
     const own =
         (group.type === MessengerGroupType.PRIVATE_CHAT && group.userId === GetSessionDataManager().userId) ||
@@ -150,23 +175,127 @@ export const FriendsMessengerThreadGroup: FC<{ thread: MessengerThread; group: M
         return hash ? `${normalizedRoot}${hash}/` : normalizedRoot;
     })();
     const renderMessage = (message: string) => {
-        const match = /^\uE000(\d+)$/.exec(message || '');
+        const value = message || '';
 
-        if (!match || !assetRoot) return message;
+        const giphyMatch = /^\[giphy:([A-Za-z0-9_-]{1,100})\]$/.exec(value);
 
-        return <MessengerHabbiconMessage id={Number(match[1])} assetRoot={assetRoot} own={own} />;
+        if (giphyMatch) {
+            return (
+                <img
+                    alt="GIF"
+                    className="messenger-giphy-message"
+                    draggable={false}
+                    loading="lazy"
+                    src={`https://media.giphy.com/media/${giphyMatch[1]}/giphy.gif`}
+                />
+            );
+        }
+
+        // Preserve rendering of Habbicons already present in message history.
+        const habbiconMatch = /^\uE000(\d+)$/.exec(value);
+
+        if (habbiconMatch && assetRoot) {
+            return <MessengerHabbiconMessage id={Number(habbiconMatch[1])} assetRoot={assetRoot} own={own} />;
+        }
+
+        return value;
+    };
+
+    const actionChat = group.chats[group.chats.length - 1];
+    const actionMessageId = actionChat?.messageId ?? 0;
+
+    const replyTarget =
+        actionChat?.replyToMessageId > 0
+            ? thread.getChatByMessageId(actionChat.replyToMessageId)
+            : null;
+
+    const replyTargetName = replyTarget
+        ? replyTarget.senderId === GetSessionDataManager().userId
+            ? GetSessionDataManager().userName
+            : groupChatData?.username || thread.participant.name
+        : '';
+
+
+    const messageReactions = useMemo(
+        () =>
+            actionMessageId > 0
+                ? reactions.filter(
+                    (entry) =>
+                        entry.messageId === actionMessageId &&
+                        entry.count > 0
+                )
+                : [],
+        [reactions, actionMessageId]
+    );
+
+    const reactToMessage = async (reaction: string) => {
+        if (actionMessageId <= 0 || reactionBusy) return;
+
+        setReactionBusy(true);
+
+        try {
+            const response = await savePhoneReaction(
+                actionMessageId,
+                reaction
+            );
+
+            onReactionUpdate?.(
+                actionMessageId,
+                response.reaction || []
+            );
+
+            setMessageActionsOpen(false);
+        } catch (error) {
+            console.error(
+                'Could not save Messenger reaction',
+                error
+            );
+        } finally {
+            setReactionBusy(false);
+        }
     };
 
     return (
-        <div className={`messenger-message-row${own ? ' own' : ''}`}>
+        <div className={`messenger-message-row phone-message-row${own ? ' own' : ' incoming'}`}>
             {own && (
                 <div className="message-avatar">
                     <LayoutAvatarImageView direction={2} figure={figure} />
                 </div>
             )}
-            <div className="messenger-message-body">
-                <div className="messenger-message-name">{name}:</div>
-                <div className="messenger-message-bubble">
+            <div className="messenger-message-body phone-message-body">
+                <div className="messenger-message-name phone-message-name">{name}</div>
+                <div
+                    className="messenger-message-bubble phone-message-bubble"
+                    onContextMenu={(event) => {
+                        event.preventDefault();
+
+                        if (actionMessageId <= 0) return;
+
+                        setMessageActionsOpen(
+                            (current) => !current
+                        );
+                    }}
+                    title={
+                        actionMessageId > 0
+                            ? 'Right-click for message actions'
+                            : undefined
+                    }
+                >
+                    {actionChat?.replyToMessageId > 0 && (
+                        <div className="phone-message-reply-quote">
+                            <strong>
+                                {replyTarget
+                                    ? replyTargetName
+                                    : 'Earlier message'}
+                            </strong>
+                            <span>
+                                {replyTarget
+                                    ? replyTarget.message
+                                    : 'Message not currently loaded'}
+                            </span>
+                        </div>
+                    )}
+
                     {group.chats.map((chat, index) =>
                         !chat.showTranslation ? (
                             <div key={index}>{renderMessage(chat.message)}</div>
@@ -182,6 +311,111 @@ export const FriendsMessengerThreadGroup: FC<{ thread: MessengerThread; group: M
                         )
                     )}
                 </div>
+
+                {messageActionsOpen && (
+                    <div className="phone-message-actions">
+                        <button
+                            type="button"
+                            className="phone-message-reply-action"
+                            disabled={actionMessageId <= 0}
+                            title="Reply"
+                            onClick={() => {
+                                if (actionMessageId <= 0) return;
+
+                                onReply?.(
+                                    actionMessageId,
+                                    name,
+                                    actionChat?.message || ''
+                                );
+
+                                setMessageActionsOpen(false);
+                            }}
+                        >
+                            Reply
+                        </button>
+
+                        <button
+                            type="button"
+                            disabled={reactionBusy}
+                            title="Love"
+                            onClick={() => void reactToMessage('❤️')}
+                        >
+                            ❤️
+                        </button>
+
+                        <button
+                            type="button"
+                            disabled={reactionBusy}
+                            title="Laugh"
+                            onClick={() => void reactToMessage('😂')}
+                        >
+                            😂
+                        </button>
+
+                        <button
+                            type="button"
+                            disabled={reactionBusy}
+                            title="Like"
+                            onClick={() => void reactToMessage('👍')}
+                        >
+                            👍
+                        </button>
+
+                        <button
+                            type="button"
+                            disabled={reactionBusy}
+                            title="Wow"
+                            onClick={() => void reactToMessage('😮')}
+                        >
+                            😮
+                        </button>
+
+                        <button
+                            type="button"
+                            disabled={reactionBusy}
+                            title="Sad"
+                            onClick={() => void reactToMessage('😢')}
+                        >
+                            😢
+                        </button>
+
+                        <button
+                            type="button"
+                            disabled={reactionBusy}
+                            title="Celebrate"
+                            onClick={() => void reactToMessage('🎉')}
+                        >
+                            🎉
+                        </button>
+                    </div>
+                )}
+
+                {messageReactions.length > 0 && (
+                    <div className="phone-message-reactions">
+                        {messageReactions.map((entry) => (
+                            <button
+                                key={`${entry.messageId}-${entry.reaction}`}
+                                type="button"
+                                className={
+                                    `phone-message-reaction-pill` +
+                                    `${entry.reactedByMe ? ' active' : ''}`
+                                }
+                                disabled={reactionBusy}
+                                title={
+                                    entry.reactedByMe
+                                        ? 'You reacted'
+                                        : 'React'
+                                }
+                                onClick={() =>
+                                    void reactToMessage(entry.reaction)}
+                            >
+                                <span>{entry.reaction}</span>
+                                <strong>{entry.count}</strong>
+                            </button>
+                        ))}
+                    </div>
+                )}
+
                 <MessengerMessageTime date={group.chats[0].date} />
             </div>
             {!own && (

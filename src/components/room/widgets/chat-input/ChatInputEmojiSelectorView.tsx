@@ -11,6 +11,8 @@ export const ChatInputEmojiSelectorView: FC<ChatInputEmojiSelectorViewProps> = (
     const [selectorVisible, setSelectorVisible] = useState(false);
 
     const handleEmojiSelect = (emoji: any) => {
+        if (!emoji?.native) return;
+
         addChatEmoji(emoji.native);
         setSelectorVisible(false);
     };
@@ -18,14 +20,25 @@ export const ChatInputEmojiSelectorView: FC<ChatInputEmojiSelectorViewProps> = (
     return (
         <Popover.Root open={selectorVisible} onOpenChange={setSelectorVisible}>
             <Popover.Trigger asChild>
-                <div className="swf-chat-emoji-trigger cursor-pointer select-none">??</div>
+                <button
+                    aria-label="Emojis"
+                    className="swf-chat-emoji-trigger"
+                    title="Emojis"
+                    type="button"
+                >
+                    <span aria-hidden="true">☺</span>
+                </button>
             </Popover.Trigger>
+
             <Popover.Portal>
-                <Popover.Content className="z-[1070]" side="top" sideOffset={8}>
+                <Popover.Content
+                    className="z-[1070]"
+                    side="top"
+                    sideOffset={8}
+                >
                     <LazyEmojiPicker onEmojiSelect={handleEmojiSelect} />
                 </Popover.Content>
             </Popover.Portal>
         </Popover.Root>
     );
 };
-

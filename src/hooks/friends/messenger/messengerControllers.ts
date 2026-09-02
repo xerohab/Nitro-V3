@@ -36,20 +36,73 @@ export const createMessengerActionsController = (
     send: Send,
     getOwnUserId: () => number,
     initialConfirmationId: number = 1,
-    makeSend: (conversationId: number, recipientId: number, confirmationId: number, type: number, text: string, metadata: string) => object = (conversationId, recipientId, confirmationId, type, text, metadata) => new SendMessengerMessageComposer(conversationId, recipientId, confirmationId, type, text, metadata),
+    makeSend: (
+        conversationId: number,
+        recipientId: number,
+        confirmationId: number,
+        type: number,
+        text: string,
+        metadata: string,
+        replyToMessageId: number
+    ) => object = (
+        conversationId,
+        recipientId,
+        confirmationId,
+        type,
+        text,
+        metadata,
+        replyToMessageId
+    ) =>
+        new SendMessengerMessageComposer(
+            conversationId,
+            recipientId,
+            confirmationId,
+            type,
+            text,
+            metadata,
+            replyToMessageId
+        ),
     makeRead: (conversationId: number, messageId: number) => object = (conversationId, messageId) => new MarkMessengerReadComposer(conversationId, messageId),
     scheduleTimeout: (callback: () => void, delay: number) => unknown = (callback, delay) => globalThis.setTimeout(callback, delay)
 ) =>
 {
     let nextConfirmationId = initialConfirmationId;
 
-    const sendMessage = (conversationId: number, recipientId: number, text: string, type: number = 0, metadata: string = '') =>
+    const sendMessage = (
+        conversationId: number,
+        recipientId: number,
+        text: string,
+        type: number = 0,
+        metadata: string = '',
+        replyToMessageId: number = 0
+    ) =>
     {
         const confirmationId = nextConfirmationId++;
         const clientId = `c-${ confirmationId }`;
-        const message: MessengerMessage = { id: 0, clientId, conversationId, senderId: getOwnUserId(), type, message: text, metadata, createdAt: Math.floor(Date.now() / 1000), status: 'sending' };
+        const message: MessengerMessage = {
+            id: 0,
+            clientId,
+            conversationId,
+            senderId: getOwnUserId(),
+            type,
+            message: text,
+            metadata,
+            createdAt: Math.floor(Date.now() / 1000),
+            replyToMessageId,
+            status: 'sending'
+        };
         dispatch({ type: 'messageOptimistic', message });
-        send(makeSend(conversationId, recipientId, confirmationId, type, text, metadata));
+        send(
+            makeSend(
+                conversationId,
+                recipientId,
+                confirmationId,
+                type,
+                text,
+                metadata,
+                replyToMessageId
+            )
+        );
         scheduleTimeout(() =>
         {
             if(selectMessageByClientId(getState(), clientId)?.status === 'sending') dispatch({ type: 'messageFailed', clientId, errorCode: 7 });
@@ -68,7 +121,14 @@ export const createMessengerActionsController = (
             const failed = selectMessageByClientId(getState(), clientId);
             if(!failed || failed.status !== 'failed') return null;
             const recipientId = getState().conversationsById[failed.conversationId]?.participantId || 0;
-            return sendMessage(failed.conversationId, recipientId, failed.message, failed.type, failed.metadata);
+            return sendMessage(
+                failed.conversationId,
+                recipientId,
+                failed.message,
+                failed.type,
+                failed.metadata,
+                failed.replyToMessageId || 0
+            );
         },
         markRead(conversationId: number, messageId: number)
         {

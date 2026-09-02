@@ -8,6 +8,8 @@ export class MessengerThreadChat {
     private static CHAT_ID: number = 0;
 
     private _id: number;
+    private _messageId: number = 0;
+    private _replyToMessageId: number = 0;
     private _type: number;
     private _status: number = MessengerThreadChat.SENT;
     private _senderId: number;
@@ -46,6 +48,33 @@ export class MessengerThreadChat {
 
     public get id(): number {
         return this._id;
+    }
+
+    /**
+     * Persistent server/database Messenger message id.
+     *
+     * This is deliberately separate from id, which remains the
+     * legacy local UI chat id used by translations and grouping.
+     */
+    public get messageId(): number {
+        return this._messageId;
+    }
+
+    public setMessageId(messageId: number): void {
+        this._messageId = Number.isFinite(messageId) && messageId > 0
+            ? Math.floor(messageId)
+            : 0;
+    }
+
+    public get replyToMessageId(): number {
+        return this._replyToMessageId;
+    }
+
+    public setReplyToMessageId(replyToMessageId: number): void {
+        this._replyToMessageId =
+            Number.isFinite(replyToMessageId) && replyToMessageId > 0
+                ? Math.floor(replyToMessageId)
+                : 0;
     }
 
     public get type(): number {

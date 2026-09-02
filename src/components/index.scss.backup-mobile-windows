@@ -1,0 +1,116 @@
+@import './achievements/AchievementsView';
+@import './avatar-editor/AvatarEditorView';
+@import './backgrounds/BackgroundsView';
+@import './camera/CameraWidgetView';
+@import './campaign/CampaignView';
+@import './catalog/CatalogView';
+@import './chat-history/ChatHistoryView';
+@import './floorplan-editor/FloorplanEditorView.scss';
+@import './friends/FriendsView';
+@import './groups/GroupView';
+@import './guide-tool/GuideToolView';
+@import './help/HelpView';
+@import './hotel-view/HotelView';
+@import './loading/LoadingView';
+@import './mod-tools/ModToolsView';
+@import './navigator/NavigatorView';
+@import './nitropedia/NitropediaView';
+@import './notification-center/NotificationCenterView';
+@import './purse/PurseView';
+@import './right-side/RightSideView';
+@import './room/RoomView';
+@import './toolbar/ToolbarView';
+@import './user-profile/UserProfileVew';
+@import './wired/WiredView';
+
+/* ============================================================
+   LOUNGE HOTEL - FORCED MOBILE CLIENT
+   Enabled only when the client URL contains ?mobile=1
+   ============================================================ */
+
+html.nitro-mobile-mode {
+    --mobile-toolbar-height: 58px;
+    --mobile-safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Prevent the game UI itself creating horizontal overflow */
+html.nitro-mobile-mode,
+html.nitro-mobile-mode body,
+html.nitro-mobile-mode #root {
+    width: 100%;
+    max-width: 100vw;
+    overflow: hidden;
+}
+
+/*
+ * Generic Nitro draggable windows.
+ * Desktop client is completely unaffected because every rule
+ * requires nitro-mobile-mode on <html>.
+ */
+html.nitro-mobile-mode .draggable-window {
+    max-width: calc(100vw - 12px) !important;
+}
+
+/*
+ * Major application windows should fit inside the phone.
+ * Individual applications can still receive more specialised
+ * mobile layouts later.
+ */
+html.nitro-mobile-mode .draggable-window:has(> .nitro-catalog-window),
+html.nitro-mobile-mode .draggable-window:has(> .nitro-inventory-window) {
+    width: calc(100vw - 12px) !important;
+    min-width: 0 !important;
+    max-width: calc(100vw - 12px) !important;
+}
+
+/* Catalog currently has desktop 840px constraints */
+html.nitro-mobile-mode .nitro-catalog-window {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+}
+
+/* Inventory */
+html.nitro-mobile-mode .nitro-inventory-window {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+}
+
+/* Mobile toolbar */
+html.nitro-mobile-mode .nitro-toolbar-mobile-hobba {
+    width: calc(100vw - 8px) !important;
+    max-width: calc(100vw - 8px) !important;
+
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+
+    bottom: max(3px, env(safe-area-inset-bottom, 0px)) !important;
+
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+
+    box-sizing: border-box;
+}
+
+/* Keep toolbar rows scrollable instead of overflowing the phone */
+html.nitro-mobile-mode .tb-bar-scroll {
+    min-width: 0 !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+}
+
+/* More comfortable touch targets */
+html.nitro-mobile-mode .tb-bar-scroll > * {
+    flex-shrink: 0;
+}
+
+/*
+ * Don't allow ordinary content to disappear underneath the
+ * iPhone/Android bottom safe area.
+ */
+html.nitro-mobile-mode body {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+}

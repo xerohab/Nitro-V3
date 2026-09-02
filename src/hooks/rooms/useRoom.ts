@@ -1,6 +1,5 @@
 import {
     ColorConverter,
-    GetDesiredResolution,
     GetRenderer,
     GetRoomEngine,
     GetStage,
@@ -23,6 +22,7 @@ import {
 } from '@nitrots/nitro-renderer';
 import { useEffect, useState } from 'react';
 import { registerSharedHook, useSharedHook } from '@/state/useSharedHook';
+import { GetRendererResolution } from '@/utils/getRendererResolution';
 import {
     CanManipulateFurniture,
     DispatchUiEvent,
@@ -269,7 +269,7 @@ const useRoomState = () => {
         const { width, height } = getViewportSize();
         const renderer = GetRenderer();
 
-        if (renderer) renderer.resize(width, height);
+        if (renderer) renderer.resize(width, height, GetRendererResolution());
 
         const displayObject = roomEngine.getRoomInstanceDisplay(roomId, canvasId, width, height, RoomGeometry.SCALE_ZOOMED_IN);
         const canvas = GetRoomEngine().getRoomInstanceRenderingCanvas(roomId, canvasId);
@@ -321,7 +321,7 @@ const useRoomState = () => {
             const offsetX = canvas.screenOffsetX - (newWidth - canvas.width) / 2;
             const offsetY = canvas.screenOffsetY - (newHeight - canvas.height) / 2;
 
-            renderer.resize(newWidth, newHeight, GetDesiredResolution());
+            renderer.resize(newWidth, newHeight, GetRendererResolution());
 
             background.width = newWidth;
             background.height = newHeight;

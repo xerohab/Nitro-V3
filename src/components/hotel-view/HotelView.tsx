@@ -238,6 +238,14 @@ export const HotelView: FC = () => {
 
     const scene = landingData.scene ?? EMPTY_SCENE;
     const backgroundImage = scene.backgroundUrl ? `url("${resolveImageUrl(scene.backgroundUrl, imageLibraryUrl, assetUrl)}")` : 'none';
+
+    // The 1172x822 dimensions are the logical coordinate system for Hotel View
+    // widgets and editable scene elements. They must not be used to size the
+    // full-screen background artwork.
+    //
+    // Keep the widget stage proportional to that logical canvas while allowing
+    // the background itself to cover the complete available Hotel View area.
+    const sceneScale = Math.max(1, scale);
     const stageStyle = {
         '--hotel-view-scale': scale,
         '--hotel-view-scaled-height': `${HOTEL_VIEW_HEIGHT * scale}px`,
@@ -245,6 +253,7 @@ export const HotelView: FC = () => {
     } as CSSProperties;
     const containerStyle = {
         '--hotel-view-background': backgroundImage,
+        '--hotel-view-scene-scale': sceneScale,
         overflow: 'hidden'
     } as CSSProperties;
 

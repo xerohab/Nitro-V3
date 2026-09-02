@@ -1,6 +1,6 @@
 import { GetRoomEngine, RoomGeometry } from '@nitrots/nitro-renderer';
 
-export const ROOM_ZOOM_SCALES = [0.5, 1, 2, 4] as const;
+export const ROOM_ZOOM_SCALES = [0.5, 1, 2, 2.5, 4] as const;
 
 export const applyRoomZoom = (roomId: number, logicalScale: number, isFlipForced: boolean = false): void => {
     if (isFlipForced) {

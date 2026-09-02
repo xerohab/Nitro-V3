@@ -51,7 +51,10 @@ export const FriendBarView: FC<{ onlineFriends: MessengerFriend[]; requestsCount
                 const reserved = document.querySelector('.tb-frame') ? AIR_RAIL_CHAT_RESERVED_HALF : AIR_RAIL_EDGE_GAP;
                 const available = Math.max(0, window.innerWidth / 2 - reserved) - preceding - trailing;
 
-                next = available - requestWidth < AIR_TAB_WIDTH ? 0 : resolveAirFriendTabCapacity(available, requestWidth, AIR_TAB_SPACING);
+                next = Math.max(
+                    AIR_MIN_VISIBLE_SLOTS,
+                    resolveAirFriendTabCapacity(available, requestWidth, AIR_TAB_SPACING)
+                );
             } else {
                 const left = element.getBoundingClientRect().left;
                 const available = window.innerWidth - left - RIGHT_SAFE;

@@ -19,6 +19,7 @@ import mainTorsoSrc from '../../assets/images/avatareditor/air/main-torso.png';
 import wardrobeHangerSrc from '../../assets/images/avatareditor/wardrobe-hanger.png';
 import mainNftSrc from '../../assets/images/wardrobe/nft.png';
 import mainPetsSrc from '../../assets/images/wardrobe/pets.png';
+import { HabbiconsSubmenuOwned } from '../../assets/images/habbicons';
 import { NitroCardContentView, NitroCardHeaderView, NitroCardTabsItemView, NitroCardTabsView, NitroCardView } from '../../common';
 import { useAvatarEditor } from '../../hooks';
 import { AvatarEditorFigurePreviewView } from './AvatarEditorFigurePreviewView';
@@ -34,7 +35,8 @@ const MAIN_TAB_ICONS: Record<string, string> = {
     [AvatarEditorFigureCategory.LEGS]: mainLegsSrc,
     [AvatarEditorFigureCategory.PETS]: mainPetsSrc,
     [AvatarEditorFigureCategory.MISC]: mainMiscSrc,
-    [AvatarEditorFigureCategory.NFT]: mainNftSrc
+    [AvatarEditorFigureCategory.NFT]: mainNftSrc,
+    purchased: HabbiconsSubmenuOwned
 };
 
 // AIR removes unavailable tabs from this sequence without reordering the
@@ -46,7 +48,8 @@ const MAIN_TAB_ORDER: string[] = [
     AvatarEditorFigureCategory.LEGS,
     AvatarEditorFigureCategory.MISC,
     AvatarEditorFigureCategory.NFT,
-    AvatarEditorFigureCategory.PETS
+    AvatarEditorFigureCategory.PETS,
+    'purchased'
 ];
 
 export const AvatarEditorView: FC<{}> = (props) => {
@@ -183,7 +186,13 @@ export const AvatarEditorView: FC<{}> = (props) => {
                                     isActive={activeModelKey === modelKey}
                                     onClick={() => setActiveModelKey(modelKey)}
                                 >
-                                    <img className="nitro-avatar-editor-main-tab-icon" src={MAIN_TAB_ICONS[modelKey]} alt="" draggable={false} />
+                                    <img
+                                        className="nitro-avatar-editor-main-tab-icon"
+                                        src={MAIN_TAB_ICONS[modelKey]}
+                                        alt={modelKey === 'purchased' ? 'Purchased' : ''}
+                                        title={modelKey === 'purchased' ? 'Purchased' : undefined}
+                                        draggable={false}
+                                    />
                                 </NitroCardTabsItemView>
                             ))}
                         </NitroCardTabsView>

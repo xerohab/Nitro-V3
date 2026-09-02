@@ -254,6 +254,11 @@ const useAvatarEditorState = () => {
     useMessageEvent<FigureSetIdsMessageEvent>(FigureSetIdsMessageEvent, (event) => {
         const parser = event.getParser();
 
+        console.log('[PURCHASED DEBUG] FigureSetIds:', parser.figureSetIds);
+        console.log('[PURCHASED DEBUG] Blueberry 1000000897 owned:', parser.figureSetIds.includes(1000000897));
+        console.log('[PURCHASED DEBUG] Bound names:', parser.boundsFurnitureNames);
+        console.log('[PURCHASED DEBUG] Blueberry mapped name:', parser.figureSetNameMap[1000000897]);
+
         setFigureSetIds(parser.figureSetIds);
         setBoundFurnitureNames(parser.boundsFurnitureNames);
         setFigureSetNames(parser.figureSetNameMap);
@@ -286,6 +291,7 @@ const useAvatarEditorState = () => {
         const newAvatarModels: { [index: string]: IAvatarEditorCategory[] } = {};
         const buildModeDefault = 'default';
         const buildModeNft = 'nft';
+        const buildModePurchased = 'purchased';
 
         const buildCategory = (setType: string, buildMode: string = buildModeDefault, allowedPartIds: number[] = null) => {
             const partItems: IAvatarEditorCategoryPartItem[] = [];
@@ -340,7 +346,21 @@ const useAvatarEditorState = () => {
                 if (buildMode === buildModeDefault && isNftPartSet) continue;
                 if (buildMode === buildModeNft && !isNftPartSet) continue;
 
+                // Purchased includes every owned sellable clothing set,
+                // including catalog clothing that Nitro classifies as NFT.
+                const isOwnedSellable = partSet.isSellable && figureSetIds.indexOf(partSet.id) !== -1;
                 const isSellableNotOwned = partSet.isSellable && figureSetIds.indexOf(partSet.id) === -1;
+
+                // Purchased clothing is shown exclusively in the Purchased tab.
+                // Keep pets/NFT behaviour separate from normal purchasable clothing.
+                if (
+                    buildMode === buildModeDefault &&
+                    partSet.isSellable &&
+                    setType !== AvatarFigurePartType.PET
+                )
+                    continue;
+
+                if (buildMode === buildModePurchased && !isOwnedSellable) continue;
 
                 if (isSellableNotOwned && buildMode !== buildModeNft && setType !== AvatarFigurePartType.PET) continue;
 
@@ -408,6 +428,29 @@ const useAvatarEditorState = () => {
         ]
             .map((setType) => buildCategory(setType, buildModeNft))
             .filter(Boolean);
+
+        // Owned purchasable clothing gets its own top-level tab.
+        // Empty figure-part categories are removed so the Purchased tab
+        // only shows relevant subcategories for the current user.
+        newAvatarModels['purchased'] = [
+            AvatarFigurePartType.HEAD,
+            AvatarFigurePartType.HAIR,
+            AvatarFigurePartType.HEAD_ACCESSORY,
+            AvatarFigurePartType.HEAD_ACCESSORY_EXTRA,
+            AvatarFigurePartType.EYE_ACCESSORY,
+            AvatarFigurePartType.FACE_ACCESSORY,
+            AvatarFigurePartType.CHEST,
+            AvatarFigurePartType.CHEST_PRINT,
+            AvatarFigurePartType.COAT_CHEST,
+            AvatarFigurePartType.CHEST_ACCESSORY,
+            AvatarFigurePartType.LEGS,
+            AvatarFigurePartType.SHOES,
+            AvatarFigurePartType.WAIST_ACCESSORY,
+            AvatarFigurePartType.MISC
+        ]
+            .map((setType) => buildCategory(setType, buildModePurchased))
+            .filter((category) => category && category.partItems.some((item) => !item.isClear));
+
         newAvatarModels[AvatarEditorFigureCategory.WARDROBE] = [];
 
         setAvatarModels(newAvatarModels);

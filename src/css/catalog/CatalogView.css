@@ -6310,3 +6310,131 @@ html.nitro-mobile-mode .nitro-catalog-default-layout .nitro-catalog-offer-detail
 html.nitro-mobile-mode .nitro-catalog-default-layout .nitro-catalog-grid-shell {
     padding-bottom: 8px !important;
 }
+
+
+/* ==========================================================================
+   NITRO DESKTOP HIGH-DPI CATALOG GUARD
+   --------------------------------------------------------------------------
+   Only applies when:
+     - Nitro detected devicePixelRatio > 1
+     - viewport is desktop-sized
+     - device uses a precise/fine pointer
+
+   This deliberately leaves the custom mobile client alone.
+   ========================================================================== */
+
+@media (min-width: 1024px) and (pointer: fine) {
+
+    .nitro-app-root.nitro-high-dpi .nitro-catalog-window {
+        box-sizing: border-box !important;
+    }
+
+    /*
+     * Give the product/purchase panel additional vertical breathing room.
+     * The standard catalogue currently fixes this panel at 220px.
+     */
+    .nitro-app-root.nitro-high-dpi
+    .nitro-catalog-default-layout
+    .nitro-catalog-product-view {
+        height: 250px !important;
+        min-height: 250px !important;
+        max-height: 250px !important;
+        flex-shrink: 0 !important;
+        overflow: visible !important;
+    }
+
+    /*
+     * Prevent the right purchase card from clipping its own children.
+     */
+    .nitro-app-root.nitro-high-dpi
+    .nitro-catalog-default-layout
+    .nitro-catalog-offer-details {
+        min-width: 0 !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+    }
+
+    /*
+     * Keep the title/price portion flexible rather than allowing it to push
+     * the purchase area outside the details card.
+     */
+    .nitro-app-root.nitro-high-dpi
+    .nitro-catalog-offer-details > :first-child {
+        min-width: 0 !important;
+        min-height: 0 !important;
+        flex: 0 1 auto !important;
+    }
+
+    /*
+     * Bottom purchase block must always remain inside the visible card.
+     */
+    .nitro-app-root.nitro-high-dpi
+    .nitro-catalog-offer-details > :last-child {
+        position: relative !important;
+        flex: 0 0 auto !important;
+        min-width: 0 !important;
+        width: 100% !important;
+        margin-top: auto !important;
+        z-index: 5 !important;
+    }
+
+    /*
+     * Quantity spinner may shrink but may never force the card wider.
+     */
+    .nitro-app-root.nitro-high-dpi
+    .nitro-catalog-spinner-box {
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+
+    /*
+     * Gift + Buy:
+     * force the two purchase actions into the available width instead of
+     * allowing Habbo-skin minimum widths to push them outside the panel.
+     */
+    .nitro-app-root.nitro-high-dpi
+    .nitro-catalog-offer-actions {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 6px !important;
+        align-items: stretch !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+
+    .nitro-app-root.nitro-high-dpi
+    .nitro-catalog-offer-actions
+    .nitro-catalog-standard-button,
+    .nitro-app-root.nitro-high-dpi
+    .nitro-catalog-offer-actions
+    .nitro-catalog-standard-gift-button,
+    .nitro-app-root.nitro-high-dpi
+    .nitro-catalog-offer-actions
+    .nitro-catalog-standard-buy-button {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    /*
+     * If there is only a Buy button, allow it to occupy the available row.
+     */
+    .nitro-app-root.nitro-high-dpi
+    .nitro-catalog-offer-actions
+    .nitro-catalog-standard-buy-button:only-child {
+        grid-column: 1 / -1 !important;
+    }
+
+    /*
+     * The item grid is the flexible part of the catalogue, therefore it takes
+     * the small amount of space added to the product panel.
+     */
+    .nitro-app-root.nitro-high-dpi
+    .nitro-catalog-grid-shell {
+        min-height: 0 !important;
+        flex: 1 1 auto !important;
+    }
+}

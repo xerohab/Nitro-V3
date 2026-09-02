@@ -38,13 +38,14 @@ export const CatalogLayoutPetView: FC<CatalogLayoutProps> = ({ page = null }) =>
     const [approvalPending, setApprovalPending] = useState(false);
     const [purchasePending, setPurchasePending] = useState(false);
     const [approvalResult, setApprovalResult] = useState(-1);
+    const [petColorRefresh, setPetColorRefresh] = useState(0);
     const pendingPurchaseRef = useRef<PendingPetPurchase | null>(null);
     const purchasePendingRef = useRef(false);
     const activePageIdRef = useRef(page?.pageId ?? -1);
     activePageIdRef.current = page?.pageId ?? -1;
     const { currentOffer = null } = useCatalogData();
     const { setCurrentOffer = null } = useCatalogUiState();
-    const breed = (currentOffer?.product?.productData?.type as unknown as string) ?? '';
+    const breed = petIndex >= 0 ? `a0 pet${petIndex}` : '';
     const { data: petPalette = null } = useSellablePetPalette(breed);
     const legacyPet = isLegacyPetType(petIndex);
 
@@ -60,7 +61,7 @@ export const CatalogLayoutPetView: FC<CatalogLayoutProps> = ({ page = null }) =>
                 : buildNewPetPaletteChoices(petIndex, sellablePalettes, (type, paletteId) =>
                       GetRoomEngine().getPetColorResult(type, paletteId)
                   ),
-        [legacyPet, petIndex, sellablePalettes]
+        [legacyPet, petIndex, sellablePalettes, petColorRefresh]
     );
 
     const selectablePalettes = useMemo(
@@ -68,21 +69,74 @@ export const CatalogLayoutPetView: FC<CatalogLayoutProps> = ({ page = null }) =>
         [legacyPet, newPetChoices, sellablePalettes]
     );
 
+    // The helper deliberately creates a white fallback choice before the
+    // renderer asset has loaded, so newPetChoices.length cannot be used to
+    // detect fixed-colour pets. Check the renderer directly instead.
+    const hasRendererPaletteColors = useMemo(
+        () =>
+            !legacyPet &&
+            sellablePalettes.some(
+                (palette) => !!GetRoomEngine().getPetColorResult(petIndex, palette.paletteId)
+            ),
+        [legacyPet, petIndex, sellablePalettes, petColorRefresh]
+    );
+
+    // If the catalogue supplies a race but the renderer never exposes any
+    // palette colour data for it, the pet is fixed-colour. Keep the race for
+    // preview/purchase but hide the fake white colour selector.
+    const fixedColorPet =
+        !legacyPet &&
+        sellablePalettes.length > 0 &&
+        !hasRendererPaletteColors;
+
+    const effectiveSelectablePalettes = useMemo(
+        () => (fixedColorPet ? sellablePalettes : selectablePalettes),
+        [fixedColorPet, sellablePalettes, selectablePalettes]
+    );
+
     const legacyColors = useMemo(
         () => (legacyPet ? GetPetAvailableColors(petIndex, sellablePalettes as SellablePetPaletteData[]) : []),
         [legacyPet, petIndex, sellablePalettes]
     );
 
-    const selectedPalette = selectedPaletteIndex >= 0 ? selectablePalettes[selectedPaletteIndex] : null;
+    const selectedPalette = selectedPaletteIndex >= 0 ? effectiveSelectablePalettes[selectedPaletteIndex] : null;
     const selectedColor = legacyPet
         ? (legacyColors[selectedColorIndex]?.[0] ?? 0xffffff)
         : (newPetChoices[selectedPaletteIndex]?.colors[0] ?? 0xffffff);
 
     const purchaseExtraData = useMemo(() => {
-        if (!petName || !selectedPalette) return '';
-        if (legacyPet && selectedColorIndex < 0) return '';
+        if (!petName) return '';
 
-        return buildPetPurchaseExtraData(petName, petIndex, selectedPalette, selectedColor);
+        // Fixed-colour custom pets use race 0.
+        if (
+            petIndex === 37 ||
+            (petIndex >= 38 && petIndex <= 65) ||
+            (petIndex >= 69 && petIndex <= 80) ||
+            (petIndex >= 83 && petIndex <= 106)
+        ) {
+            return `${petName}\n0\nFFFFFF`;
+        }
+
+        if (!selectedPalette) return '';
+
+        // Custom baby pets (66-68) have genuine renderer palettes.
+        // Preserve the selected palette/race, but purchase directly rather
+        // than waiting for the legacy name-approval flow.
+        if (petIndex >= 66 && petIndex <= 68) {
+            return `${petName}\n${selectedPalette.paletteId}\nFFFFFF`;
+        }
+
+        // Normal legacy pets require a selected colour.
+        // Dragon Dog (pet36) has no legacy colour palette,
+        // so allow it to use the default colour.
+        if (legacyPet && petIndex !== 36 && selectedColorIndex < 0) return '';
+
+        return buildPetPurchaseExtraData(
+            petName,
+            petIndex,
+            selectedPalette,
+            petIndex === 36 ? 0xffffff : selectedColor
+        );
     }, [legacyPet, petIndex, petName, selectedColor, selectedColorIndex, selectedPalette]);
 
     const validationErrorMessage = useMemo(() => {
@@ -98,7 +152,38 @@ export const CatalogLayoutPetView: FC<CatalogLayoutProps> = ({ page = null }) =>
     }, [approvalResult]);
 
     const requestPurchase = useCallback(() => {
+        console.log('[PET37 CLICK DEBUG]', {
+            petIndex,
+            breed,
+            pageId: page?.pageId,
+            offerId: currentOffer?.offerId,
+            offerName: currentOffer?.product?.productData?.type,
+            petName,
+            selectedPaletteIndex,
+            selectedPalette,
+            selectedColor,
+            purchaseExtraData,
+            approvalPending,
+            purchasePending: purchasePendingRef.current
+        });
         if (approvalPending || purchasePendingRef.current || !page || !currentOffer || !purchaseExtraData) return;
+
+        // Custom pets bypass the legacy name-approval round trip.
+        // Babies 66-68 keep their selected palette in purchaseExtraData.
+        if (
+            petIndex === 37 ||
+            (petIndex >= 38 && petIndex <= 65) ||
+            (petIndex >= 66 && petIndex <= 68) ||
+            (petIndex >= 69 && petIndex <= 80) ||
+            (petIndex >= 83 && petIndex <= 106)
+        ) {
+            purchasePendingRef.current = true;
+            setPurchasePending(true);
+            SendMessageComposer(
+                new PurchaseFromCatalogComposer(page.pageId, currentOffer.offerId, purchaseExtraData, 1)
+            );
+            return;
+        }
 
         pendingPurchaseRef.current = {
             extraData: purchaseExtraData,
@@ -108,7 +193,7 @@ export const CatalogLayoutPetView: FC<CatalogLayoutProps> = ({ page = null }) =>
         setApprovalPending(true);
         setApprovalResult(-1);
         SendMessageComposer(new ApproveNameMessageComposer(petName, 1));
-    }, [approvalPending, currentOffer, page, petName, purchaseExtraData]);
+    }, [approvalPending, currentOffer, page, petIndex, petName, purchaseExtraData]);
 
     useMessageEvent<ApproveNameMessageEvent>(ApproveNameMessageEvent, (event) => {
         const pendingPurchase = pendingPurchaseRef.current;
@@ -167,8 +252,39 @@ export const CatalogLayoutPetView: FC<CatalogLayoutProps> = ({ page = null }) =>
     }, [page?.pageId]);
 
     useEffect(() => {
-        setSelectedPaletteIndex(selectablePalettes.length ? 0 : -1);
-    }, [selectablePalettes]);
+        setSelectedPaletteIndex(effectiveSelectablePalettes.length ? 0 : -1);
+    }, [effectiveSelectablePalettes]);
+
+    useEffect(() => {
+        if (legacyPet || petIndex < 0 || !sellablePalettes.length) return;
+
+        let cancelled = false;
+        let attempts = 0;
+
+        const refreshPetColors = () => {
+            if (cancelled) return;
+
+            const hasRendererColors = sellablePalettes.some(
+                (palette) => !!GetRoomEngine().getPetColorResult(petIndex, palette.paletteId)
+            );
+
+            if (hasRendererColors) {
+                setPetColorRefresh((value) => value + 1);
+                return;
+            }
+
+            attempts++;
+
+            if (attempts < 40) window.setTimeout(refreshPetColors, 100);
+        };
+
+        refreshPetColors();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [legacyPet, petIndex, sellablePalettes]);
+
 
     useEffect(() => {
         setSelectedColorIndex(legacyColors.length ? 0 : -1);
@@ -180,6 +296,31 @@ export const CatalogLayoutPetView: FC<CatalogLayoutProps> = ({ page = null }) =>
         setApprovalResult(-1);
     }, [approvalPending, petName]);
 
+    useEffect(() => {
+        console.log('[PET PALETTE DEBUG]', {
+            petIndex,
+            breed,
+            pageId: page?.pageId,
+            offerId: currentOffer?.offerId,
+            petPalette,
+            rawPalettes: petPalette?.palettes ?? [],
+            sellablePalettes,
+            selectablePalettes,
+            selectedPaletteIndex,
+            selectedPalette
+        });
+    }, [
+        petIndex,
+        breed,
+        page?.pageId,
+        currentOffer,
+        petPalette,
+        sellablePalettes,
+        selectablePalettes,
+        selectedPaletteIndex,
+        selectedPalette
+    ]);
+
     if (!currentOffer) return null;
 
     const controlsDisabled = approvalPending || purchasePending;
@@ -190,11 +331,11 @@ export const CatalogLayoutPetView: FC<CatalogLayoutProps> = ({ page = null }) =>
             className={`nitro-catalog-pet-layout ${legacyPet ? 'nitro-catalog-pet-layout--legacy' : 'nitro-catalog-pet-layout--new'}`}
         >
             <div className="nitro-catalog-pet-preview relative h-[240px] min-h-[240px] overflow-hidden">
-                {selectedPalette && (
+                {petIndex >= 0 && (
                     <div className="nitro-catalog-pet-preview-image">
                         <LayoutPetImageView
                             direction={legacyPet || petIndex === 15 ? 2 : 3}
-                            paletteId={selectedPalette.paletteId}
+                            paletteId={fixedColorPet ? 0 : (selectedPalette?.paletteId ?? 0)}
                             petColor={legacyPet ? selectedColor : 0xffffff}
                             scale={petIndex === 15 ? 1 : 2}
                             typeId={petIndex}
@@ -250,38 +391,40 @@ export const CatalogLayoutPetView: FC<CatalogLayoutProps> = ({ page = null }) =>
                         )}
                     </>
                 ) : (
-                    <div className="nitro-catalog-pet-field">
-                        <span>{colorLabel}</span>
-                        <CatalogScrollAreaView
-                            className="nitro-catalog-pet-color-grid"
-                            contentClassName="nitro-catalog-pet-color-grid-content"
-                            aria-label={colorLabel}
-                            role="group"
-                        >
-                            {newPetChoices.map((choice, index) => {
-                                const colors = choice.colors.map((color) => ColorConverter.int2rgb(color));
-                                const style = {
-                                    background:
-                                        colors.length > 1
-                                            ? `linear-gradient(135deg, ${colors[0]} 0 50%, ${colors[1]} 50% 100%)`
-                                            : colors[0]
-                                };
+                    !fixedColorPet && (
+                        <div className="nitro-catalog-pet-field">
+                            <span>{colorLabel}</span>
+                            <CatalogScrollAreaView
+                                className="nitro-catalog-pet-color-grid"
+                                contentClassName="nitro-catalog-pet-color-grid-content"
+                                aria-label={colorLabel}
+                                role="group"
+                            >
+                                {newPetChoices.map((choice, index) => {
+                                    const colors = choice.colors.map((color) => ColorConverter.int2rgb(color));
+                                    const style = {
+                                        background:
+                                            colors.length > 1
+                                                ? `linear-gradient(135deg, ${colors[0]} 0 50%, ${colors[1]} 50% 100%)`
+                                                : colors[0]
+                                    };
 
-                                return (
-                                    <button
-                                        key={choice.palette.paletteId}
-                                        aria-label={`${colorLabel} ${index + 1}`}
-                                        aria-pressed={selectedPaletteIndex === index}
-                                        className="nitro-catalog-pet-color-swatch"
-                                        disabled={controlsDisabled}
-                                        style={style}
-                                        type="button"
-                                        onClick={() => setSelectedPaletteIndex(index)}
-                                    />
-                                );
-                            })}
-                        </CatalogScrollAreaView>
-                    </div>
+                                    return (
+                                        <button
+                                            key={choice.palette.paletteId}
+                                            aria-label={`${colorLabel} ${index + 1}`}
+                                            aria-pressed={selectedPaletteIndex === index}
+                                            className="nitro-catalog-pet-color-swatch"
+                                            disabled={controlsDisabled}
+                                            style={style}
+                                            type="button"
+                                            onClick={() => setSelectedPaletteIndex(index)}
+                                        />
+                                    );
+                                })}
+                            </CatalogScrollAreaView>
+                        </div>
+                    )
                 )}
 
                 <div className="nitro-catalog-pet-purchase mt-auto">

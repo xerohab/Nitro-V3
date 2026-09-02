@@ -6,13 +6,26 @@ import {
     ModKickMessageComposer,
     ModMessageMessageComposer,
     ModMuteMessageComposer,
-    ModTradingLockMessageComposer
+    ModTradingLockMessageComposer,
+    SanctionBotSelectComposer
 } from '@nitrots/nitro-renderer';
-import { FC, useMemo, useRef, useState } from 'react';
+import { FC, useEffect, useMemo, useRef, useState } from 'react';
 import { FaBan, FaBolt, FaEnvelope, FaExclamationTriangle, FaGavel, FaUserSlash, FaVolumeMute } from 'react-icons/fa';
 import { ISelectedUser, LocalizeText, ModActionDefinition, NotificationAlertType, SendMessageComposer } from '../../../../api';
 import { Button, DraggableWindowPosition, NitroCardContentView, NitroCardHeaderView, NitroCardView } from '../../../../common';
 import { useModTools, useNotification } from '../../../../hooks';
+
+interface SanctionBotProfile {
+    id: number;
+    name: string;
+    bot_id: number;
+    bot_name: string;
+    bot_figure?: string;
+    bot_gender?: string;
+    speech_enabled?: boolean;
+    speech_interval?: number;
+    follow_distance?: number;
+}
 
 interface ModToolsUserModActionViewProps {
     user: ISelectedUser;
@@ -57,9 +70,52 @@ export const ModToolsUserModActionView: FC<ModToolsUserModActionViewProps> = (pr
     const [selectedTopic, setSelectedTopic] = useState(-1);
     const [selectedAction, setSelectedAction] = useState(-1);
     const [message, setMessage] = useState<string>('');
+    const [sanctionBots, setSanctionBots] = useState<SanctionBotProfile[]>([]);
+    const [selectedSanctionBot, setSelectedSanctionBot] = useState<number>(0);
+    const [sanctionBotsLoading, setSanctionBotsLoading] = useState<boolean>(true);
     const { cfhCategories = null, settings = null } = useModTools();
     const { simpleAlert = null } = useNotification();
     const isSendingRef = useRef<boolean>(false);
+
+    useEffect(() => {
+        let cancelled = false;
+
+        setSanctionBotsLoading(true);
+
+        fetch('/hotel-api/sanction-bots', {
+            method: 'GET',
+            credentials: 'same-origin',
+            headers: {
+                Accept: 'application/json'
+            }
+        })
+            .then((response) => {
+                if (!response.ok) throw new Error('Failed to load sanction bots');
+
+                return response.json();
+            })
+            .then((data) => {
+                if (cancelled) return;
+
+                const profiles = Array.isArray(data?.bots) ? data.bots : [];
+
+                setSanctionBots(profiles);
+            })
+            .catch(() => {
+                if (cancelled) return;
+
+                setSanctionBots([]);
+            })
+            .finally(() => {
+                if (cancelled) return;
+
+                setSanctionBotsLoading(false);
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     const topics = useMemo(() => {
         const values: CallForHelpTopicData[] = [];
@@ -106,6 +162,15 @@ export const ModToolsUserModActionView: FC<ModToolsUserModActionViewProps> = (pr
         if (errorMessage) return sendAlert(errorMessage);
 
         const messageOrDefault = message.trim().length === 0 ? LocalizeText(`help.cfh.topic.${category.id}`) : message;
+
+        // Tell the emulator which escort profile belongs to
+        // the very next sanction issued by this moderator.
+        SendMessageComposer(
+            new SanctionBotSelectComposer(
+                user.userId,
+                selectedSanctionBot
+            )
+        );
 
         switch (sanction.actionType) {
             case ModActionDefinition.ALERT: {
@@ -206,6 +271,48 @@ export const ModToolsUserModActionView: FC<ModToolsUserModActionViewProps> = (pr
                     </select>
                 </div>
 
+                {/* Sanction bot escort */}
+                <div className="flex flex-col gap-1">
+                    <label className="text-[.7rem] uppercase tracking-wide opacity-60 font-semibold">
+                        Sanction Bot Escort
+                    </label>
+
+                    <select
+                        className="form-select form-select-sm"
+                        value={selectedSanctionBot}
+                        disabled={sanctionBotsLoading}
+                        onChange={(event) =>
+                            setSelectedSanctionBot(
+                                parseInt(event.target.value)
+                            )
+                        }
+                    >
+                        <option value={0}>
+                            None
+                        </option>
+
+                        {sanctionBots.map((profile) => (
+                            <option
+                                key={profile.id}
+                                value={profile.id}
+                            >
+                                {profile.name}
+                                {profile.bot_name
+                                    ? ` — ${profile.bot_name}`
+                                    : ''}
+                            </option>
+                        ))}
+                    </select>
+
+                    <div className="text-[.65rem] opacity-50">
+                        {sanctionBotsLoading
+                            ? 'Loading sanction bots...'
+                            : selectedSanctionBot === 0
+                                ? 'No escort bot will be attached.'
+                                : 'This bot will follow the user until the sanction expires.'}
+                    </div>
+                </div>
+
                 {/* Message */}
                 <div className="flex flex-col gap-1">
                     <label className="text-[.7rem] uppercase tracking-wide opacity-60 font-semibold">
@@ -233,6 +340,11 @@ export const ModToolsUserModActionView: FC<ModToolsUserModActionViewProps> = (pr
                             {selectedSanction && (
                                 <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${sanctionTone}`}>
                                     {sanctionIcon} {selectedSanction.name}
+                                </span>
+                            )}
+                            {selectedSanctionBot > 0 && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border bg-violet-100 text-violet-800 border-violet-200">
+                                    Escort: {sanctionBots.find((profile) => profile.id === selectedSanctionBot)?.name || 'Bot'}
                                 </span>
                             )}
                         </div>

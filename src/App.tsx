@@ -3,7 +3,6 @@ import {
     GetAvatarRenderManager,
     GetCommunication,
     GetConfiguration,
-    GetDesiredResolution,
     GetLocalizationManager,
     GetRoomEngine,
     GetRoomSessionManager,
@@ -29,6 +28,7 @@ import { MainView } from './components/MainView';
 import { ReconnectView } from './components/reconnect/ReconnectView';
 import { ClearStoredChatHistory, getConnectionFailureAction, useConnectionState, useDevicePixelRatio, useMessageEvent, useNitroEvent } from './hooks';
 import { SharedHookRegistry } from './state/useSharedHook';
+import { GetRendererResolution } from './utils/getRendererResolution';
 
 NitroVersion.UI_VERSION = GetUIVersion();
 
@@ -321,7 +321,7 @@ export const App: FC<{}> = (props) => {
         rendererPromiseRef.current = PrepareRenderer({
             width: Math.floor(width),
             height: Math.floor(height),
-            resolution: GetDesiredResolution(),
+            resolution: GetRendererResolution(),
             autoDensity: true,
             backgroundAlpha: 0,
             preference: 'webgl',
@@ -571,7 +571,7 @@ export const App: FC<{}> = (props) => {
     }, [prepareTrigger, startWarmup, startRenderer, tryRememberLogin, applySsoTicket, rotateRememberLogin, bumpProgress, taskLabel]);
 
     return (
-        <Base fit overflow="hidden" className={`nitro-app-root ${!(devicePixelRatio % 1) ? 'image-rendering-pixelated' : ''}`}>
+        <Base fit overflow="hidden" className={`nitro-app-root ${devicePixelRatio > 1 ? 'nitro-high-dpi' : ''} ${!(devicePixelRatio % 1) ? 'image-rendering-pixelated' : ''}`}>
             {!isReady && !showLogin && (
                 <LoadingView isError={errorMessage.length > 0} message={errorMessage} homeUrl={homeUrl} progress={loadingProgress} currentTask={loadingTask} />
             )}

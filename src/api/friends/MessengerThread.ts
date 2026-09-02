@@ -23,7 +23,15 @@ export class MessengerThread {
         this._unreadCount = 0;
     }
 
-    public addMessage(senderId: number, message: string, secondsSinceSent: number = 0, extraData: string = null, type: number = 0): MessengerThreadChat {
+    public addMessage(
+        senderId: number,
+        message: string,
+        secondsSinceSent: number = 0,
+        extraData: string = null,
+        type: number = 0,
+        messageId: number = 0,
+        replyToMessageId: number = 0
+    ): MessengerThreadChat {
         const isGroupChat = senderId < 0 && extraData;
         const userId = isGroupChat ? GetGroupChatData(extraData).userId : senderId;
 
@@ -34,6 +42,9 @@ export class MessengerThread {
         if (isGroupChat) group.type = MessengerGroupType.GROUP_CHAT;
 
         const chat = new MessengerThreadChat(senderId, message, secondsSinceSent, extraData, type);
+
+        chat.setMessageId(messageId);
+        chat.setReplyToMessageId(replyToMessageId);
 
         group.addChat(chat);
         this.pruneChats();
@@ -48,6 +59,20 @@ export class MessengerThread {
     public getChat(chatId: number): MessengerThreadChat {
         for (const group of this._groups) {
             const chat = group.chats.find((existingChat) => existingChat.id === chatId);
+
+            if (chat) return chat;
+        }
+
+        return null;
+    }
+
+    public getChatByMessageId(messageId: number): MessengerThreadChat {
+        if (!Number.isFinite(messageId) || messageId <= 0) return null;
+
+        for (const group of this._groups) {
+            const chat = group.chats.find(
+                (existingChat) => existingChat.messageId === messageId
+            );
 
             if (chat) return chat;
         }

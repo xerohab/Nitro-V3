@@ -186,6 +186,11 @@ export const RoomToolsWidgetView: FC<{}> = (props) => {
 
     useEffect(() => {
         setHasLikedRoom(false);
+
+        if (!roomSession) return;
+
+        // Preserve the room renderer's normal zoom on every display.
+        // High-DPI / 4K handling belongs in renderer resolution, not room scale.
         updateZoomScale();
     }, [roomSession?.roomId]);
 

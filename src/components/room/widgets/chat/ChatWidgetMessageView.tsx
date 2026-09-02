@@ -43,6 +43,17 @@ export const ChatWidgetMessageView: FC<ChatWidgetMessageViewProps> = ({
         [chat.translatedFormattedText, chat.formattedText, ownUsername, mentionsHighlightOn]
     );
 
+    const giphyId = useMemo(() => {
+        const match = /^\[giphy:([A-Za-z0-9_-]{1,100})\]$/.exec(`${chat.text || ''}`.trim());
+
+        return match ? match[1] : '';
+    }, [chat.text]);
+
+    const giphyUrl = useMemo(
+        () => (giphyId ? `https://media.giphy.com/media/${giphyId}/giphy.gif` : ''),
+        [giphyId]
+    );
+
     const getBubbleWidth = useMemo(() => {
         switch (bubbleWidth) {
             case RoomChatSettings.CHAT_BUBBLE_WIDTH_NORMAL:
@@ -191,10 +202,25 @@ export const ChatWidgetMessageView: FC<ChatWidgetMessageViewProps> = ({
                         showColon={true}
                         username={chat.username}
                     />
-                    {!chat.showTranslation && (
-                        <span className={`${messageClassName} align-middle`} dangerouslySetInnerHTML={{ __html: formattedText }} onClick={onClickChat} />
-                    )}
-                    {chat.showTranslation && (
+                    {giphyId ? (
+                        <div className="swf-room-gif-message" onClick={onClickChat}>
+                            <img
+                                alt="GIF"
+                                draggable={false}
+                                src={giphyUrl}
+                            />
+                            <span className="swf-room-gif-branding">GIPHY</span>
+                        </div>
+                    ) : (
+                        <>
+                            {!chat.showTranslation && (
+                                <span
+                                    className={`${messageClassName} align-middle`}
+                                    dangerouslySetInnerHTML={{ __html: formattedText }}
+                                    onClick={onClickChat}
+                                />
+                            )}
+                            {chat.showTranslation && (
                         <div className="mt-[2px] flex flex-col gap-[2px]" onClick={onClickChat}>
                             <div className="flex items-start gap-1 leading-[1.1]">
                                 <span className="inline-block min-w-[52px] font-bold" style={{ opacity: 0.75 }}>
@@ -209,6 +235,8 @@ export const ChatWidgetMessageView: FC<ChatWidgetMessageViewProps> = ({
                                 <span className={messageClassName} dangerouslySetInnerHTML={{ __html: translatedFormattedText }} />
                             </div>
                         </div>
+                            )}
+                        </>
                     )}
                 </div>
                 {showPointer && (
