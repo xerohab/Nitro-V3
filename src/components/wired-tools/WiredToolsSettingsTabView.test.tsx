@@ -1,0 +1,122 @@
+/* @vitest-environment jsdom */
+
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { ButtonHTMLAttributes, PropsWithChildren } from 'react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+const mocks = vi.hoisted(() => ({
+    config: {} as Record<string, unknown>,
+    showConfirm: vi.fn(),
+    saveRoomSettings: vi.fn(),
+    saveRoomTimezone: vi.fn(),
+    reloadRoomWired: vi.fn(),
+    rollbackRoomWired: vi.fn(),
+    updateAccountPreferences: vi.fn(),
+    roomSettings: {
+        roomId: 7,
+        inspectMask: 1,
+        modifyMask: 2,
+        canInspect: true,
+        canModify: true,
+        canManageSettings: true,
+        isLoaded: true,
+        timezone: 'Europe/Amsterdam'
+    }
+}));
+
+vi.mock('../../api', () => ({
+    GetConfigurationValue: (key: string, fallback: unknown) => (key in mocks.config ? mocks.config[key] : fallback),
+    LocalizeText: (key: string) => key,
+    localizeWithFallback: (key: string, fallback: string) => fallback,
+    normalizeWiredStyle: (value: string) => value,
+    WIRED_STYLE_DEFAULT: 'default',
+    WIRED_STYLE_OPTIONS: ['default'],
+    wiredStyleTitle: (value: string) => value
+}));
+
+vi.mock('../../common', () => ({
+    Button: ({ children, classNames: _classNames, ...props }: PropsWithChildren<ButtonHTMLAttributes<HTMLButtonElement> & { classNames?: string[] }>) => (
+        <button type="button" {...props}>
+            {children}
+        </button>
+    ),
+    Text: ({ children }: PropsWithChildren) => <span>{children}</span>
+}));
+
+vi.mock('../../hooks', () => ({
+    useRoom: () => ({ roomSession: { hotelTimeZone: 'UTC' } }),
+    useNotification: () => ({ showConfirm: mocks.showConfirm }),
+    useWiredTools: () => ({
+        accountPreferences: { showToolbarButton: false, showInspectButton: false, showSystemNotifications: false, wiredStyle: 'default' },
+        roomSettings: mocks.roomSettings,
+        saveRoomSettings: mocks.saveRoomSettings,
+        saveRoomTimezone: mocks.saveRoomTimezone,
+        reloadRoomWired: mocks.reloadRoomWired,
+        rollbackRoomWired: mocks.rollbackRoomWired,
+        updateAccountPreferences: mocks.updateAccountPreferences
+    })
+}));
+
+import { buildTimezoneOptions, WiredToolsSettingsTabView } from './WiredToolsSettingsTabView';
+
+describe('WiredToolsSettingsTabView', () => {
+    beforeEach(() => {
+        for (const key of Object.keys(mocks.config)) delete mocks.config[key];
+        mocks.showConfirm.mockReset();
+        mocks.saveRoomTimezone.mockReset();
+        mocks.reloadRoomWired.mockReset();
+        mocks.rollbackRoomWired.mockReset();
+    });
+
+    afterEach(cleanup);
+
+    it('lists the room zone, the hotel zone and the configured zones once each', () => {
+        expect(buildTimezoneOptions('Europe/Amsterdam', 'UTC', 'UTC, Europe/Amsterdam, America/New_York')).toEqual([
+            'Europe/Amsterdam',
+            'UTC',
+            'America/New_York'
+        ]);
+        expect(buildTimezoneOptions('', 'UTC', '')).toContain('UTC');
+    });
+
+    it('saves a picked timezone through the permissions packet', () => {
+        mocks.config['wired.timezones'] = 'UTC,Europe/Amsterdam,Europe/Berlin';
+        render(<WiredToolsSettingsTabView />);
+
+        const select = screen.getByLabelText('Timezone') as HTMLSelectElement;
+        expect(select.value).toBe('Europe/Amsterdam');
+
+        fireEvent.change(select, { target: { value: 'Europe/Berlin' } });
+
+        expect(mocks.saveRoomTimezone).toHaveBeenCalledWith('Europe/Berlin');
+    });
+
+    it('reload and rollback ask first and then send the room-state action', () => {
+        render(<WiredToolsSettingsTabView />);
+
+        fireEvent.click(screen.getByRole('button', { name: 'Rollback' }));
+        expect(mocks.rollbackRoomWired).not.toHaveBeenCalled();
+        expect(mocks.showConfirm).toHaveBeenCalledTimes(1);
+
+        (mocks.showConfirm.mock.calls[0][1] as () => void)();
+        expect(mocks.rollbackRoomWired).toHaveBeenCalledTimes(1);
+
+        fireEvent.click(screen.getByRole('button', { name: 'Reload' }));
+        (mocks.showConfirm.mock.calls[1][1] as () => void)();
+        expect(mocks.reloadRoomWired).toHaveBeenCalledTimes(1);
+    });
+
+    it('shows the sandbox donation tool only when the hotel enables it', () => {
+        const onOpen = vi.fn();
+        const { unmount } = render(<WiredToolsSettingsTabView onOpenSelfDonation={onOpen} />);
+
+        expect(screen.queryByRole('button', { name: 'Sandbox donation tool' })).toBeNull();
+        unmount();
+
+        mocks.config['wired.selfdonation.enabled'] = true;
+        render(<WiredToolsSettingsTabView onOpenSelfDonation={onOpen} />);
+
+        fireEvent.click(screen.getByRole('button', { name: 'Sandbox donation tool' }));
+        expect(onOpen).toHaveBeenCalledTimes(1);
+    });
+});

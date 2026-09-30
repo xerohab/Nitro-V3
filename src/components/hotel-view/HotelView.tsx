@@ -1,4 +1,4 @@
-import type { IHotelViewLandingScene, IHotelViewLandingSlot } from '@nitrots/nitro-renderer';
+import type { IHotelViewLandingScene, IHotelViewLandingSlot } from '@octane/renderer';
 import {
     CreateLinkEvent,
     GetSessionDataManager,
@@ -8,7 +8,7 @@ import {
     HotelViewLandingSaveComposer,
     HotelViewLandingSaveSceneComposer,
     HotelViewLandingVoteComposer
-} from '@nitrots/nitro-renderer';
+} from '@octane/renderer';
 import { CSSProperties, FC, FormEvent, PointerEvent, useEffect, useRef, useState } from 'react';
 import { GetConfigurationValue, SendMessageComposer } from '../../api';
 import { LayoutAvatarImageView } from '../../common';
@@ -43,7 +43,9 @@ interface HotelViewSlotDrag {
     height: number;
 }
 
-type HotelViewSceneDragTarget = 'left' | 'right' | 'drape' | 'hallOfFame';
+// Left and right edge artwork is permanently pinned to the bottom corners via CSS and
+// cannot be moved, so only the drape and Hall of Fame are draggable scene targets.
+type HotelViewSceneDragTarget = 'drape' | 'hallOfFame';
 
 interface HotelViewSceneDrag {
     target: HotelViewSceneDragTarget;
@@ -414,7 +416,23 @@ export const HotelView: FC = () => {
 
         if (!Number.isFinite(position.x) || !Number.isFinite(position.y) || position.x < 0 || position.y < 0) return undefined;
 
-        return { left: `${position.x}px`, top: `${position.y}px`, right: 'auto', bottom: 'auto', transform: 'none' } as CSSProperties;
+        // Hall of Fame lives inside the fixed 1172x822 stage (uniformly scaled), so its
+        // coordinates are plain design-space pixels.
+        if (target === 'hallOfFame') {
+            return { left: `${position.x}px`, top: `${position.y}px`, right: 'auto', bottom: 'auto', transform: 'none' } as CSSProperties;
+        }
+
+        // The edge artwork is a fixed-size image anchored to the viewport-sized container.
+        // Store it as a fraction of the FREE space (permille, 0-1000): 0 hugs the left/top,
+        // 1000 hugs the right/bottom, 500 centres it. `left: P%` positions relative to the
+        // container while `translate(-P%)` pulls back by the same fraction of the image's
+        // own size, so the two compose into P * (container - image). That keeps a corner
+        // placement pinned to the same corner at any screen size, instead of drifting as a
+        // plain top-left percentage would.
+        const percentX = position.x / 10;
+        const percentY = position.y / 10;
+
+        return { left: `${percentX}%`, top: `${percentY}%`, right: 'auto', bottom: 'auto', transform: `translate(-${percentX}%, -${percentY}%)` } as CSSProperties;
     };
 
     const startSceneDrag = (event: PointerEvent<HTMLButtonElement>, target: HotelViewSceneDragTarget) => {
@@ -451,8 +469,18 @@ export const HotelView: FC = () => {
         const dragScale = sceneDrag.scaled ? scale : 1;
         const rootWidth = sceneDrag.scaled ? HOTEL_VIEW_WIDTH : rootRect.width;
         const rootHeight = sceneDrag.scaled ? HOTEL_VIEW_HEIGHT : rootRect.height;
-        const x = Math.round(Math.max(0, Math.min(rootWidth - sceneDrag.width, ((event.clientX - rootRect.left) / dragScale) - sceneDrag.offsetX)));
-        const y = Math.round(Math.max(0, Math.min(rootHeight - sceneDrag.height, ((event.clientY - rootRect.top) / dragScale) - sceneDrag.offsetY)));
+        const freeWidth = rootWidth - sceneDrag.width;
+        const freeHeight = rootHeight - sceneDrag.height;
+        const pixelX = Math.max(0, Math.min(freeWidth, ((event.clientX - rootRect.left) / dragScale) - sceneDrag.offsetX));
+        const pixelY = Math.max(0, Math.min(freeHeight, ((event.clientY - rootRect.top) / dragScale) - sceneDrag.offsetY));
+
+        // Hall of Fame is in the fixed design space (scale-invariant) so it keeps pixel
+        // coordinates. The container-anchored edges are stored as a fraction of the free
+        // space in permille (0-1000) — pixelX / (container - image) — so a corner or centre
+        // placement lands in the same relative spot when reopened at a different screen size
+        // (see getScenePositionStyle for how it is applied).
+        const x = sceneDrag.scaled ? Math.round(pixelX) : Math.round(freeWidth > 0 ? (pixelX / freeWidth) * 1000 : 0);
+        const y = sceneDrag.scaled ? Math.round(pixelY) : Math.round(freeHeight > 0 ? (pixelY / freeHeight) * 1000 : 0);
         const position = { target: sceneDrag.target, x, y };
 
         sceneDragPositionRef.current = position;
@@ -482,11 +510,11 @@ export const HotelView: FC = () => {
     };
 
     return (
-        <div ref={containerRef} className="nitro-hotel-view block fixed w-full h-[calc(100%_-_50px)]" style={containerStyle}>
+        <div ref={containerRef} className="octane-hotel-view block fixed w-full h-[calc(100%_-_50px)]" style={containerStyle}>
             {scene.leftUrl
-                ? <div className="hotelview-edge hotelview-edge-left" style={getScenePositionStyle('left')}><img src={resolveImageUrl(scene.leftUrl, imageLibraryUrl, assetUrl)} alt="" /><LayoutAvatarImageView classNames={['hotelview-avatar']} figure={GetSessionDataManager().figure} gender={GetSessionDataManager().gender} direction={2} />{landingData.canEdit && <button type="button" className="hotelview-scene-drag-handle" onPointerDown={(event) => startSceneDrag(event, 'left')} onPointerMove={moveSceneDrag} onPointerUp={finishSceneDrag} onPointerCancel={finishSceneDrag} title="Drag left artwork">↕</button>}</div>
+                ? <div className="hotelview-edge hotelview-edge-left"><img src={resolveImageUrl(scene.leftUrl, imageLibraryUrl, assetUrl)} alt="" /><LayoutAvatarImageView classNames={['hotelview-avatar']} figure={GetSessionDataManager().figure} gender={GetSessionDataManager().gender} direction={2} /></div>
                 : <LayoutAvatarImageView classNames={['hotelview-avatar hotelview-avatar-fallback']} figure={GetSessionDataManager().figure} gender={GetSessionDataManager().gender} direction={2} />}
-            {scene.rightUrl && <div className="hotelview-edge hotelview-edge-right" style={getScenePositionStyle('right')}><img src={resolveImageUrl(scene.rightUrl, imageLibraryUrl, assetUrl)} alt="" />{landingData.canEdit && <button type="button" className="hotelview-scene-drag-handle" onPointerDown={(event) => startSceneDrag(event, 'right')} onPointerMove={moveSceneDrag} onPointerUp={finishSceneDrag} onPointerCancel={finishSceneDrag} title="Drag right artwork">↕</button>}</div>}
+            {scene.rightUrl && <div className="hotelview-edge hotelview-edge-right"><img src={resolveImageUrl(scene.rightUrl, imageLibraryUrl, assetUrl)} alt="" /></div>}
             {scene.drapeUrl && <div className="hotelview-edge hotelview-edge-drape" style={getScenePositionStyle('drape')}><img src={resolveImageUrl(scene.drapeUrl, imageLibraryUrl, assetUrl)} alt="" />{landingData.canEdit && <button type="button" className="hotelview-scene-drag-handle" onPointerDown={(event) => startSceneDrag(event, 'drape')} onPointerMove={moveSceneDrag} onPointerUp={finishSceneDrag} onPointerCancel={finishSceneDrag} title="Drag drape">↕</button>}</div>}
             <div className="hotelview-stage" style={stageStyle}>
                 <div ref={hotelViewRef} className="hotelview">

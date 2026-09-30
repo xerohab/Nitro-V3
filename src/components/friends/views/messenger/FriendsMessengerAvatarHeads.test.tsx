@@ -1,10 +1,11 @@
 /* @vitest-environment jsdom */
 
-import { AddLinkEventTracker, GetAvatarRenderManager, GetSessionDataManager } from '@nitrots/nitro-renderer';
+import { AddLinkEventTracker, GetAvatarRenderManager, GetSessionDataManager } from '@octane/renderer';
 import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MessengerFriend, MessengerThread } from '../../../../api';
 import { useFriends, useHelp, useMessenger, useTranslation } from '../../../../hooks';
+import { useHabbiconCatalog } from '../../../../hooks/habbicons/useHabbiconCatalog';
 import { FriendsMessengerView } from './FriendsMessengerView';
 import { FriendsMessengerThreadGroup } from './messenger-thread/FriendsMessengerThreadGroup';
 
@@ -15,7 +16,14 @@ vi.mock('../../../../hooks', () => ({
     useTranslation: vi.fn()
 }));
 
-vi.mock('../../../../common/layout/avatarImageCrop', () => ({
+// Avatar tests control the catalogue dependency just like the messenger and
+// friends hooks; the real shared hook requires the application registry.
+vi.mock('../../../../hooks/habbicons/useHabbiconCatalog', () => ({
+    useHabbiconCatalog: vi.fn()
+}));
+
+vi.mock('../../../../common/layout/avatarImageCrop', async (importOriginal) => ({
+    ...(await importOriginal<typeof import('../../../../common/layout/avatarImageCrop')>()),
     cropTransparentImageUrl: vi.fn(async () => 'data:image/png;base64,cropped')
 }));
 
@@ -51,6 +59,35 @@ describe('Messenger avatar heads', () => {
     const friend = makeFriend();
 
     beforeEach(() => {
+        vi.mocked(useHabbiconCatalog).mockReturnValue({
+            enabled: false,
+            baseUrl: '',
+            entries: [],
+            ownedEntries: [],
+            sets: [],
+            ownedSets: [],
+            recentIds: [],
+            favoriteIds: [],
+            lastUsedCollectionId: 0,
+            loaded: false,
+            assetError: false,
+            bookVisible: false,
+            setBookVisible: vi.fn(),
+            purchase: null,
+            setPurchase: vi.fn(),
+            pending: null,
+            error: '',
+            refresh: vi.fn(),
+            retry: vi.fn(),
+            unseenCount: 0,
+            isUnseen: () => false,
+            clearUnseen: vi.fn(),
+            getInfo: vi.fn(),
+            toggleFavorite: vi.fn(),
+            claim: vi.fn(),
+            buy: vi.fn()
+        });
+
         vi.mocked(AddLinkEventTracker).mockClear();
         vi.mocked(GetAvatarRenderManager).mockReturnValue({
             createAvatarImage: () => ({

@@ -1,4 +1,4 @@
-import { AchievementData } from '@nitrots/nitro-renderer';
+import { AchievementData } from '@octane/renderer';
 import { FC } from 'react';
 import { AchievementUtilities, LocalizeBadgeDescription, LocalizeBadgeName, LocalizeText } from '../../api';
 import { LayoutCurrencyIcon } from '../../common';
@@ -15,7 +15,8 @@ export const AchievementDetailsView: FC<AchievementDetailsViewProps> = (props) =
     if (!achievement) return null;
 
     const badgeCode = AchievementUtilities.getAchievementBadgeCode(achievement);
-    const showReward = !achievement.finalLevel && achievement.levelRewardPointType >= 0 && achievement.levelRewardPoints > 0;
+    // Polaris also supports credit rewards with currency type -1.
+    const showReward = !achievement.finalLevel && achievement.levelRewardPointType >= -1 && achievement.levelRewardPoints > 0;
     const showProgress = achievement.displayMethod !== AchievementData.DISPLAY_METHOD_NEVER_SHOW_PROGRESS && !achievement.finalLevel;
 
     return (
@@ -45,14 +46,8 @@ export const AchievementDetailsView: FC<AchievementDetailsViewProps> = (props) =
                     width={180}
                     progress={achievement.currentPoints}
                     maxProgress={achievement.scoreLimit}
-                    text={LocalizeText(
-                        'achievements.details.progress',
-                        ['progress', 'limit'],
-                        [
-                            (achievement.currentPoints + achievement.scoreAtStartOfLevel).toString(),
-                            (achievement.scoreLimit + achievement.scoreAtStartOfLevel).toString()
-                        ]
-                    )}
+                    key={`${achievement.achievementId}:${achievement.level}:${achievement.scoreLimit}`}
+                    scoreAtStartOfLevel={achievement.scoreAtStartOfLevel}
                 />
             )}
         </div>

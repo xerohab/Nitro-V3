@@ -112,4 +112,46 @@ export class WiredActionLayoutCode {
     public static CONTRACT_TRADE: number = 112;
     public static CUSTOM_CONTRACT: number = 113;
     public static CHANGE_OPACITY: number = 114;
+    public static WALK_TO_FURNI: number = 115;
+    public static USER_TARGET: number = 116;
+    public static MOVE_USER_TILES: number = 117;
+    public static EFFECT_AMOUNT: number = 118;
+    public static EFFECT_BADGE: number = 119;
+    public static EFFECT_TAG: number = 120;
+    public static EFFECT_ID: number = 121;
+    public static EFFECT_MESSAGE: number = 122;
+    public static EFFECT_TEXT: number = 123;
+    public static ALL_USERS_LEAVE_TEAM: number = 124;
+    public static OVERRIDE_HEIGHT: number = 125;
+
+    public static MODIFY_ARRAY: number = 126;
+    public static ARRAY_CAPTURE_VARIABLE_EXTRA: number = 127;
+
+    public static VARIABLE_WEB_API_EXTRA: number = 128;
+
+    public static CLICK_SETTINGS: number = 129;
+
+    public static VARIABLE_FX_HEALTH_POINTS_EXTRA: number = 130;
+    public static VARIABLE_FX_PROGRESS_BAR_EXTRA: number = 131;
+    public static VARIABLE_FX_LEVELLING_PROGRESS_EXTRA: number = 132;
+    public static VARIABLE_FX_STATUS_BAR_EXTRA: number = 133;
+    public static VARIABLE_FX_BOSS_BAR_EXTRA: number = 134;
+    public static VARIABLE_FX_NUMBER_DISPLAY_EXTRA: number = 135;
+
+    public static PROJECTILE_EXTRA: number = 136;
+    /** Habbo's "write to logs" (wf_act_log / wf_act_neg_log): a message at a log level into the room log. */
+    public static WRITE_TO_LOGS: number = 137;
+    /** Habbo's "teleport to room": a typed room, or the room a picked room link or teleporter leads to. */
+    public static TELEPORT_TO_ROOM: number = 138;
+
+    /** Habbo's achievement and reward-track boxes; hotel-wide rewards, gated by the hotel. */
+    public static PROGRESS_ACHIEVEMENT: number = 150;
+    public static ACHIEVEMENT_ENABLER_EXTRA: number = 151;
+    public static PROGRESS_REWARD_TRACK: number = 152;
+    public static RESET_REWARD_TRACK: number = 153;
+
+    /** Global placeholder add-on (wf_xtra_text_output_global); the upstream addon code. */
+    public static GLOBAL_PLACEHOLDER_EXTRA: number = 2000;
+    /** Daily task variable box (wf_var_daily_task); upstream variable code 8 in the same band. */
+    public static DAILY_TASK_EXTRA: number = 2008;
 }

@@ -1,4 +1,4 @@
-import { AddLinkEventTracker, CreateMessengerGroupComposer, FollowFriendMessageComposer, GetSessionDataManager, ILinkEventTracker, RemoveLinkEventTracker } from '@nitrots/nitro-renderer';
+import { AddLinkEventTracker, CreateMessengerGroupComposer, FollowFriendMessageComposer, GetSessionDataManager, ILinkEventTracker, RemoveLinkEventTracker } from '@octane/renderer';
 import { FC, KeyboardEvent, useEffect, useRef, useState } from 'react';
 import {
     FaAddressBook,
@@ -15,7 +15,8 @@ import {
     FaUser,
     FaWallet
 } from 'react-icons/fa';
-import { GetUserProfile, LocalizeText, ReportType, SendMessageComposer } from '../../../../api';
+import { GetUserProfile, LocalizeText, ReportType, SendMessageComposer, useHabbiconCatalog } from '../../../../api';
+import { HabbiconsDmIcon } from '../../../../assets/images/habbicons';
 import {
     getPhoneState,
     markPhoneNotificationRead,
@@ -38,6 +39,7 @@ import { isStaffChatIdentity } from '../../staffChatIdentity';
 import { StaffChatFrankIconView } from '../../StaffChatFrankIconView';
 import { resolveAvatarFigure } from '../friends-list/resolveAvatarFigure';
 import './FriendsMessengerView.css';
+import { FriendsMessengerHabbiconPickerView } from './FriendsMessengerHabbiconPickerView';
 import { FriendsMessengerThreadView } from './messenger-thread/FriendsMessengerThreadView';
 
 const MESSENGER_VISIBLE_AVATARS = 7;
@@ -60,6 +62,8 @@ export const FriendsMessengerView: FC<{}> = (props) => {
     const [replyingToMessageId, setReplyingToMessageId] = useState<number>(0);
     const [replyingToName, setReplyingToName] = useState<string>('');
     const [replyingToText, setReplyingToText] = useState<string>('');
+    const [isHabbiconPickerVisible, setIsHabbiconPickerVisible] = useState(false);
+    const habbiconCatalog = useHabbiconCatalog();
     const [avatarStartIndex, setAvatarStartIndex] = useState(0);
     const [groupCreatorVisible, setGroupCreatorVisible] = useState(false);
     const [groupName, setGroupName] = useState('');
@@ -88,6 +92,7 @@ export const FriendsMessengerView: FC<{}> = (props) => {
         activeThread = null,
         getMessageThread = null,
         sendMessage = null,
+        sendHabbiconMessage,
         setActiveThreadId = null,
         closeThread = null,
         typingUserIds = [],
@@ -263,6 +268,16 @@ export const FriendsMessengerView: FC<{}> = (props) => {
 
         clearReply();
     };
+
+    const sendHabbicon = (habbiconId: number, keepOpen = false) => {
+        if (!activeThread || habbiconId <= 0) return;
+
+        stopTyping();
+        sendHabbiconMessage(activeThread, habbiconId);
+
+        if (!keepOpen) setIsHabbiconPickerVisible(false);
+    };
+
 
     useEffect(() => {
         const linkTracker: ILinkEventTracker = {
@@ -2809,6 +2824,15 @@ export const FriendsMessengerView: FC<{}> = (props) => {
                             <div className="phone-composer-media">
                                 <ChatInputEmojiSelectorView addChatEmoji={addMessageEmoji} />
                                 <ChatInputGifSelectorView sendGif={sendGif} />
+
+                                <button
+                                    type="button"
+                                    className="messenger-btn habbicon"
+                                    aria-label={LocalizeText('messenger.habbicons.tooltip')}
+                                    onClick={() => setIsHabbiconPickerVisible((value) => !value)}
+                                >
+                                    <img alt="" src={HabbiconsDmIcon} />
+                                </button>
                             </div>
 
                             <input
@@ -2828,6 +2852,17 @@ export const FriendsMessengerView: FC<{}> = (props) => {
                                 {LocalizeText('widgets.chatinput.say')}
                             </button>
                         </div>
+
+                        {isHabbiconPickerVisible && (
+                            <FriendsMessengerHabbiconPickerView
+                                onClose={() => setIsHabbiconPickerVisible(false)}
+                                onOpenHub={() => {
+                                    setIsHabbiconPickerVisible(false);
+                                    habbiconCatalog.setBookVisible(true);
+                                }}
+                                onSelect={sendHabbicon}
+                            />
+                        )}
                     </>
                 )}
             </div>

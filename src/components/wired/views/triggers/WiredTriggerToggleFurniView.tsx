@@ -1,5 +1,5 @@
 import { FC, useEffect, useState } from 'react';
-import { LocalizeText, WiredFurniType } from '../../../../api';
+import { localizeWithFallback, LocalizeText, WiredFurniType } from '../../../../api';
 import { Text } from '../../../../common';
 import { useWired } from '../../../../hooks';
 import { WiredSourceOption, WiredSourcesSelector } from '../WiredSourcesSelector';
@@ -12,7 +12,12 @@ const FURNI_SOURCE_OPTIONS: WiredSourceOption[] = [
 
 const normalizeFurniSource = (value: number) => (FURNI_SOURCE_OPTIONS.some((option) => option.value === value) ? value : 100);
 
-export const WiredTriggerToggleFurniView: FC<{}> = () => {
+interface WiredTriggerToggleFurniViewProps {
+    /** The state-change box: it also fires when a wired effect sets the state, not only on a click. */
+    includesWiredChanges?: boolean;
+}
+
+export const WiredTriggerToggleFurniView: FC<WiredTriggerToggleFurniViewProps> = ({ includesWiredChanges = false }) => {
     const [triggerMode, setTriggerMode] = useState(0);
     const [furniSource, setFurniSource] = useState(100);
     const { trigger = null, setIntParams = null } = useWired();
@@ -31,6 +36,9 @@ export const WiredTriggerToggleFurniView: FC<{}> = () => {
             save={save}
             footer={<WiredSourcesSelector showFurni={true} furniSource={furniSource} furniSources={FURNI_SOURCE_OPTIONS} onChangeFurni={setFurniSource} />}
         >
+            {includesWiredChanges && (
+                <Text small>{localizeWithFallback('wiredfurni.params.state_change.info', 'Fires on every state change of the furni, including changes made by wired.')}</Text>
+            )}
             <div className="flex flex-col gap-1">
                 <Text bold>{LocalizeText('wiredfurni.params.condition.state')}</Text>
                 <div className="flex items-center gap-1">

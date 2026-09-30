@@ -1,6 +1,6 @@
 /* @vitest-environment jsdom */
 
-import { GetAvatarRenderManager } from '@nitrots/nitro-renderer';
+import { GetAvatarRenderManager } from '@octane/renderer';
 import { cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MessengerFriend, OpenMessengerChat } from '../../../../../api';
@@ -16,7 +16,8 @@ vi.mock('../../../../../api', async (importOriginal) => ({
     OpenMessengerChat: vi.fn()
 }));
 
-vi.mock('../../../../../common/layout/avatarImageCrop', () => ({
+vi.mock('../../../../../common/layout/avatarImageCrop', async (importOriginal) => ({
+    ...(await importOriginal<typeof import('../../../../../common/layout/avatarImageCrop')>()),
     cropTransparentImageUrl: vi.fn(async () => 'data:image/png;base64,cropped')
 }));
 

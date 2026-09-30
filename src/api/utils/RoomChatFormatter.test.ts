@@ -94,3 +94,16 @@ describe('RoomChatFormatter — legitimate markup is preserved', () => {
         expect(div.querySelectorAll('br').length).toBe(1);
     });
 });
+
+describe('RoomChatFormatter — emoji', () => {
+    it('keeps an emoji intact after an accented letter', () => {
+        const div = parse('café🙂');
+        expect(div.textContent).toBe('café🙂');
+    });
+
+    it('keeps typed numeric entities as text, never as markup', () => {
+        const div = parse('&#60;b&#62;bold&#60;/b&#62;');
+        expect(div.querySelector('b')).toBeNull();
+        expect(div.textContent).toBe('<b>bold</b>');
+    });
+});

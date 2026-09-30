@@ -18,6 +18,12 @@
     "furni.descriptions.enabled": true,
     "furni.location.enabled": true,
     "furni.location.require.access": true,
+	"furni.plant.classnames": [
+        "jungle_c16_flowera1", "jungle_c16_flowera2", "jungle_c16_flowera3",
+        "jungle_c16_flowerb1", "jungle_c16_flowerb2", "jungle_c16_flowerb3",
+        "jungle_c16_flowerc1", "jungle_c16_flowerc2", "jungle_c16_flowerc3",
+        "jungle_c16_flowerd1", "jungle_c16_flowerd2", "jungle_c16_flowerd3"
+    ],
     "motto.max.length": 38,
     "bot.name.max.length": 15,
     "pet.package.name.max.length": 15,
@@ -26,6 +32,9 @@
     "wired.action.chat.max.length": 100,
     "wired.action.kick.from.room.max.length": 100,
     "wired.action.mute.user.max.length": 100,
+    "wired.timezones": "",
+    "wired.selfdonation.enabled": false,
+    "wired.selfdonation.max.amount": 500,
     "game.center.enabled": false,
     "hotel_alert_animated": false,
     "radio_ui.enabled": false,
@@ -276,6 +285,7 @@
     "achievements.unseen.ignored": [
         "ACH_AllTimeHotelPresence"
     ],
+    "avatareditor.show.unowned.sellables": false,
     "avatareditor.show.clubitems.dimmed": true,
     "avatareditor.show.clubitems.first": true,
     "chat.history.max.items": 100,
@@ -1431,6 +1441,14 @@
             "title": ""
         },
         "notification.feed.enabled": false,
+        "notification.hotel.event": {
+            "image": "${image.library.url}web_promo_small/spromo_Games_Bundle.png",
+            "sound": "messenger_new_thread"
+        },
+        "notification.hotel.event.ended": {
+            "image": "${image.library.url}web_promo_small/spromo_Games_Bundle.png",
+            "sound": "messenger_new_thread"
+        },
         "notification.floorplan_editor.error": {
             "display": "POP_UP"
         },

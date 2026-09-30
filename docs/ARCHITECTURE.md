@@ -22,7 +22,7 @@
 
 ## Where the project stands today
 
-The codebase is a React 19.2 client for the Nitro renderer (Habbo-style hotel
+The codebase is a React 19.2 client for the Octane renderer (Habbo-style hotel
 client). Most of the architectural pressure comes from the renderer's
 **event-bus + composer/parser** model: the UI talks to the server by sending
 composers and listening to incoming message events. Almost every piece of
@@ -56,7 +56,7 @@ easier.
 **Problem.** Pattern repeated hundreds of times:
 ```ts
 const [foo, setFoo] = useState(initial);
-useNitroEvent(SomeEvent, e => setFoo(e.payload));
+useOctaneEvent(SomeEvent, e => setFoo(e.payload));
 ```
 or with the message channel:
 ```ts
@@ -71,10 +71,10 @@ useMessageEvent(SomeParser, e => {
 The shape of the code obscures the intent ("`foo` IS the latest event payload")
 and makes the lint think we're doing imperative setState in an effect.
 
-**Solution.** Two thin hooks (`src/hooks/events/useNitroEventState.ts`
+**Solution.** Two thin hooks (`src/hooks/events/useOctaneEventState.ts`
 and `useMessageEventState.ts`):
 ```ts
-const foo = useNitroEventState(SomeEvent, e => e.payload, initial);
+const foo = useOctaneEventState(SomeEvent, e => e.payload, initial);
 const data = useMessageEventState(SomeParser, e => e.getParser()?.field ?? null, null);
 ```
 
@@ -93,7 +93,7 @@ updates, conditional filters, or state-machine semantics that lose
 information when forced into a single selector.
 
 **Companions** (all implemented in `src/hooks/events/`):
-- `useNitroEventReducer<S, T>(types, reducer, initial)` — multiple event
+- `useOctaneEventReducer<S, T>(types, reducer, initial)` — multiple event
   types collapsing into one owned state slice (analogous to
   `useReducer` but driven by renderer events).
 - `useMessageEventReducer<S, T>(eventTypes, reducer, initial)` — same
@@ -122,7 +122,7 @@ information when forced into a single selector.
   `.github/workflows/ci.yml`.
 
 For state owned outside the listener (the `useState` + `setState(prev =>
-applyX(prev, event))` pattern), keep using `useNitroEvent` /
+applyX(prev, event))` pattern), keep using `useOctaneEvent` /
 `useMessageEvent` and extract the reducer as a pure function for
 testability. See `src/hooks/inventory/useInventoryFurni.reducers.ts` and
 `src/hooks/rooms/widgets/avatarInfo.reducers.ts` for the convention.
@@ -150,14 +150,14 @@ multiple times if multiple components mount it.
 (`@tanstack/react-query` is in the same family as `@tanstack/react-virtual`
 which is already a dependency):
 ```ts
-const { data, isLoading } = useNitroQuery({
+const { data, isLoading } = useOctaneQuery({
     request: () => new GetXComposer(),
     parser: YParser,
     select: e => e.getParser().data,
 });
 ```
 
-**Status.** Adapter prototype written (`src/api/nitro-query/createNitroQuery.ts`).
+**Status.** Adapter prototype written (`src/api/octane-query/createOctaneQuery.ts`).
 Not wired up because `@tanstack/react-query` is **not yet installed** —
 deliberately left as a `yarn add` step the team can approve.
 
@@ -236,13 +236,13 @@ useCatalogUiState()   // ui state, returns { selectedNode, setSelectedNode, filt
 useCatalogActions()   // imperative actions, returns { purchase, gift, openOffer }
 ```
 
-Inside, `useCatalogData` uses `useNitroQuery` (#2). `useCatalogUiState` uses
+Inside, `useCatalogData` uses `useOctaneQuery` (#2). `useCatalogUiState` uses
 a Zustand slice (#5). `useCatalogActions` is a stateless export — just
 functions that compose composers.
 
 **Status.** Pilot done on `useDoorbellWidget`:
 - `src/hooks/rooms/widgets/useDoorbellState.ts` — the users list,
-  derived from three events using a `useNitroEventReducer`-like pattern.
+  derived from three events using a `useOctaneEventReducer`-like pattern.
 - `src/hooks/rooms/widgets/useDoorbellActions.ts` — `answer(name, flag)`.
 - `src/hooks/rooms/widgets/useDoorbellWidget.ts` kept as a deprecated
   shim that composes the two so existing consumers don't break.
@@ -252,7 +252,7 @@ the same one we want to apply to `useCatalog`.
 
 **Migration order suggested.** Largest pain first, moving down:
 1. `useCatalog` (~1100 LOC) — but only after #2 is enabled (server fetches
-   collapse to a few `useNitroQuery` calls, removing 60% of the file).
+   collapse to a few `useOctaneQuery` calls, removing 60% of the file).
 2. `useChatInputWidget` (~500 LOC)
 3. `useWiredTools` (~600 LOC)
 4. `useInventoryFurni` (~300 LOC)
@@ -291,7 +291,7 @@ const activeTab = useWiredToolsStore(s => s.activeTab);
 This eliminates the `let isCreatingRoom = false` module-level pattern and
 makes the state ispezionable in dev tools.
 
-**Status.** Skeleton written (`src/state/createNitroStore.ts`), not yet
+**Status.** Skeleton written (`src/state/createOctaneStore.ts`), not yet
 adopted — `zustand` is not yet installed. Same reason as #2: deliberately
 a follow-up `yarn add` step.
 
@@ -314,14 +314,14 @@ fine as-is. Zustand is for *application* state, not *configuration* state.
 room (e.g. malformed pet data in `InfoStandWidgetFurniView`) currently
 takes down the whole UI.
 
-**Solution.** Wrap each widget root in `<ErrorBoundary fallback={null} onError={NitroLogger.error}>`.
+**Solution.** Wrap each widget root in `<ErrorBoundary fallback={null} onError={OctaneLogger.error}>`.
 Implementation lives at `src/common/error-boundary/WidgetErrorBoundary.tsx`.
 
 **Status.** Implemented + applied to `RoomWidgetsView` as the umbrella for
 all in-room widgets, **plus** a per-widget pass that wraps each of the 13
 direct children of `RoomWidgetsView` and each of the 20 sub-widgets in
 `FurnitureWidgetsView`. A crash in any single widget now silently logs
-through `NitroLogger` and renders `null` for that widget only — its
+through `OctaneLogger` and renders `null` for that widget only — its
 siblings keep rendering. Each boundary carries a `name` prop matching
 the widget so the log line identifies the culprit.
 
@@ -357,27 +357,27 @@ The current branch (**`feat/react19-modernization`**, PR #2) has applied:
   `useEffectEvent`).
 
 ### Patterns + adoption (proposals #1, #2, #4, #5)
-- **`useNitroEventState` / `useMessageEventState` + companions** (proposal #1)
+- **`useOctaneEventState` / `useMessageEventState` + companions** (proposal #1)
   — adapters in `src/hooks/events/`. Selectors are held in a
   `useLayoutEffect`-refreshed ref (Dan Abramov's use-event-callback
   pattern) so the listener stays mounted across renders.
   Companions for the multi-event → single state-slice case:
-  `useNitroEventReducer`, `useMessageEventReducer`, plus
+  `useOctaneEventReducer`, `useMessageEventReducer`, plus
   `useExternalSnapshot` (a typed wrapper of `useSyncExternalStore` for the
   renderer's `EventDispatcher.subscribe()` + `getXxxSnapshot()` getters
-  added in `Nitro_Render_V3` 2.1.0).
+  added in `Octane_Render_V3` 2.1.0).
   Pilots: `OfferView` (single-event), `useAvatarInfoWidget` (3 listeners
   for figure/badges/group merged via pure reducers — moved out of
   `InfoStandWidgetUserView`, killing 3 `CloneObject` calls), and
   `useInventoryFurni` (4 message listeners + fragment buffer refactored
   to pure reducers; the module-level `furniMsgFragments` is now a
   `useRef` and the dead `FurniturePostItPlacedEvent` handler dropped).
-- **`useNitroQuery`** (proposal #2) — **enabled**. `@tanstack/react-query` +
+- **`useOctaneQuery`** (proposal #2) — **enabled**. `@tanstack/react-query` +
   devtools installed; `QueryClientProvider` mounted in `src/index.tsx`.
-  Adapter at `src/api/nitro-query/createNitroQuery.ts` with `select`,
+  Adapter at `src/api/octane-query/createOctaneQuery.ts` with `select`,
   `accept` (correlation-key filter), `timeoutMs`, `staleTime`, plus a
-  lower-level `awaitNitroResponse()` for imperative use. Companion at
-  `src/api/nitro-query/useNitroEventInvalidator.ts` invalidates a slot
+  lower-level `awaitOctaneResponse()` for imperative use. Companion at
+  `src/api/octane-query/useOctaneEventInvalidator.ts` invalidates a slot
   whenever the server pushes the matching event unprompted — required
   for queries whose data the server refreshes outside the request cycle
   (e.g. ClubGiftInfoEvent after a gift claim). Pilots / sites:
@@ -395,7 +395,7 @@ The current branch (**`feat/react19-modernization`**, PR #2) has applied:
       filter on parser.productCode
     - `useMarketplaceConfiguration` — lifts a self-fetch out of
       MarketplacePostOfferView
-    - `useClubGifts` — paired with `useNitroEventInvalidator` for the
+    - `useClubGifts` — paired with `useOctaneEventInvalidator` for the
       server-push-after-SelectClubGift case
 - **`ICatalogOptions` deleted** — useCatalog used to expose a
   `catalogOptions` bag where multiple components stuffed unrelated
@@ -446,7 +446,7 @@ The current branch (**`feat/react19-modernization`**, PR #2) has applied:
     - **notification**: `useNotificationStore` (internal singleton) +
       `useNotificationState` (queue arrays for the renderer view) +
       `useNotificationActions` (8 entry points: simpleAlert,
-      showNitroAlert, showTradeAlert, showConfirm, showSingleBubble,
+      showOctaneAlert, showTradeAlert, showConfirm, showSingleBubble,
       closeAlert, closeBubbleAlert, closeConfirm) + shim. The ~30
       message-event listeners and 5 state slices stay in the singleton.
       Used by ~44 consumers, most of which only need one action.
@@ -456,7 +456,7 @@ The current branch (**`feat/react19-modernization`**, PR #2) has applied:
       (requestFriend, requestResponse, followFriend, updateRelationship)
       + shim. 16 consumers.
 - **Zustand** (proposal #5) — **enabled**. `zustand` installed; factory at
-  `src/state/createNitroStore.ts`. First adoption: the `let isCreatingRoom`
+  `src/state/createOctaneStore.ts`. First adoption: the `let isCreatingRoom`
   / `createRoomTimeout` module-level pair in `NavigatorRoomCreatorView`
   replaced by `useRoomCreatorStore` (timer lives in the store closure,
   survives StrictMode double-mount).
@@ -474,16 +474,83 @@ The current branch (**`feat/react19-modernization`**, PR #2) has applied:
   dropped.
 - Main view: **4493 → 3544 lines** (−21%).
 
-### `useCatalog` decomposition (in progress)
+### `useCatalog` decomposition (done)
 
-The 1100-line god-hook owns the catalog page tree, current page,
-offer selection, and a long tail of secondary fetches. Decomposition
-strategy from ARCHITECTURE.md proposal #4 step 1: lift the
-session-stable read-only fetches to TanStack queries first, then
-split the remaining state ownership into `useCatalogData` /
-`useCatalogUiState` / `useCatalogActions`.
+The 1100-line god-hook owning the catalog page tree, current page,
+offer selection, and a long tail of secondary fetches has been
+decomposed along the lines proposed in ARCHITECTURE.md proposal #4:
+the index and the pages moved to TanStack queries, the remaining UI
+state moved to a Zustand store, side effects moved to a dedicated
+headless hook, and the two internal request coordinators that used
+to paper over the lack of a selector were deleted outright.
 
-Status after this round of work:
+- **Store** — `src/hooks/catalog/catalogStore.ts` holds the UI-owned
+  slice: `isVisible`, `pageId`, `previousPageId`, `currentType`,
+  `activeNodes`, `navigationHidden`, `purchaseOptions`,
+  `catalogPlaceMultipleObjects`, `pendingOfferId`, `pageOverride`
+  (search/admin override of the page shown independent of `pageId`)
+  and their actions, including `consumePendingOffer` and
+  `setSearchResult`.
+- **Queries** — `src/hooks/catalog/useCatalogQueries.ts` owns the
+  index and the pages as TanStack queries:
+    - `useCatalogIndexQuery(type, enabled)` — key
+      `['octane', 'catalog', 'index', type]` (`type` is the catalog
+      type, `NORMAL` or `BUILDERS_CLUB`), `staleTime: Infinity` (the
+      tree is only ever invalidated explicitly), prefetchable idle via
+      `prefetchCatalogIndex`. A publish or an admin edit *invalidates*
+      the index and the pages (`invalidateCatalogIndex` /
+      `invalidateCatalogPages` / `invalidateCatalogPage`) so they
+      refetch on next use; only the authenticated → unauthenticated
+      transition *drops* the cache outright, via `dropCatalogCache`.
+    - `useCatalogPageQuery(type, pageId, enabled)` — key
+      `['octane', 'catalog', 'page', type, pageId]`, `staleTime: 30_000`,
+      `keepPreviousData` so switching pages renders the cached page
+      immediately instead of a loading state, a 10 s request timeout
+      surfaced as `catalogLoadError` with `retryCurrentPage`, and
+      invalidation on purchase / sold-out / admin reorder.
+    - Cache helpers (`cloneCachedCatalogPages`, `readCatalogIndex`,
+      `selectCatalogIndex`, `selectCatalogPage`,
+      `invalidateCatalogIndex`, `invalidateCatalogPage(s)`,
+      `refetchCatalogPage`) are exported for the effects hook and for
+      tests.
+- **Effects** — `src/hooks/catalog/useCatalogEffects.ts` is the single
+  headless hook mounted once via `CatalogEffectsHost` in
+  `src/components/catalog/CatalogView.tsx`. It owns every
+  subscription that used to live inside the god-hook: server message
+  listeners (page/index updates, purchase, sold-out), the
+  `catalog/open/<pageId>` deep-link consumption
+  (`pendingOfferId`/`consumePendingOffer`), the mover/previewer flow,
+  and the localization-refresh listener (`bumpLocalizationVersion`,
+  re-clones the cached pages without a network round trip). It does
+  **not** own an admin listener: `CatalogAdminContext` calls
+  `refreshIndex()` / `refreshCurrentPage()` from `useCatalogActions`
+  directly on a successful admin edit, rather than dispatching a
+  `window` event for the effects hook to pick up.
+- **Filters** — `src/hooks/catalog/useCatalog.ts` is now a short file
+  exposing three filters, each reading its slice of the store with
+  `useShallow` so a consumer of one slice does not re-render on a
+  change to another:
+    - `useCatalogData()` — server-driven read-only slice, sourced from
+      the queries (`rootNode`, `offersToNodes`, `currentPage`,
+      `currentOffer`, `frontPageItems`, `searchResult`,
+      `roomPreviewer`, `isBusy`, `catalogLoadError`,
+      `catalogLocalizationVersion`, Builders Club counters + timers).
+    - `useCatalogUiState()` — the store's UI slice + writers.
+    - `useCatalogActions()` — imperative operations
+      (`openCatalogByType`, `toggleCatalogByType`, `activateNode`,
+      `openPageBy{Id,Name,OfferId}`, `requestOfferToMover`,
+      `selectCatalogOffer`, `getNodeBy{Id,Name}`,
+      `getBuilderFurniPlaceableStatus`, `retryCurrentPage`).
+- **`useSharedHook` is no longer used by the catalog** — the shared
+  Zustand-vanilla-store + registry pattern used for the coordinator
+  era has been replaced end to end by `catalogStore.ts` +
+  `useCatalogQueries.ts` + `useCatalogEffects.ts`.
+- **The two request coordinators were deleted**:
+  `createCatalogIndexRequestCoordinator`,
+  `createCatalogIndexPrewarmController` and
+  `createCatalogPageRequestCorrelation` (and their three `describe`
+  blocks) no longer exist; the queries' own cache/staleness rules and
+  the effects hook's listeners replace what they worked around.
 
 | Fetch | Migrated to |
 |---|---|
@@ -492,44 +559,15 @@ Status after this round of work:
 | HabboClubOffers (per windowId) | `useClubOffers(windowId)` |
 | SellablePetPalettes (per breed) | `useSellablePetPalette(breed)` |
 | MarketplaceConfiguration | `useMarketplaceConfiguration()` |
-| ClubGiftInfo | `useClubGifts()` (with `useNitroEventInvalidator`) |
-| CatalogPagesList / CatalogPage | **deferred** — core state slice (rootNode / offersToNodes / currentPage), needs its own split-out store |
-| BuildersClubFurniCount / SubscriptionStatus | **deferred** — read by the internal `getBuilderFurniPlaceableStatus` logic, moves with the data/actions split |
+| ClubGiftInfo | `useClubGifts()` (with `useOctaneEventInvalidator`) |
+| CatalogPagesList / CatalogPage | `useCatalogIndexQuery` / `useCatalogPageQuery` |
+| BuildersClubFurniCount / SubscriptionStatus | store, written by `useCatalogEffects` |
 
-**Helper extraction + filter split both landed.** The 1100-line hook
-now has its dependency-free logic in
-`src/hooks/catalog/useCatalog.helpers.ts` and exposes three public
-filters built on top of the same Zustand-backed shared source:
-
-- `useCatalogData()` — server-driven read-only slice (`rootNode`,
-  `offersToNodes`, `currentPage`, `currentOffer`, `frontPageItems`,
-  `searchResult`, `roomPreviewer`, `isBusy`,
-  `catalogLocalizationVersion`, Builders Club counters + timers).
-- `useCatalogUiState()` — UI ephemeral state + writers
-  (`isVisible`, `pageId`, `previousPageId`, `currentType`,
-  `activeNodes`, `navigationHidden`, `purchaseOptions`,
-  `catalogPlaceMultipleObjects`, plus all the `set*` writers,
-  including the ones that mutate the data slice on page / offer /
-  search-result selection).
-- `useCatalogActions()` — imperative operations
-  (`openCatalogByType`, `toggleCatalogByType`, `activateNode`,
-  `openPageBy{Id,Name,OfferId}`, `requestOfferToMover`,
-  `selectCatalogOffer`, `getNodeBy{Id,Name}`,
-  `getBuilderFurniPlaceableStatus`).
-
-The internal store is named `useCatalogStore` and is **not exported**;
-the three public entry points (`useCatalogData` / `useCatalogUiState`
-/ `useCatalogActions`) all funnel into the same `useSharedHook`
-store, so listeners + state register once. All 48 historical
-consumers have been migrated to the targeted filters; the deprecated
-`useCatalog` shim has been removed.
-
-Pure helpers in `useCatalog.helpers.ts`:
+Pure helpers in `useCatalog.helpers.ts` (unchanged by this round —
+still dependency-free and coordinator-free):
 
 - `normalizeCatalogType(type?)` — coerce the optional catalog type
   back to `NORMAL` / `BUILDER`.
-- `getOfferProductKeys(offer)` — canonical lookup keys for the
-  resolved-offer cache.
 - `findNodeById` / `findNodeByName` — DFS over the catalog tree,
   root excluded.
 - `getNodesByOfferIdFromMap(offerId, map, onlyVisible)` — used to be
@@ -545,7 +583,7 @@ Pure helpers in `useCatalog.helpers.ts`:
 
 `useCatalog.ts` now imports these instead of defining them inline
 (net **−75 LOC**). Co-located test file `src/hooks/catalog/useCatalog.helpers.test.ts` covers
-all six helpers with 34 cases (tree depth + offerId mapping,
+all five helpers with 30 cases (tree depth + offerId mapping,
 node lookups including root exclusion, the limit-reached / guild-admin
 fallback / visitors-in-room paths of the placement helper, and the
 empty-map / partial-bucket branches of the offer lookup).
@@ -554,7 +592,7 @@ empty-map / partial-bucket branches of the offer lookup).
 - Vitest 3 + jsdom + `@testing-library/react` + `@testing-library/jest-dom`
   configured. Separate `vitest.config.mts` so the runner doesn't drag in
   the renderer SDK aliases from `vite.config.mjs`.
-- **178 cases passing** across 13 test files, **co-located under `src/`** next to each subject (no separate `tests/` tree). Pure-module suites:
+- **1909 of 1910 cases passing** across 351 of 353 test files (full `src/` suite; the two remaining failures — a pixi.js resolution error in `FloorplanEditorView.test.tsx` and a static-text assertion in `NavigatorAirParity.test.ts` — are pre-existing and unrelated to the catalog work below). The catalog-scoped slice (`src/hooks/catalog src/components/catalog`) is 69 test files / 294 cases, up from the 66 files / 270 cases baseline: the three coordinator `describe` blocks (`createCatalogIndexRequestCoordinator`, `createCatalogIndexPrewarmController`, `createCatalogPageRequestCorrelation`) were removed and replaced by the query/store/effects test files added in this decomposition. Tests are **co-located under `src/`** next to each subject (no separate `tests/` tree). Pure-module suites:
     - `WiredCreatorTools.helpers.test.ts` (18) — formatters + snapshot
       factory.
     - `navigatorRoomCreatorStore.test.ts` (4) — Zustand store invariants
@@ -574,9 +612,9 @@ empty-map / partial-bucket branches of the offer lookup).
       bail-out branches (state-not-AvatarInfoUser, mismatched
       user/roomIndex, equal-after-dedup) + the figure / favorite-group
       apply paths.
-    - `useCatalog.helpers.test.ts` (34) — catalog pure helpers
+    - `useCatalog.helpers.test.ts` (30) — catalog pure helpers
       extracted out of the god-hook: `normalizeCatalogType`,
-      `getOfferProductKeys`, `findNodeById` / `findNodeByName` (with
+      `findNodeById` / `findNodeByName` (with
       the root-exclusion guard), `getNodesByOfferIdFromMap` (with
       the partial-visible fallback), `buildCatalogNodeTree` (tree
       depth + offerId index), and the full decision tree of
@@ -590,18 +628,18 @@ empty-map / partial-bucket branches of the offer lookup).
 
   Component-/hook-level suites (on the new renderer-SDK mock):
     - `WidgetErrorBoundary.test.tsx` (4) — happy path + caught render
-      error logged via `NitroLogger.error` + custom fallback +
+      error logged via `OctaneLogger.error` + custom fallback +
       `unknown` default name.
     - `useDoorbellState.test.tsx` (7) — initial empty state, append on
       `DOORBELL`, dedup duplicates, remove on `RSDE_ACCEPTED` /
       `RSDE_REJECTED`, ignore stale events, unsubscribe on unmount.
 
-- **Renderer-SDK mock at `src/nitro-renderer.mock.ts`** —
-  `vitest.config.mts` aliases `@nitrots/nitro-renderer` over this file
+- **Renderer-SDK mock at `src/octane-renderer.mock.ts`** —
+  `vitest.config.mts` aliases `@octane/renderer` over this file
   so jsdom-hosted tests never load Pixi or the message
   parser/composer registry. The mock exports:
     - Explicit, behavioral stubs for the symbols tests actually
-      exercise: `NitroLogger`, `GetEventDispatcher`,
+      exercise: `OctaneLogger`, `GetEventDispatcher`,
       `mockEventDispatcher` / `clearMockEventDispatcher` helpers, the
       `RoomSessionDoorbellEvent` class (signature mirrors the real
       `(type, session, userName)` so `tsgo` stays happy).
@@ -610,7 +648,7 @@ empty-map / partial-bucket branches of the offer lookup).
       returns a stable unique string so dispatch + listener agree.
     - Lightweight `class StubClass {}` placeholders for the ~30 Pixi
       and gameplay classes the `src/api/*` barrel touches at import
-      time (`NitroAlphaFilter`, `NitroContainer`, `EventDispatcher`,
+      time (`OctaneAlphaFilter`, `OctaneContainer`, `EventDispatcher`,
       etc.). Keeps the cascade from throwing without simulating
       behavior tests don't care about.
     - Singleton getters (`GetAssetManager`, `GetCommunication`,
@@ -651,7 +689,7 @@ empty-map / partial-bucket branches of the offer lookup).
   sweeps:
     - Framer-motion `Variants` typing on `ToolbarView` + `FriendsBarView`
       (−33).
-    - `createNitroQuery` import path / generics / Pick subset
+    - `createOctaneQuery` import path / generics / Pick subset
       (−3 + −1 propagation).
     - `useFurniChooserState` typed as `IRoomObject` + dead getUserData
       branch dropped (−10).
@@ -670,7 +708,7 @@ empty-map / partial-bucket branches of the offer lookup).
 ### Bonus
 - **`WidgetErrorBoundary`** (`src/common/error-boundary/`) — wraps the
   `RoomWidgetsView` umbrella. A widget crash now degrades gracefully
-  (logged to `NitroLogger.error`) instead of unmounting the room.
+  (logged to `OctaneLogger.error`) instead of unmounting the room.
 - **`CLAUDE.md`** at the repo root — onboarding file Claude Code reads at
   session start. Captures the layout convention, the patterns to use,
   what's wired up, what isn't, and the open logic bugs.
@@ -678,12 +716,12 @@ empty-map / partial-bucket branches of the offer lookup).
 ### Boot-time orchestration (`src/bootstrap.ts`)
 - Mobile viewport meta tag inserted before anything else.
 - `await loadClientMode()` — fetches `client-mode.json` into
-  `window.__nitroClientMode` so `getClientMode()` can pick up
+  `window.__octaneClientMode` so `getClientMode()` can pick up
   `secureAssetsEnabled` / `secureApiEnabled` / `apiBaseUrl` for the
   fetch interceptor.
 - `installSecureFetch()` (no-op when both `secureAssetsEnabled` and
   `secureApiEnabled` are off, which is the dev default).
-- Populate `window.NitroConfig` with `config.urls`, `sso.ticket`,
+- Populate `window.OctaneConfig` with `config.urls`, `sso.ticket`,
   forward parameters.
 - **`await GetConfiguration().init()`** — eager configuration load
   before React mounts. Eliminates the "Missing configuration key:
@@ -699,7 +737,7 @@ empty-map / partial-bucket branches of the offer lookup).
   so Vite serves them via `publicDir`" trick is a trap on Windows:
   chokidar tries to install a watcher on every file under `public/`
   and the dev server hangs for minutes on ~177k assets.
-- The current setup installs a tiny Vite plugin (`nitroAssetsServer`)
+- The current setup installs a tiny Vite plugin (`octaneAssetsServer`)
   that mounts `sirv` on `/nitro-assets` and `/swf`, reading from
   `../Nitro-Files/{nitro-assets,swf}`. `sirv` is connect-style
   middleware; it bypasses chokidar entirely.
@@ -711,7 +749,7 @@ empty-map / partial-bucket branches of the offer lookup).
   recreated as symlinks.
 
 ### Upstream feature catch-up
-- `duckietm/Nitro-V3` PR #126 is cherry-picked: adds
+- `duckietm/Octane-V3` PR #126 is cherry-picked: adds
   `src/components/user-settings/UserAccountSettingsView.tsx`
   (reset password / email / change username flows under the user
   settings overlay) and a wear-badge popup fix in
@@ -733,7 +771,7 @@ the room widgets umbrella, `usePollSubscriptions` already hoisted to
 
 Remaining order of value/risk for the next contributor:
 
-1. **Migrate `useCatalog`'s read-only fetches to `useNitroQuery`.**
+1. **Migrate `useCatalog`'s read-only fetches to `useOctaneQuery`.**
    Biggest expected payoff (cache + dedup + loading state for free).
    The hook is ~1100 lines; start with the page-tree fetch and the
    handful of fire-and-forget request/response pairs (gift wrapping
@@ -750,11 +788,11 @@ Remaining order of value/risk for the next contributor:
    each tab. A slice at `src/components/wired-tools/wiredToolsStore.ts`
    would make each tab subscribe to the keys it needs.
 4. **Widen the component/hook Vitest coverage.** The renderer-SDK
-   mock layer is in place (`src/nitro-renderer.mock.ts`) and the
+   mock layer is in place (`src/octane-renderer.mock.ts`) and the
    first two pilots — `WidgetErrorBoundary` and `useDoorbellState` —
    pass. Good follow-up targets: other `*State` hooks built on event
    reducers (`useFurniChooserState`, `useUserChooserState`,
-   `useFriendRequestState`, `useChatInputState`), the `useNitroQuery`
+   `useFriendRequestState`, `useChatInputState`), the `useOctaneQuery`
    adapter (timeout + cleanup + accept-filter behavior), and the
    `LoginView` Form Actions happy/error paths. Each new test will
    likely need to add 1-3 named exports to the renderer mock.
@@ -800,10 +838,10 @@ below.)_
   tuple would also work, but neither call goes through a composer /
   parser pair so the request-id ref is the lighter fix.)
 - **`MainView` CREATED/ENDED race fixed.** Two independent
-  `useNitroEvent` listeners on `RoomSessionEvent.CREATED` /
+  `useOctaneEvent` listeners on `RoomSessionEvent.CREATED` /
   `RoomSessionEvent.ENDED` could land out of order under flaky
   reconnects, leaving `landingViewVisible` contradicting the actual
-  session state. Replaced with a single `useNitroEventReducer` that
+  session state. Replaced with a single `useOctaneEventReducer` that
   carries the active session's `roomId`: a CREATED bumps the tracked
   id and closes the landing view; an ENDED is honored only if its
   `event.session.roomId` matches the tracked id (or no session is

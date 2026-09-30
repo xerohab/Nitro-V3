@@ -1,7 +1,7 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SendMessageComposer } from '../../../../../../api';
-import { useCatalogData, useCatalogUiState, useMessageEvent, useSellablePetPalette, useUiEvent } from '../../../../../../hooks';
+import { useCatalogData, useCatalogUiState, useMessageEvent, useOctaneEvent, useSellablePetPalette, useUiEvent } from '../../../../../../hooks';
 import { CatalogLayoutPetView } from './CatalogLayoutPetView';
 
 const composerTypes = vi.hoisted(() => {
@@ -24,14 +24,24 @@ const composerTypes = vi.hoisted(() => {
     return { ApproveNameMessageComposer, PurchaseFromCatalogComposer };
 });
 
-vi.mock('@nitrots/nitro-renderer', () => ({
+const petAssetState = vi.hoisted(() => ({ colorsReady: true, downloadAsset: vi.fn() }));
+
+vi.mock('@octane/renderer', () => ({
     ApproveNameMessageComposer: composerTypes.ApproveNameMessageComposer,
     ApproveNameMessageEvent: class {},
     ColorConverter: { int2rgb: (color: number) => `#${color.toString(16).padStart(6, '0')}` },
-    GetRoomEngine: () => ({
-        getPetColorResult: (_type: number, paletteId: number) => ({ primaryColor: paletteId, secondaryColor: paletteId + 1 })
+    GetRoomContentLoader: () => ({
+        downloadAsset: petAssetState.downloadAsset,
+        getPetNameForType: (type: number) => `pettype_${type}`
     }),
-    PurchaseFromCatalogComposer: composerTypes.PurchaseFromCatalogComposer
+    GetRoomEngine: () => ({
+        getPetColorResult: (_type: number, paletteId: number) =>
+            petAssetState.colorsReady ? { primaryColor: paletteId, secondaryColor: paletteId + 1 } : null
+    }),
+    PurchaseFromCatalogComposer: composerTypes.PurchaseFromCatalogComposer,
+    RoomContentLoadedEvent: class {
+        public static RCLE_SUCCESS = 'RCLE_SUCCESS';
+    }
 }));
 
 vi.mock('../../../../../../api', () => ({
@@ -40,7 +50,8 @@ vi.mock('../../../../../../api', () => ({
     GetPetIndexFromLocalization: (localization: string) => Number(localization.split('_').at(-1)),
     LocalizeText: (key: string) => key,
     SanitizeHtml: (value: string) => value,
-    SendMessageComposer: vi.fn()
+    SendMessageComposer: vi.fn(),
+    localizeWithFallback: (_key: string, fallback: string) => fallback
 }));
 
 vi.mock('../../../../../../common', () => ({
@@ -62,12 +73,16 @@ vi.mock('../../../../../../common', () => ({
     LayoutRoomPreviewerView: () => <div data-testid="pet-preview" />
 }));
 
+const userDataState = vi.hoisted(() => ({ clubLevel: 0 }));
+
 vi.mock('../../../../../../hooks', () => ({
     useCatalogData: vi.fn(),
     useCatalogUiState: vi.fn(),
     useMessageEvent: vi.fn(),
+    useOctaneEvent: vi.fn(),
     useSellablePetPalette: vi.fn(),
-    useUiEvent: vi.fn()
+    useUiEvent: vi.fn(),
+    useUserDataSnapshot: () => ({ clubLevel: userDataState.clubLevel })
 }));
 
 vi.mock('../../../../../../events', () => ({
@@ -100,6 +115,7 @@ const roomPreviewer = {
 };
 
 let approveNameHandler: ((event: { getParser: () => { result: number } }) => void) | null = null;
+let contentLoadedHandler: ((event: { contentType: string }) => void) | null = null;
 const uiEventHandlers = new Map<string, () => void>();
 
 afterEach(cleanup);
@@ -107,10 +123,16 @@ afterEach(cleanup);
 beforeEach(() => {
     vi.clearAllMocks();
     approveNameHandler = null;
+    contentLoadedHandler = null;
     uiEventHandlers.clear();
+    petAssetState.colorsReady = true;
+    userDataState.clubLevel = 0;
     vi.mocked(useCatalogUiState).mockReturnValue({ setCurrentOffer: vi.fn(), setPurchaseOptions: vi.fn() } as any);
     vi.mocked(useMessageEvent).mockImplementation((_event: unknown, handler: any) => {
         approveNameHandler = handler;
+    });
+    vi.mocked(useOctaneEvent).mockImplementation((_type: any, handler: any) => {
+        contentLoadedHandler = handler;
     });
     vi.mocked(useUiEvent).mockImplementation((event: any, handler: any) => {
         uiEventHandlers.set(event, handler);
@@ -128,12 +150,58 @@ describe('pet catalog layout', () => {
         expect(await screen.findByTestId('pet-image')).toBeInTheDocument();
         expect(screen.queryByTestId('generic-product-preview')).not.toBeInTheDocument();
         expect(screen.getByRole('textbox')).toHaveAttribute('maxLength', '16');
-        expect(screen.getByRole('button', { name: 'catalog.pets.choose.color 1' })).toHaveStyle({
-            background: 'linear-gradient(135deg, #00000a 0 50%, #00000b 50% 100%)'
-        });
+        // jsdom normalises the hex stops to rgb() from 30.1 on; accept either spelling.
+        expect(screen.getByRole('button', { name: 'catalog.pets.choose.color 1' }).style.background).toMatch(
+            /^linear-gradient\(135deg, (#00000a|rgb\(0, 0, 10\)) 0 50%, (#00000b|rgb\(0, 0, 11\)) 50% 100%\)$/
+        );
         expect(screen.getByTestId('pet-image')).toHaveAttribute('data-type-id', '8');
         expect(screen.getByTestId('pet-image')).toHaveAttribute('data-direction', '3');
         expect(screen.getByTestId('pet-image')).toHaveAttribute('data-scale', '2');
+    });
+
+    it('locks an HC-only breed for a non-HC member', async () => {
+        userDataState.clubLevel = 0;
+        const currentOffer = offer(8);
+        vi.mocked(useCatalogData).mockReturnValue({ currentOffer, roomPreviewer } as any);
+        vi.mocked(useSellablePetPalette).mockReturnValue({ data: { palettes: [{ ...palette(8, 10), clubOnly: true }] } } as any);
+
+        render(<CatalogLayoutPetView page={{ ...page, offers: [currentOffer] } as any} hideNavigation={() => undefined} />);
+
+        const lockedSwatch = await screen.findByRole('button', { name: 'catalog.pets.choose.color 1 — Habbo Club only' });
+        expect(lockedSwatch).toBeDisabled();
+    });
+
+    it('unlocks an HC-only breed for an HC member', async () => {
+        userDataState.clubLevel = 2;
+        const currentOffer = offer(8);
+        vi.mocked(useCatalogData).mockReturnValue({ currentOffer, roomPreviewer } as any);
+        vi.mocked(useSellablePetPalette).mockReturnValue({ data: { palettes: [{ ...palette(8, 10), clubOnly: true }] } } as any);
+
+        render(<CatalogLayoutPetView page={{ ...page, offers: [currentOffer] } as any} hideNavigation={() => undefined} />);
+
+        const swatch = await screen.findByRole('button', { name: 'catalog.pets.choose.color 1' });
+        expect(swatch).not.toBeDisabled();
+    });
+
+    it('downloads the pet asset and shows the palettes once its colors arrive for new pets', async () => {
+        petAssetState.colorsReady = false;
+        const currentOffer = offer(8);
+        vi.mocked(useCatalogData).mockReturnValue({ currentOffer, roomPreviewer } as any);
+        vi.mocked(useSellablePetPalette).mockReturnValue({ data: { palettes: [palette(8, 10)] } } as any);
+
+        render(<CatalogLayoutPetView page={{ ...page, offers: [currentOffer] } as any} hideNavigation={() => undefined} />);
+
+        expect(screen.queryByTestId('pet-image')).not.toBeInTheDocument();
+        expect(petAssetState.downloadAsset).toHaveBeenCalledWith('pettype_8');
+
+        petAssetState.colorsReady = true;
+        act(() => contentLoadedHandler?.({ contentType: 'pettype_9' }));
+        expect(screen.queryByTestId('pet-image')).not.toBeInTheDocument();
+
+        act(() => contentLoadedHandler?.({ contentType: 'pettype_8' }));
+
+        expect(await screen.findByTestId('pet-image')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'catalog.pets.choose.color 1' })).toBeInTheDocument();
     });
 
     it('renders the legacy breed menu and colors with the fifteen-character name field', async () => {
@@ -151,14 +219,14 @@ describe('pet catalog layout', () => {
         expect(screen.getByTestId('pet-image')).toHaveAttribute('data-direction', '2');
         expect(screen.getByRole('textbox')).toHaveAttribute('maxLength', '15');
         expect(screen.getByRole('button', { name: 'catalog.pets.choose.color 1' })).toHaveAttribute('aria-pressed', 'true');
-        expect(screen.getByTestId('pet-image').closest('.nitro-catalog-pet-layout')).toHaveClass(
-            'nitro-catalog-pet-layout--legacy'
+        expect(screen.getByTestId('pet-image').closest('.octane-catalog-pet-layout')).toHaveClass(
+            'octane-catalog-pet-layout--legacy'
         );
         expect(
             screen.getByLabelText('catalog.pets.choose.color').compareDocumentPosition(screen.getByRole('combobox')) &
                 Node.DOCUMENT_POSITION_FOLLOWING
         ).toBeTruthy();
-        expect(screen.getByTestId('pet-image').closest('.nitro-catalog-pet-preview')).toContainElement(screen.getByTestId('pet-price'));
+        expect(screen.getByTestId('pet-image').closest('.octane-catalog-pet-preview')).toContainElement(screen.getByTestId('pet-price'));
     });
 
     it('sends one approval request and purchases only after the matching approval succeeds', async () => {

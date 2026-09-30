@@ -141,6 +141,8 @@ export interface VariableDefinition {
     hasUpdateTime: boolean;
     isTextConnected: boolean;
     isAlwaysAvailable?: boolean;
+    /** The value-to-text table of a text connected custom variable, as the server sent it. */
+    textConnector?: VariableTextValue[];
 }
 
 export interface VariableTextValue {

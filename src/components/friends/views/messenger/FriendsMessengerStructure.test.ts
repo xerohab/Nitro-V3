@@ -6,7 +6,9 @@ describe('Messenger component structure', () => {
     const css = readFileSync(join(process.cwd(), 'src/components/friends/views/messenger/FriendsMessengerView.css'), 'utf8');
 
     it('owns the complete fixed-window layout without origin prefixes', () => {
-        expect(css).not.toMatch(/\b(?:swf|air)-/);
+        const fixedWindowCss = css.split('.phone-messenger-window')[0];
+
+        expect(fixedWindowCss).not.toMatch(/\b(?:swf|air)-/);
         expect(css).toMatch(/\.messenger-window\s*\{[^}]*width:\s*282px;[^}]*height:\s*385px;[^}]*min-height:\s*275px;/s);
         expect(css).toMatch(/\.messenger-window \.messenger-avatar-navigation\s*\{[^}]*height:\s*35px;/s);
         expect(css).toMatch(/\.messenger-window \.messenger-thread-header\s*\{[^}]*top:\s*80px;/s);

@@ -78,7 +78,7 @@
     text-shadow: none !important;
     box-shadow: none !important;
     cursor: pointer;
-    image-rendering: pixelated;
+    image-rendering: var(--octane-pixel-art, pixelated);
 }
 
 .habbo-btn-secondary:hover,
@@ -131,7 +131,7 @@
     text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35) !important;
     box-shadow: none !important;
     cursor: pointer;
-    image-rendering: pixelated;
+    image-rendering: var(--octane-pixel-art, pixelated);
 }
 
 .habbo-btn-primary:hover,
@@ -165,7 +165,7 @@
     cursor: not-allowed;
 }
 
-/* AIR has no dedicated red button style; Nitro danger uses shiny × purse logout #DE5347. */
+/* AIR has no dedicated red button style; Octane danger uses shiny × purse logout #DE5347. */
 .habbo-btn-danger {
     display: inline-flex;
     align-items: center;
@@ -188,7 +188,7 @@
     text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.35) !important;
     box-shadow: none !important;
     cursor: pointer;
-    image-rendering: pixelated;
+    image-rendering: var(--octane-pixel-art, pixelated);
 }
 
 .habbo-btn-danger:hover {
@@ -199,4 +199,93 @@
 .habbo-btn-danger:active {
     border-image-source: var(--habbo-skin-shiny-red-pressed) !important;
     box-shadow: none !important;
+}
+
+/* Selected state.
+   Button adds the class `active` when a toggle is on - an open mod tool, the
+   selected catalog page, the current floorplan brush - but the skin only drew the
+   `:active` pseudo-class, which lasts as long as the mouse is down. So sixteen call
+   sites were saying "this one is on" and nothing showed it.
+   The pressed artwork says it best; the inset shadow keeps it apart from a click,
+   which is momentary. */
+.habbo-btn-primary.active,
+.habbo-btn-buy.active,
+.habbo-btn-success.active,
+.habbo-btn-green.active {
+    border-image-source: var(--habbo-skin-shiny-thick-green-pressed) !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.34) !important;
+    filter: none;
+}
+
+.habbo-btn-secondary.active,
+.habbo-btn-slice.active {
+    border-image-source: var(--habbo-skin-button-pressed) !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.28) !important;
+    filter: none;
+}
+
+.habbo-btn-danger.active {
+    border-image-source: var(--habbo-skin-shiny-red-pressed) !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.34) !important;
+    filter: none;
+}
+
+/* Checkboxes and radios, drawn with the client's own artwork.
+   These rules used to live inside the .octane-wired block, so they only reached the
+   wired dialogs: everywhere else in the client a checkbox was whatever the browser
+   drew. The images come from the official client - the checkbox is the two states
+   of illumina_light_checkbox_basic, the radio is radio_button_off/on - so the size
+   is the artwork's own and must not be scaled. */
+input[type='checkbox'],
+.form-check-input[type='checkbox'] {
+    width: 19px;
+    height: 20px;
+    min-width: 19px;
+    flex: 0 0 auto;
+    appearance: none;
+    -webkit-appearance: none;
+    border: 0;
+    border-radius: 0;
+    background: var(--habbo-skin-checkbox) no-repeat center / 19px 20px;
+    box-shadow: none;
+    cursor: pointer;
+    image-rendering: var(--octane-pixel-art, pixelated);
+}
+
+input[type='checkbox']:checked,
+.form-check-input[type='checkbox']:checked {
+    background-image: var(--habbo-skin-checkbox-checked);
+}
+
+input[type='radio'],
+.form-check-input[type='radio'] {
+    width: 11px;
+    height: 12px;
+    min-width: 11px;
+    flex: 0 0 auto;
+    appearance: none;
+    -webkit-appearance: none;
+    border: 0;
+    border-radius: 0;
+    background: var(--habbo-skin-radio) no-repeat center / 11px 12px;
+    box-shadow: none;
+    cursor: pointer;
+    image-rendering: var(--octane-pixel-art, pixelated);
+}
+
+input[type='radio']:checked,
+.form-check-input[type='radio']:checked {
+    background-image: var(--habbo-skin-radio-checked);
+}
+
+input[type='checkbox']:focus-visible,
+input[type='radio']:focus-visible {
+    outline: 1px solid #4b7ea1;
+    outline-offset: 1px;
+}
+
+input[type='checkbox']:disabled,
+input[type='radio']:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
 }

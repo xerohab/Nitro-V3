@@ -1,4 +1,4 @@
-import { GetRoomEngine, RoomGeometry } from '@nitrots/nitro-renderer';
+import { GetRoomEngine, RoomGeometry } from '@octane/renderer';
 
 export const ROOM_ZOOM_SCALES = [0.5, 1, 2, 2.5, 4] as const;
 

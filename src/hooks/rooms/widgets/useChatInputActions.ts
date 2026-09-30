@@ -12,8 +12,8 @@ import {
     RoomShakingEffect,
     RoomZoomEvent,
     TextureUtils,
-    UseHabbiconComposer
-} from '@nitrots/nitro-renderer';
+    TriggerHabbiconComposer
+} from '@octane/renderer';
 import { useCallback } from 'react';
 import { ChatMessageTypeEnum, GetClubMemberLevel, GetConfigurationValue, LocalizeText, SendMessageComposer } from '../../../api';
 import { useNotification } from '../../notification';
@@ -36,7 +36,7 @@ import { useRoom } from '../useRoom';
  * to useChatInputState.
  */
 export const useChatInputActions = () => {
-    const { showNitroAlert = null, showConfirm = null } = useNotification();
+    const { showOctaneAlert = null, showConfirm = null } = useNotification();
     const { settings, translateOutgoing, enqueueOutgoingTranslation } = useTranslation();
     const { roomSession = null } = useRoom();
 
@@ -120,7 +120,7 @@ export const useChatInputActions = () => {
                     case ':habbicon': {
                         const habbiconId = parseInt(secondPart);
 
-                        if(Number.isFinite(habbiconId) && habbiconId > 0) SendMessageComposer(new UseHabbiconComposer(habbiconId));
+                        if(Number.isFinite(habbiconId) && habbiconId > 0) SendMessageComposer(new TriggerHabbiconComposer(habbiconId));
 
                         return null;
                     }
@@ -145,6 +145,7 @@ export const useChatInputActions = () => {
                             (async () => {
                                 try {
                                     const imageUrl = await TextureUtils.generateImageUrl(texture);
+                                    texture?.destroy?.(true);
                                     if (!imageUrl) return;
 
                                     const link = document.createElement('a');
@@ -210,9 +211,10 @@ export const useChatInputActions = () => {
                         return null;
                     }
                     case ':client':
+                    case ':octane':
                     case ':nitro':
                     case ':billsonnn':
-                        showNitroAlert();
+                        showOctaneAlert();
                         return null;
                     case ':settings':
                         if (roomSession && (roomSession.isRoomOwner || GetSessionDataManager().isModerator)) {
@@ -272,7 +274,7 @@ export const useChatInputActions = () => {
 
             return null;
         },
-        [roomSession, settings, translateOutgoing, enqueueOutgoingTranslation, showConfirm, showNitroAlert]
+        [roomSession, settings, translateOutgoing, enqueueOutgoingTranslation, showConfirm, showOctaneAlert]
     );
 
     return { sendChat };

@@ -1,7 +1,8 @@
 import { NotificationAlertItem, NotificationAlertType } from '../../../../api';
-import { NitroInfoAlertView } from './NitroInfoAlertView';
-import { NitroSystemAlertView } from './NitroSystemAlertView';
+import { OctaneInfoAlertView } from './OctaneInfoAlertView';
+import { OctaneSystemAlertView } from './OctaneSystemAlertView';
 import { NotificationDefaultAlertView } from './NotificationDefaultAlertView';
+import { EVENT_ALERT_TYPES, NotificationEventAlertView } from './NotificationEventAlertView';
 import { isFurniDataAlert, NotificationFurniDataAlertView } from './NotificationFurniDataAlertView';
 import { NotificationSeachAlertView } from './NotificationSearchAlertView';
 
@@ -9,13 +10,15 @@ export const GetAlertLayout = (item: NotificationAlertItem, onClose: () => void)
     if (!item) return null;
 
     const key = item.id;
-    const props = { item, onClose };
+    const props = { item, onClose, autoCloseSeconds: item.timeoutSeconds };
+
+    if (EVENT_ALERT_TYPES.includes(item.alertType)) return <NotificationEventAlertView key={key} {...props} />;
 
     switch (item.alertType) {
-        case NotificationAlertType.NITRO:
-            return <NitroSystemAlertView key={key} {...props} />;
-        case NotificationAlertType.NITRO_INFO:
-            return <NitroInfoAlertView key={key} {...props} />;
+        case NotificationAlertType.OCTANE:
+            return <OctaneSystemAlertView key={key} {...props} />;
+        case NotificationAlertType.OCTANE_INFO:
+            return <OctaneInfoAlertView key={key} {...props} />;
         case NotificationAlertType.SEARCH:
             return <NotificationSeachAlertView key={key} {...props} />;
         default:

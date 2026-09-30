@@ -1,6 +1,7 @@
-import { GetRoomEngine, IPetCustomPart, PetFigureData, TextureUtils, Vector3d } from '@nitrots/nitro-renderer';
+import { GetRoomEngine, IPetCustomPart, PetFigureData, Vector3d } from '@octane/renderer';
 import { CSSProperties, FC, useEffect, useMemo, useRef, useState } from 'react';
 import { Base, BaseProps } from '../Base';
+import { PIXEL_ART_RENDERING } from './PixelArtRendering';
 
 interface LayoutPetImageViewProps extends BaseProps<HTMLDivElement> {
     figure?: string;
@@ -42,7 +43,7 @@ export const LayoutPetImageView: FC<LayoutPetImageViewProps> = (props) => {
         if (scale !== 1) {
             newStyle.transform = `scale(${scale})`;
 
-            if (!(scale % 1)) newStyle.imageRendering = 'pixelated';
+            if (!(scale % 1)) newStyle.imageRendering = PIXEL_ART_RENDERING;
         }
 
         newStyle.width = width;
@@ -88,19 +89,19 @@ export const LayoutPetImageView: FC<LayoutPetImageViewProps> = (props) => {
                     const { image, data: texture } = result;
 
                     if (image) {
-                        if (!isCurrentRequest()) return;
-
                         setPetUrl(image.src);
                         setWidth(image.width);
                         setHeight(image.height);
                     } else if (texture) {
-                        const generatedUrl = await TextureUtils.generateImageUrl(texture);
+                        // Read the size first: getImage() releases the render texture.
+                        const { width, height } = texture;
+                        const generated = await result.getImage();
 
                         if (!isCurrentRequest()) return;
 
-                        setPetUrl(generatedUrl);
-                        setWidth(texture.width);
-                        setHeight(texture.height);
+                        setPetUrl(generated?.src ?? null);
+                        setWidth(width);
+                        setHeight(height);
                     }
                 },
                 imageFailed: () => {

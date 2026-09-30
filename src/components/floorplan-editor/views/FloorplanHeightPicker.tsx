@@ -7,29 +7,10 @@ type Props = {
     onSelect: (h: number) => void;
 };
 
-const TRACK_W = 18;
-const TRACK_H = 260;
-const THUMB_DIAM = 28;
-const RAIL_GUTTER = 4;
-
-const isLightColor = (hex: string): boolean => {
-    const c = hex.replace('#', '');
-
-    if (c.length !== 6) return true;
-
-    const r = parseInt(c.slice(0, 2), 16);
-    const g = parseInt(c.slice(2, 4), 16);
-    const b = parseInt(c.slice(4, 6), 16);
-    const luma = 0.299 * r + 0.587 * g + 0.114 * b;
-
-    return luma > 160;
-};
-
 export const FloorplanHeightPicker: FC<Props> = ({ selectedH, onSelect }) => {
     const count = HEIGHT_BRUSH_MAX - HEIGHT_BRUSH_MIN + 1;
     const trackRef = useRef<HTMLDivElement>(null);
     const [isDragging, setIsDragging] = useState(false);
-    const [isHovering, setIsHovering] = useState(false);
 
     const gradient = useMemo(() => {
         const stops: string[] = [];
@@ -97,52 +78,21 @@ export const FloorplanHeightPicker: FC<Props> = ({ selectedH, onSelect }) => {
         };
     }, [isDragging, heightFromClientY, onSelect, selectedH]);
 
-    const thumbPct = ((HEIGHT_BRUSH_MAX - selectedH) / (count - 1)) * 100;
+    const thumbPct = ((HEIGHT_BRUSH_MAX - selectedH + 0.5) / count) * 100;
     const thumbColor = tileFill({ h: selectedH, blocked: false });
-    const thumbTextDark = isLightColor(thumbColor);
 
     return (
         <div
-            className="relative shrink-0 select-none touch-none flex flex-col items-center"
-            style={{ width: THUMB_DIAM + RAIL_GUTTER * 2, height: TRACK_H + 32 }}
+            className={`fp-slider ${isDragging ? 'is-dragging' : ''}`}
             role="slider"
             aria-label="Brush height"
             aria-valuemin={HEIGHT_BRUSH_MIN}
             aria-valuemax={HEIGHT_BRUSH_MAX}
             aria-valuenow={selectedH}
+            title={`Brush height ${selectedH}`}
         >
-            <span className="text-[9px] font-bold tabular-nums text-zinc-500 leading-none mb-1">{HEIGHT_BRUSH_MAX}</span>
-            <div className="relative flex-1" style={{ width: THUMB_DIAM }}>
-                <div
-                    ref={trackRef}
-                    data-testid="height-track"
-                    className={`absolute left-1/2 -translate-x-1/2 top-0 bottom-0 rounded-full border border-zinc-400 cursor-pointer overflow-hidden transition-shadow ${isHovering || isDragging ? 'shadow-[inset_0_0_0_1px_rgba(255,255,255,0.4),0_0_0_2px_rgba(250,204,21,0.35)]' : 'shadow-inner'}`}
-                    style={{
-                        width: TRACK_W,
-                        background: gradient
-                    }}
-                    onPointerDown={onPointerDown}
-                    onPointerEnter={() => setIsHovering(true)}
-                    onPointerLeave={() => setIsHovering(false)}
-                />
-                <div
-                    data-testid="height-thumb"
-                    data-thumb-color={thumbColor}
-                    className={`absolute left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full flex items-center justify-center text-[11px] font-bold tabular-nums pointer-events-none transition-[box-shadow,transform] ${thumbTextDark ? 'text-zinc-900' : 'text-white'} ${isDragging ? 'ring-2 ring-zinc-900 scale-110' : isHovering ? 'ring-2 ring-white' : ''}`}
-                    style={{
-                        width: THUMB_DIAM,
-                        height: THUMB_DIAM,
-                        top: `${thumbPct}%`,
-                        background: `radial-gradient(circle at 32% 28%, ${thumbTextDark ? 'rgba(255, 255, 255, 0.85)' : 'rgba(255, 255, 255, 0.55)'} 0%, ${thumbColor} 45%, ${thumbColor} 78%, rgba(0, 0, 0, 0.25) 100%)`,
-                        border: '2px solid rgba(0, 0, 0, 0.55)',
-                        boxShadow: '0 2px 5px rgba(0, 0, 0, 0.35), inset 0 -2px 3px rgba(0, 0, 0, 0.25), inset 0 1px 2px rgba(255, 255, 255, 0.4)',
-                        textShadow: thumbTextDark ? '0 1px 0 rgba(255, 255, 255, 0.6)' : '0 1px 1px rgba(0, 0, 0, 0.55)'
-                    }}
-                >
-                    {selectedH}
-                </div>
-            </div>
-            <span className="text-[9px] font-bold tabular-nums text-zinc-500 leading-none mt-1">{HEIGHT_BRUSH_MIN}</span>
+            <div ref={trackRef} data-testid="height-track" className="fp-slider-track" style={{ background: gradient }} onPointerDown={onPointerDown} />
+            <div data-testid="height-thumb" data-value={selectedH} data-thumb-color={thumbColor} className="fp-slider-thumb" style={{ top: `calc(6px + (100% - 12px) * ${(thumbPct / 100).toFixed(4)})` }} />
         </div>
     );
 };

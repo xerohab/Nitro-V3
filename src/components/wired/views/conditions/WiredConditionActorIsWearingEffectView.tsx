@@ -2,15 +2,21 @@ import { FC, useEffect, useState } from 'react';
 import { LocalizeText, localizeWithFallback, WiredFurniType } from '../../../../api';
 import { Text } from '../../../../common';
 import { useWired } from '../../../../hooks';
-import { NitroInput } from '../../../../layout';
+import { OctaneInput } from '../../../../layout';
 import { WiredSourcesSelector } from '../WiredSourcesSelector';
 import { WiredConditionBaseView } from './WiredConditionBaseView';
 
 interface WiredConditionActorIsWearingEffectViewProps {
     negative?: boolean;
+    /**
+     * The freeze conditions share this dialog for its user source and quantifier, but they ask
+     * WiredFreezeUtil whether someone is frozen — there is no effect to name. They pass false, and the
+     * effect-id box stays out of the window.
+     */
+    showEffect?: boolean;
 }
 
-export const WiredConditionActorIsWearingEffectView: FC<WiredConditionActorIsWearingEffectViewProps> = ({ negative = false }) => {
+export const WiredConditionActorIsWearingEffectView: FC<WiredConditionActorIsWearingEffectViewProps> = ({ negative = false, showEffect = true }) => {
     const [effect, setEffect] = useState(-1);
     const [quantifier, setQuantifier] = useState(1);
     const { trigger = null, setIntParams = null } = useWired();
@@ -50,10 +56,12 @@ export const WiredConditionActorIsWearingEffectView: FC<WiredConditionActorIsWea
                     </label>
                 ))}
             </div>
-            <div className="flex flex-col gap-1">
-                <Text bold>{localizeWithFallback('wiredfurni.params.effectid', LocalizeText('wiredfurni.tooltip.effectid'))}</Text>
-                <NitroInput type="number" value={effect} onChange={(event) => setEffect(parseInt(event.target.value))} />
-            </div>
+            {showEffect && (
+                <div className="flex flex-col gap-1">
+                    <Text bold>{localizeWithFallback('wiredfurni.params.effectid', LocalizeText('wiredfurni.tooltip.effectid'))}</Text>
+                    <OctaneInput type="number" value={effect} onChange={(event) => setEffect(parseInt(event.target.value))} />
+                </div>
+            )}
         </WiredConditionBaseView>
     );
 };

@@ -1,4 +1,4 @@
-import { GetRoomEngine, RoomObjectCategory, RoomUnitWalkComposer } from '@nitrots/nitro-renderer';
+import { GetRoomEngine, RoomObjectCategory, RoomUnitWalkComposer } from '@octane/renderer';
 import { useEffect, useRef } from 'react';
 import { SendMessageComposer } from '../../api';
 import { useKeyboardMovement } from '../useKeyboardMovement';
@@ -13,14 +13,24 @@ const STEPS: Record<string, [number, number]> = {
 
 const REPEAT_DELAY = 180;
 
-const isTyping = () => {
+/**
+ * The room's chat input takes focus on the first keystroke and keeps it, so
+ * treating "an input has focus" as "the user is typing" disabled arrow
+ * movement for the rest of the session. An empty chat box is not typing:
+ * only a message actually being composed should swallow the arrows.
+ */
+export const isTyping = () => {
     const element = document.activeElement as HTMLElement;
 
     if (!element) return false;
 
+    if (element.classList.contains('swf-chat-input-field')) {
+        return !!(element as HTMLInputElement).value.length;
+    }
+
     const tag = element.tagName;
 
-    return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || element.isContentEditable;
+    return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || !!element.isContentEditable;
 };
 
 export const useRoomKeyboardMovement = () => {

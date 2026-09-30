@@ -1,4 +1,4 @@
-import type { HotelDateTimeParts, MonitorSnapshot } from './WiredCreatorTools.types';
+import type { HotelDateTimeParts, MonitorSnapshot, VariableTextValue } from './WiredCreatorTools.types';
 
 const HOTEL_TIME_FORMATTERS: Map<string, Intl.DateTimeFormat> = new Map();
 
@@ -132,4 +132,11 @@ export const normalizeMonitorReason = (reason: string): string => {
     const normalizedReason = (reason || '').trim();
 
     return normalizedReason || 'No detailed reason was recorded for this entry.';
+};
+
+/** The server's text-connector table as the variables tab lists it; undefined when there is none. */
+export const toVariableTextValues = (textConnector?: Array<{ key: number; value: string }>): VariableTextValue[] | undefined => {
+    if (!textConnector?.length) return undefined;
+
+    return textConnector.map((entry) => ({ value: String(entry.key), text: entry.value }));
 };

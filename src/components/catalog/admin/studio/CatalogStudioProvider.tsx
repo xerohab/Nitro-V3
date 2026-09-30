@@ -11,7 +11,7 @@ import {
     CatalogStudioUndoEvent,
     CatalogStudioValidateComposer,
     CatalogStudioValidationEvent
-} from '@nitrots/nitro-renderer';
+} from '@octane/renderer';
 import { FC, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SendMessageComposer } from '../../../../api';
 import { useConnectionState, useMessageEvent } from '../../../../hooks';
@@ -116,7 +116,8 @@ export const CatalogStudioProvider: FC<{ active: boolean; children: ReactNode }>
             message: parser.message,
             revision: parser.revision,
             current: parser.current,
-            issues: parser.issues.map((issue) => ({ ...issue }))
+            issues: parser.issues.map((issue) => ({ ...issue })),
+            receivedAt: Date.now()
         };
         setValidation(next);
         updateRevision(parser.revision);

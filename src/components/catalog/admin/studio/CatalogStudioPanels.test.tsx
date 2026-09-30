@@ -98,8 +98,10 @@ describe('Catalog Studio essential panels', () => {
             undo={vi.fn()}
         />);
 
+        // The rule heads the group; the entity and field sit in the row beneath it.
         expect(screen.getByText('Offer page 999 does not exist')).toBeInTheDocument();
-        expect(screen.getByText('OFFER #77 · pageId')).toBeInTheDocument();
+        expect(screen.getByText('OFFER #77')).toBeInTheDocument();
+        expect(screen.getByText('pageId · Offer page 999 does not exist')).toBeInTheDocument();
         expect(screen.queryByText(/publish/i)).not.toBeInTheDocument();
         expect(screen.queryByText(/draft/i)).not.toBeInTheDocument();
     });

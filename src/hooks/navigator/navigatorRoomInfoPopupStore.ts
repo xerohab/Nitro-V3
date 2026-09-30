@@ -1,10 +1,9 @@
-import { RoomDataParser } from '@nitrots/nitro-renderer';
-import { createNitroStore } from '../../state/createNitroStore';
+import { RoomDataParser } from '@octane/renderer';
+import { createOctaneStore } from '../../state/createOctaneStore';
 
 export type NavigatorRoomInfoAnchorKind = 'info' | 'row' | 'tile';
 
 const POPUP_HIDE_DELAY_MS = 4000;
-const POPUP_HEIGHT = 350;
 
 export type NavigatorRoomInfoPopupState = {
     room: RoomDataParser | null;
@@ -53,7 +52,7 @@ const anchorPoint = (kind: NavigatorRoomInfoAnchorKind, rect: DOMRect) => {
     return { x: rect.right, y: midY };
 };
 
-export const useNavigatorRoomInfoPopupStore = createNitroStore<NavigatorRoomInfoPopupState & NavigatorRoomInfoPopupActions>()((set, get) => ({
+export const useNavigatorRoomInfoPopupStore = createOctaneStore<NavigatorRoomInfoPopupState & NavigatorRoomInfoPopupActions>()((set, get) => ({
     room: null,
     visible: false,
     x: 0,
@@ -84,7 +83,7 @@ export const useNavigatorRoomInfoPopupStore = createNitroStore<NavigatorRoomInfo
             visible: true,
             hovered: false,
             x: point.x,
-            y: point.y - POPUP_HEIGHT / 2
+            y: point.y
         });
     },
 
@@ -97,7 +96,7 @@ export const useNavigatorRoomInfoPopupStore = createNitroStore<NavigatorRoomInfo
             room,
             visible: true,
             x: point.x,
-            y: point.y - POPUP_HEIGHT / 2
+            y: point.y
         });
     }
 }));

@@ -1,7 +1,8 @@
 import { Dispatch, FC } from 'react';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { LocalizeText } from '../../../api';
-import { Base, Flex, Text } from '../../../common';
+import { localizeOr } from '../state/localize';
+import { Base } from '../../../common';
 import { EntryDir, FloorplanAction, FloorplanState, ThicknessLevel } from '../state/types';
 
 type Props = {
@@ -20,91 +21,68 @@ export const FloorplanOptionsPanel: FC<Props> = ({ state, dispatch }) => {
     const setFloor = (t: ThicknessLevel) => dispatch({ type: 'SET_THICKNESS', floor: t, source: 'local' });
 
     return (
-        <Flex gap={3} alignItems="center" className="py-1">
-            <Flex gap={1} alignItems="center">
-                <Text bold small className="text-zinc-700">
-                    {LocalizeText('floor.plan.editor.enter.direction')}
-                </Text>
-                <Flex alignItems="center" gap={0} className="rounded border border-zinc-300 bg-white overflow-hidden">
-                    <Base
-                        data-testid="entry-dir-prev"
-                        pointer
-                        title="Rotate left"
-                        className="w-7 h-9 flex items-center justify-center text-zinc-600 hover:bg-zinc-100"
-                        onClick={() => setDir(rotateDir(state.door.dir, -1))}
-                    >
-                        <FaChevronLeft size={12} />
+        <>
+            <div className="fp-control-group is-centered" data-testid="floorplan-orientation">
+                <div className="fp-group-label">{LocalizeText('floor.plan.editor.enter.direction')}</div>
+                <div className="fp-orientation">
+                    <Base data-testid="entry-dir-prev" pointer title="Rotate left" className="fp-orientation-step" onClick={() => setDir(rotateDir(state.door.dir, -1))}>
+                        <FaChevronLeft size={11} />
                     </Base>
                     <Base
                         data-testid="entry-dir"
                         pointer
                         title={`Direction ${state.door.dir}/7 (click to rotate)`}
-                        className={`nitro-icon icon-door-direction-${state.door.dir} mx-1`}
+                        className={`octane-icon icon-door-direction-${state.door.dir}`}
                         onClick={() => setDir(rotateDir(state.door.dir, 1))}
                     />
-                    <Base
-                        data-testid="entry-dir-next"
-                        pointer
-                        title="Rotate right"
-                        className="w-7 h-9 flex items-center justify-center text-zinc-600 hover:bg-zinc-100"
-                        onClick={() => setDir(rotateDir(state.door.dir, 1))}
-                    >
-                        <FaChevronRight size={12} />
+                    <Base data-testid="entry-dir-next" pointer title="Rotate right" className="fp-orientation-step" onClick={() => setDir(rotateDir(state.door.dir, 1))}>
+                        <FaChevronRight size={11} />
                     </Base>
-                </Flex>
-            </Flex>
+                </div>
+            </div>
 
-            <ThicknessSegmented
-                label="Walls"
-                value={state.thickness.wall}
-                onChange={setWall}
-                testIdPrefix="wall-thickness"
-                labelKeyPrefix="navigator.roomsettings.wall_thickness"
-            />
-
-            <ThicknessSegmented
-                label="Floors"
-                value={state.thickness.floor}
-                onChange={setFloor}
-                testIdPrefix="floor-thickness"
-                labelKeyPrefix="navigator.roomsettings.floor_thickness"
-            />
-        </Flex>
+            <div className="fp-control-group is-centered is-right" data-testid="floorplan-appearance">
+                <div className="fp-group-label">{localizeOr('floor.plan.editor.appearance', 'Appearance')}</div>
+                <ThicknessStepper value={state.thickness.wall} onChange={setWall} testIdPrefix="wall-thickness" labelKeyPrefix="navigator.roomsettings.wall_thickness" />
+                <ThicknessStepper value={state.thickness.floor} onChange={setFloor} testIdPrefix="floor-thickness" labelKeyPrefix="navigator.roomsettings.floor_thickness" />
+            </div>
+        </>
     );
 };
 
-type SegmentedProps = {
-    label: string;
+type StepperProps = {
     value: ThicknessLevel;
     onChange: (next: ThicknessLevel) => void;
     testIdPrefix: string;
     labelKeyPrefix: string;
 };
 
-const ThicknessSegmented: FC<SegmentedProps> = ({ label, value, onChange, testIdPrefix, labelKeyPrefix }) => {
-    return (
-        <Flex gap={1} alignItems="center">
-            <Text bold small className="text-zinc-700">
-                {label}
-            </Text>
-            <Flex className="rounded border border-zinc-300 bg-white overflow-hidden">
-                {THICKNESS_LEVELS.map((t) => {
-                    const active = value === t;
+/** Up steps to the next thicker level, down to the thinner one; the label cycles on click. */
+const ThicknessStepper: FC<StepperProps> = ({ value, onChange, testIdPrefix, labelKeyPrefix }) => {
+    const index = THICKNESS_LEVELS.indexOf(value);
+    const thinner = index > 0 ? THICKNESS_LEVELS[index - 1] : null;
+    const thicker = index < THICKNESS_LEVELS.length - 1 ? THICKNESS_LEVELS[index + 1] : null;
+    const label = LocalizeText(`${labelKeyPrefix}.${THICKNESS_NAMES[value]}`);
 
-                    return (
-                        <Base
-                            key={`${testIdPrefix}-${t}`}
-                            data-testid={`${testIdPrefix}-${t}`}
-                            pointer
-                            title={LocalizeText(`${labelKeyPrefix}.${THICKNESS_NAMES[t]}`)}
-                            className={`px-2 h-9 flex items-center justify-center text-xs ${active ? 'bg-emerald-500 text-white font-bold' : 'text-zinc-700 hover:bg-zinc-100'} ${t < THICKNESS_LEVELS.length - 1 ? 'border-r border-zinc-300' : ''}`}
-                            onClick={() => onChange(t)}
-                        >
-                            {LocalizeText(`${labelKeyPrefix}.${THICKNESS_NAMES[t]}`)}
-                        </Base>
-                    );
-                })}
-            </Flex>
-        </Flex>
+    return (
+        <div className="fp-select" data-testid={testIdPrefix} data-value={value} title={label}>
+            <span data-testid={`${testIdPrefix}-label`} onClick={() => onChange(thicker ?? THICKNESS_LEVELS[0])}>
+                {label}
+            </span>
+            <div className="fp-select-arrows">
+                <span
+                    data-testid={`${testIdPrefix}-up`}
+                    className={`fp-select-arrow is-up ${thicker === null ? 'is-disabled' : ''}`}
+                    title="Thicker"
+                    onClick={() => thicker !== null && onChange(thicker)}
+                />
+                <span
+                    data-testid={`${testIdPrefix}-down`}
+                    className={`fp-select-arrow is-down ${thinner === null ? 'is-disabled' : ''}`}
+                    title="Thinner"
+                    onClick={() => thinner !== null && onChange(thinner)}
+                />
+            </div>
+        </div>
     );
 };

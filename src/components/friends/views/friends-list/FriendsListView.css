@@ -32,7 +32,7 @@
     background: #418db0;
     color: #000;
     font: 400 9px/1 Volter, Arial, sans-serif;
-    image-rendering: pixelated;
+    image-rendering: var(--octane-pixel-art, pixelated);
     box-shadow: 0 3px 5px rgba(0, 0, 0, .35), inset 0 1px 0 #8adcf2;
     text-shadow: none;
 }
@@ -299,7 +299,7 @@
     transform: none !important;
     background-position: 51% 40% !important;
     background-size: 65px auto !important;
-    image-rendering: pixelated !important;
+    image-rendering: var(--octane-pixel-art, pixelated) !important;
 }
 
 .hfl-friend-avatar .avatar-image.compact-head {

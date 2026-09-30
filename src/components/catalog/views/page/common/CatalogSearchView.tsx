@@ -1,4 +1,4 @@
-import { GetSessionDataManager } from '@nitrots/nitro-renderer';
+import { GetSessionDataManager } from '@octane/renderer';
 import { ChangeEvent, FC, KeyboardEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { FaSearch, FaTimes } from 'react-icons/fa';
 import {
@@ -8,6 +8,7 @@ import {
     ICatalogNode,
     IPurchasableOffer,
     LocalizeText,
+    localizeWithFallback,
     PageLocalization,
     SearchResult
 } from '../../../../../api';
@@ -177,7 +178,7 @@ export const CatalogSearchView: FC<{}> = () => {
             />
             {searchValue && searchValue.length > 0 && (
                 <button
-                    aria-label={LocalizeText('generic.clear')}
+                    aria-label={localizeWithFallback('generic.clear', 'Clear')}
                     type="button"
                     className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] text-muted hover:text-danger cursor-pointer transition-colors"
                     onClick={clearSearch}

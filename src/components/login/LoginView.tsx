@@ -1,8 +1,8 @@
-import { GetAvatarRenderManager, GetConfiguration } from '@nitrots/nitro-renderer';
+import { GetAvatarRenderManager, GetConfiguration } from '@octane/renderer';
 import { FC, useActionState, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { FaDice } from 'react-icons/fa';
-import { ClearRememberLogin, GetConfigurationValue, GetRememberLogin, persistAccessTokenFromPayload, StoreRememberLoginFromPayload } from '../../api';
+import { ClearRememberLogin, GetConfigurationValue, GetOptionalConfigurationValue, GetRememberLogin, persistAccessTokenFromPayload, StoreRememberLoginFromPayload } from '../../api';
 import flagEn from '../../assets/images/flag_icon/flag_icon_en.png';
 import flagEs from '../../assets/images/flag_icon/flag_icon_es.png';
 import flagFr from '../../assets/images/flag_icon/flag_icon_fr.png';
@@ -11,7 +11,9 @@ import flagNl from '../../assets/images/flag_icon/flag_icon_nl.png';
 import { applyTextTranslationLocale } from '../../hooks/translation/useTranslation';
 import { configFileUrl } from '../../secure-assets';
 import { LoginModal } from './components/LoginModal';
+import { LoginWidgetSlot } from './components/LoginWidgetSlot';
 import { NewsWindow } from './components/NewsWindow';
+import { useDraggableLoginWindow } from './hooks/useDraggableLoginWindow';
 import { RegistrationAvatarWardrobe } from './components/RegistrationAvatarWardrobe';
 import { TurnstileWidget } from './TurnstileWidget';
 import { t } from './utils/i18n';
@@ -30,8 +32,8 @@ const interpolate = (value: string | null | undefined): string => {
     } catch {}
 
     return output.replace(/\$\{([^}]+)\}/g, (_, key: string) => {
-        if (key === 'api.url' && typeof (window as any).NitroSecureApiUrl === 'string') {
-            const secureApiUrl = (window as any).NitroSecureApiUrl.replace(/\/$/, '');
+        if (key === 'api.url' && typeof (window as any).OctaneSecureApiUrl === 'string') {
+            const secureApiUrl = (window as any).OctaneSecureApiUrl.replace(/\/$/, '');
 
             if (secureApiUrl) return secureApiUrl;
         }
@@ -175,6 +177,7 @@ export const LoginView: FC<LoginViewProps> = ({ onAuthenticated, isEntering = fa
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
+    const [maintenance, setMaintenance] = useState<{ enabled: boolean; message: string } | null>(null);
     const [info, setInfo] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
     const [loginTurnstileToken, setLoginTurnstileToken] = useState('');
@@ -229,6 +232,13 @@ export const LoginView: FC<LoginViewProps> = ({ onAuthenticated, isEntering = fa
     const roomTemplatesUrl = GetConfigurationValue<string>('login.room_templates.endpoint', '/api/auth/room-templates');
     const forgotUrl = GetConfigurationValue<string>('login.forgot.endpoint', '/api/auth/forgot-password');
     const newsUrl = interpolate(GetConfigurationValue<string>('login.news.url', ''));
+    const dragHint = t('nitro.login.window.drag_hint', 'Drag to move, double-click to reset');
+    const languageWindowRef = useRef<HTMLDivElement>(null);
+    const authWindowRef = useRef<HTMLDivElement>(null);
+    const registerWindowRef = useRef<HTMLDivElement>(null);
+    const languageWindow = useDraggableLoginWindow('language', languageWindowRef);
+    const authWindow = useDraggableLoginWindow('auth', authWindowRef);
+    const registerWindow = useDraggableLoginWindow('register', registerWindowRef);
     const turnstileSiteKey = GetConfigurationValue<string>('login.turnstile.sitekey', '');
     const rawTurnstileEnabled = GetConfigurationValue<unknown>('login.turnstile.enabled', false);
     const turnstileEnabled =
@@ -385,7 +395,7 @@ export const LoginView: FC<LoginViewProps> = ({ onAuthenticated, isEntering = fa
             headers: {
                 'Content-Type': 'application/json',
                 Accept: 'application/json',
-                'X-Requested-With': 'NitroLoginView'
+                'X-Requested-With': 'OctaneLoginView'
             },
             body: JSON.stringify(body)
         });
@@ -418,6 +428,64 @@ export const LoginView: FC<LoginViewProps> = ({ onAuthenticated, isEntering = fa
             return false;
         }
     }, [healthUrl, healthMethod]);
+
+    useEffect(() => {
+        let url = interpolate(GetConfigurationValue<string>('login.maintenance.endpoint', ''));
+        let source = 'login.maintenance.endpoint';
+
+        if (!url) {
+            const apiUrl = interpolate(GetConfigurationValue<string>('api.url', '')).replace(/\/+$/, '');
+
+            try {
+                if (/^https?:\/\//i.test(apiUrl)) {
+                    url = `${apiUrl}/api/maintenance`;
+                    source = `derived from api.url "${apiUrl}"`;
+                } else {
+                    url = new URL('/api/maintenance', new URL(loginUrl, window.location.href)).toString();
+                    source = `derived from login.endpoint "${loginUrl}"`;
+                }
+            } catch {
+                return;
+            }
+        }
+
+        const controller = new AbortController();
+        const reportProbeFailure = (detail: string) => {
+            if (!import.meta.env.DEV) return;
+
+            const raw = (key: string) => JSON.stringify(GetOptionalConfigurationValue<unknown>(key, undefined));
+
+            console.warn(
+                `[LoginView] maintenance probe ${url} (${source}) failed: ${detail}\n` +
+                `  config.urls=${raw('config.urls')}\n` +
+                `  login.maintenance.endpoint=${raw('login.maintenance.endpoint')} login.endpoint=${raw('login.endpoint')} api.url=${raw('api.url')}`);
+        };
+
+        (async () => {
+            try {
+                const response = await fetch(url, { credentials: 'omit', signal: controller.signal });
+
+                if (!response.ok) {
+                    reportProbeFailure(`HTTP ${response.status}`);
+
+                    return;
+                }
+
+                const payload = (await response.json()) as { enabled?: unknown; message?: unknown };
+
+                if (controller.signal.aborted) return;
+
+                setMaintenance({
+                    enabled: payload.enabled === true,
+                    message: typeof payload.message === 'string' ? payload.message : ''
+                });
+            } catch (error) {
+                if (!controller.signal.aborted) reportProbeFailure(String((error as Error)?.message ?? error));
+            }
+        })();
+
+        return () => controller.abort();
+    }, [loginUrl]);
 
     const pingLoginServer = useCallback(async () => {
         setLoginPingingServer(true);
@@ -478,6 +546,17 @@ export const LoginView: FC<LoginViewProps> = ({ onAuthenticated, isEntering = fa
                         StoreRememberLoginFromPayload(payload, typeof payload.username === 'string' ? payload.username : usernameInput, ssoTicket);
                     else ClearRememberLogin();
                     onAuthenticated(ssoTicket);
+                    return null;
+                }
+
+                if (payload.maintenance === true) {
+                    const notice =
+                        typeof payload.error === 'string'
+                            ? payload.error
+                            : t('nitro.login.maintenance.notice', 'The hotel is currently undergoing maintenance. Only staff can log in right now.');
+                    setMaintenance({ enabled: true, message: notice });
+                    setError(notice);
+                    resetLoginTurnstile();
                     return null;
                 }
 
@@ -639,7 +718,7 @@ export const LoginView: FC<LoginViewProps> = ({ onAuthenticated, isEntering = fa
     );
 
     return (
-        <div className="nitro-login-view" style={backgroundColor ? { background: backgroundColor } : undefined}>
+        <div className="octane-login-view" style={backgroundColor ? { background: backgroundColor } : undefined}>
             {background ? <img className="login-background login-layer login-layer-img" src={background} alt="" draggable={false} /> : null}
             {sun ? <img className="login-sun login-layer login-layer-img" src={sun} alt="" draggable={false} /> : null}
             {drape ? <img className="login-drape login-layer login-layer-img" src={drape} alt="" draggable={false} /> : null}
@@ -663,24 +742,17 @@ export const LoginView: FC<LoginViewProps> = ({ onAuthenticated, isEntering = fa
                         const description = typeof slot.conf.description === 'string' ? slot.conf.description : '';
 
                         return (
-                            <div key={slot.key} className="login-widget-slot" data-widget-type={slot.type}>
-                                {image && <img className="login-widget-image" src={image} alt="" draggable={false} />}
-                                <div className="login-widget-content">
-                                    <div className="login-widget-title">{title}</div>
-                                    {description && <div className="login-widget-description">{description}</div>}
-                                    {btnText && (
-                                        <button
-                                            type="button"
-                                            className="login-widget-button"
-                                            onClick={() => {
-                                                if (btnLink) window.location.href = btnLink;
-                                            }}
-                                        >
-                                            {btnText}
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
+                            <LoginWidgetSlot
+                                key={slot.key}
+                                slotKey={String(slot.key)}
+                                type={slot.type}
+                                image={image}
+                                title={title}
+                                description={description}
+                                buttonText={btnText}
+                                buttonLink={btnLink}
+                                dragHint={dragHint}
+                            />
                         );
                     })}
                 </div>
@@ -688,13 +760,17 @@ export const LoginView: FC<LoginViewProps> = ({ onAuthenticated, isEntering = fa
 
             {newsUrl && <NewsWindow newsUrl={newsUrl} />}
 
-            <div className="login-language-picker nitro-card-shell">
-                <div className="login-language-header nitro-card-header-shell">
-                    <label className="nitro-card-title" htmlFor="login-language-select">
+            <div
+                className={`login-language-picker octane-card-shell${languageWindow.dragging ? ' is-dragging' : ''}`}
+                ref={languageWindowRef}
+                style={languageWindow.style}
+            >
+                <div className="login-language-header octane-card-header-shell login-drag-handle" title={dragHint} {...languageWindow.handleProps}>
+                    <label className="octane-card-title" htmlFor="login-language-select">
                         {localeApplying ? t('nitro.login.language.loading', 'Loading...') : t('nitro.login.language.title', 'Language')}
                     </label>
                 </div>
-                <div className="login-language-content nitro-card-content-shell">
+                <div className="login-language-content octane-card-content-shell">
                     <div className="login-language-select-wrap">
                         <img src={selectedLocale.flag} alt="" draggable={false} />
                         <select
@@ -717,11 +793,15 @@ export const LoginView: FC<LoginViewProps> = ({ onAuthenticated, isEntering = fa
             </div>
 
             <div className="login-stack">
-                <div className="nitro-login-card nitro-card-shell login-auth-card">
-                    <div className="card-title nitro-card-header-shell">
-                        <span className="nitro-card-title">{t('nitro.login.card.title', "What's your Habbo called?")}</span>
+                <div
+                    className={`octane-login-card octane-card-shell login-auth-card${authWindow.dragging ? ' is-dragging' : ''}`}
+                    ref={authWindowRef}
+                    style={authWindow.style}
+                >
+                    <div className="card-title octane-card-header-shell login-drag-handle" title={dragHint} {...authWindow.handleProps}>
+                        <span className="octane-card-title">{t('nitro.login.card.title', "What's your Habbo called?")}</span>
                     </div>
-                    <form className="card-body nitro-card-content-shell" action={submitLoginAction} autoComplete="on">
+                    <form className="card-body octane-card-content-shell" action={submitLoginAction} autoComplete="on">
                         <div className="field">
                             <label htmlFor="login-username">{t('login.username', 'Name of your Habbo')}</label>
                             <input
@@ -760,6 +840,15 @@ export const LoginView: FC<LoginViewProps> = ({ onAuthenticated, isEntering = fa
                                 resetSignal={loginTurnstileResetSignal}
                             />
                         )}
+                        {maintenance?.enabled && (
+                            <div className="error-line maintenance-notice" role="status">
+                                <strong>{t('nitro.login.maintenance.title', 'Maintenance mode')}</strong>
+                                <span>
+                                    {maintenance.message ||
+                                        t('nitro.login.maintenance.notice', 'The hotel is currently undergoing maintenance. Only staff can log in right now.')}
+                                </span>
+                            </div>
+                        )}
                         {loginServerReachable === false && (
                             <div className="error-line server-offline">
                                 {t('nitro.login.server.offline.short', "The gameserver isn't running right now. Please try again in a moment.")}
@@ -779,11 +868,15 @@ export const LoginView: FC<LoginViewProps> = ({ onAuthenticated, isEntering = fa
                     </form>
                 </div>
 
-                <div className="nitro-login-card nitro-card-shell login-register-card">
-                    <div className="card-title nitro-card-header-shell">
-                        <span className="nitro-card-title">{t('nitro.login.firsttime.title', 'First time here?')}</span>
+                <div
+                    className={`octane-login-card octane-card-shell login-register-card${registerWindow.dragging ? ' is-dragging' : ''}`}
+                    ref={registerWindowRef}
+                    style={registerWindow.style}
+                >
+                    <div className="card-title octane-card-header-shell login-drag-handle" title={dragHint} {...registerWindow.handleProps}>
+                        <span className="octane-card-title">{t('nitro.login.firsttime.title', 'First time here?')}</span>
                     </div>
-                    <div className="card-body nitro-card-content-shell register-card-body">
+                    <div className="card-body octane-card-content-shell register-card-body">
                         <span>{t('nitro.login.firsttime.text', "Don't have a Habbo yet?")}</span>
                         <button type="button" className="register-link" onClick={() => setMode('register')}>
                             {t('nitro.login.firsttime.link', 'You can create one here')}
@@ -1365,8 +1458,8 @@ const RegisterDialog: FC<RegisterDialogProps> = (props) => {
             onClose={closeAndSaveDraft}
         >
             {step === 'credentials' && (
-                <form className="card-body nitro-card-content-shell" action={submitCredentialsAction} autoComplete="on">
-                    <div className="register-intro nitro-card-panel">
+                <form className="card-body octane-card-content-shell" action={submitCredentialsAction} autoComplete="on">
+                    <div className="register-intro octane-card-panel">
                         {t(
                             'nitro.login.register.intro.credentials',
                             "Let's create your account. Enter your email and pick a password — we'll check that email isn't already in use."
@@ -1439,8 +1532,8 @@ const RegisterDialog: FC<RegisterDialogProps> = (props) => {
             )}
 
             {step === 'avatar' && (
-                <form className="card-body nitro-card-content-shell" action={submitAvatarAction} autoComplete="on">
-                    <div className="register-intro nitro-card-panel">
+                <form className="card-body octane-card-content-shell" action={submitAvatarAction} autoComplete="on">
+                    <div className="register-intro octane-card-panel">
                         {t(
                             'nitro.login.register.intro.avatar',
                             "Now it's time to make your own Habbo character! To make your own Habbo, please start by choosing your Habbo Name."
@@ -1547,8 +1640,8 @@ const RegisterDialog: FC<RegisterDialogProps> = (props) => {
             )}
 
             {step === 'room' && (
-                <form className="card-body nitro-card-content-shell" action={submitRoomAction} autoComplete="off">
-                    <div className="register-intro nitro-card-panel">
+                <form className="card-body octane-card-content-shell" action={submitRoomAction} autoComplete="off">
+                    <div className="register-intro octane-card-panel">
                         {t('nitro.login.register.intro.room', 'Last step — pick a starter room, or skip and create your own later.')}
                     </div>
 
@@ -1683,7 +1776,7 @@ const ForgotDialog: FC<ForgotDialogProps> = (props) => {
             closeLabel={t('generic.close', 'Close')}
             onClose={onCancel}
         >
-            <form className="card-body nitro-card-content-shell" action={submitForgotAction} autoComplete="on">
+            <form className="card-body octane-card-content-shell" action={submitForgotAction} autoComplete="on">
                 <div className="field">
                     <label htmlFor="forgot-email">{t('nitro.login.forgot.email.label', 'Email address')}</label>
                     <input

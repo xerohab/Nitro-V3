@@ -8,12 +8,11 @@ import {
     RoomObjectCategory,
     RoomObjectVariable,
     RoomSessionPresentEvent,
-    TextureUtils,
     Vector3d
-} from '@nitrots/nitro-renderer';
+} from '@octane/renderer';
 import { useMemo, useState } from 'react';
 import { IsOwnerOfFurniture, LocalizeText, ProductTypeEnum } from '../../../../api';
-import { useNitroEvent } from '../../../events';
+import { useOctaneEvent } from '../../../events';
 import { useFurniRemovedEvent } from '../../engine';
 import { useRoom } from '../../useRoom';
 
@@ -69,11 +68,7 @@ const useFurniturePresentWidgetState = () => {
         return {
             imageReady: (result) => {
                 (async () => {
-                    let image = result.image;
-
-                    if (!image && result.data) {
-                        image = await TextureUtils.generateImage(result.data);
-                    }
+                    const image = await result.getImage();
 
                     if (image) setImageUrl(image.src);
                 })();
@@ -84,7 +79,7 @@ const useFurniturePresentWidgetState = () => {
         };
     }, []);
 
-    useNitroEvent<RoomSessionPresentEvent>(RoomSessionPresentEvent.RSPE_PRESENT_OPENED, (event) => {
+    useOctaneEvent<RoomSessionPresentEvent>(RoomSessionPresentEvent.RSPE_PRESENT_OPENED, (event) => {
         let furniData: IFurnitureData = null;
 
         if (event.itemType === ProductTypeEnum.FLOOR) {
@@ -207,7 +202,7 @@ const useFurniturePresentWidgetState = () => {
         setPlacedInRoom(event.placedInRoom);
     });
 
-    useNitroEvent<RoomEngineTriggerWidgetEvent>(RoomEngineTriggerWidgetEvent.REQUEST_PRESENT, (event) => {
+    useOctaneEvent<RoomEngineTriggerWidgetEvent>(RoomEngineTriggerWidgetEvent.REQUEST_PRESENT, (event) => {
         const roomObject = GetRoomEngine().getRoomObject(event.roomId, event.objectId, event.category);
 
         if (!roomObject) return null;

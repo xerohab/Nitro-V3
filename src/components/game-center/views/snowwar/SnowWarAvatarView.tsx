@@ -1,6 +1,6 @@
-import { AvatarAction, AvatarScaleType, AvatarSetType, GetAvatarRenderManager } from '@nitrots/nitro-renderer';
+import { AvatarAction, AvatarScaleType, AvatarSetType, GetAvatarRenderManager } from '@octane/renderer';
 import { CSSProperties, FC, useEffect, useRef, useState } from 'react';
-import { LayoutAvatarImageView } from '../../../../common';
+import { LayoutAvatarImageView, PIXEL_ART_RENDERING } from '../../../../common';
 
 const WALK_FRAME_COUNT = 4;
 const WALK_FRAME_MS = 120;
@@ -168,7 +168,7 @@ export const SnowWarAvatarView: FC<SnowWarAvatarViewProps> = (props) =>
     if (scale !== 1)
     {
         style.transform = `scale(${scale})`;
-        if (!(scale % 1)) style.imageRendering = 'pixelated';
+        if (!(scale % 1)) style.imageRendering = PIXEL_ART_RENDERING;
     }
 
     return <div className="avatar-image relative w-[90px] h-[130px] bg-no-repeat left-[-2px] pointer-events-none" style={style} />;

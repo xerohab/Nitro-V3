@@ -1,20 +1,27 @@
 import {
+    AuthenticatedEvent,
     ConsoleReadReceiptEvent,
     ConsoleTypingComposer,
     FriendIsTypingEvent,
     FriendListUpdateEvent,
     GetSessionDataManager,
     MarkConsoleReadComposer,
+    MessengerMessageAckEvent,
+    MessengerMessageEvent,
+    MessengerMessageFailedEvent,
+    MessengerMessageType,
     NewConsoleMessageEvent,
     RoomInviteErrorEvent,
     RoomInviteEvent,
-    SendMessageComposer as SendMessageComposerPacket
-} from '@nitrots/nitro-renderer';
+    SendMessageComposer as SendMessageComposerPacket,
+    SendMessengerMessageComposer
+} from '@octane/renderer';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { registerSharedHook, useSharedHook } from '@/state/useSharedHook';
 import {
     CloneObject,
     LocalizeText,
+    localizeWithFallback,
     MessengerIconState,
     MessengerThread,
     MessengerThreadChat,
@@ -28,7 +35,7 @@ import {
 import { useMessageEvent } from '../events';
 import { useNotification } from '../notification';
 import { IResolvedTranslation, useTranslation } from '../translation';
-import { useMessengerHistory, useMessengerRealtime } from './messenger';
+import { useMessengerActions, useMessengerHistory, useMessengerRealtime } from './messenger';
 import { useFriends } from './useFriends';
 
 const useMessengerState = () => {
@@ -36,7 +43,7 @@ const useMessengerState = () => {
     // store drives the messenger icon state and history prefetch for the SWF window.
     const persistentState = useMessengerRealtime();
     const persistentHistory = useMessengerHistory();
-    const persistentActions = persistentState.actions;
+    const persistentActions = useMessengerActions();
     const [messageThreads, setMessageThreads] = useState<MessengerThread[]>([]);
     const [activeThreadId, setActiveThreadId] = useState<number>(-1);
     const [hiddenThreadIds, setHiddenThreadIds] = useState<number[]>([]);
@@ -47,6 +54,8 @@ const useMessengerState = () => {
 
     const [typingUserIds, setTypingUserIds] = useState<number[]>([]);
     const typingTimersRef = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
+    const habbiconConfirmationId = useRef(0);
+    const pendingHabbicons = useRef(new Map<number, { thread: MessengerThread; id: number; timer: ReturnType<typeof setTimeout> }>());
     const historyMessageIdsRef = useRef<Map<number, Set<number>>>(new Map());
     const hiddenThreadIdsRef = useRef(hiddenThreadIds);
 
@@ -221,6 +230,134 @@ const useMessengerState = () => {
             });
         });
     };
+
+    const addAcknowledgedHabbicon = (thread: MessengerThread, id: number) => {
+        if (!thread || id <= 0) return;
+
+        setMessageThreads((prevValue) => {
+            const newValue = [...prevValue];
+            const index = newValue.findIndex((newThread) => newThread.threadId === thread.threadId);
+
+            if (index === -1) return prevValue;
+
+            const clonedThread = CloneObject(newValue[index]);
+
+            if (clonedThread.groups.length === 1) PlaySound(SoundNames.MESSENGER_NEW_THREAD);
+
+            clonedThread.addMessage(
+                GetSessionDataManager().userId,
+                String(id),
+                0,
+                null,
+                MessengerMessageType.Habbicon
+            );
+
+            if (activeThreadId === clonedThread.threadId) clonedThread.setRead();
+
+            newValue[index] = clonedThread;
+
+            return newValue;
+        });
+    };
+
+    const sendHabbiconMessage = (thread: MessengerThread, id: number) => {
+        if (!thread || id <= 0) return;
+
+        const confirmationId = ++habbiconConfirmationId.current;
+        const timer = setTimeout(() => {
+            if (!pendingHabbicons.current.delete(confirmationId)) return;
+
+            simpleAlert(localizeWithFallback('messenger.habbicon.failed', 'The Habicon could not be sent. Please try again.'));
+        }, 10000);
+
+        pendingHabbicons.current.set(confirmationId, { thread, id, timer });
+
+        SendMessageComposer(
+            new SendMessengerMessageComposer(
+                0,
+                thread.participant.id,
+                confirmationId,
+                MessengerMessageType.Habbicon,
+                String(id),
+                ''
+            )
+        );
+    };
+
+    const noteHabbiconMessage = (conversationId: number, messageId: number) => {
+        const known = historyMessageIdsRef.current.get(conversationId) ?? new Set<number>();
+
+        known.add(messageId);
+        historyMessageIdsRef.current.set(conversationId, known);
+    };
+
+    useMessageEvent<AuthenticatedEvent>(AuthenticatedEvent, () => {
+        for (const pending of pendingHabbicons.current.values()) clearTimeout(pending.timer);
+
+        pendingHabbicons.current.clear();
+    });
+
+    useMessageEvent<MessengerMessageAckEvent>(MessengerMessageAckEvent, (event) => {
+        const parser = event.getParser();
+        const pending = pendingHabbicons.current.get(parser.confirmationId);
+
+        if (!pending) return;
+
+        clearTimeout(pending.timer);
+        pendingHabbicons.current.delete(parser.confirmationId);
+
+        noteHabbiconMessage(parser.conversationId, parser.messageId);
+
+        // Do not call the customised sendMessage() here. Its own-message path
+        // transmits through persistentActions, which would resend an already
+        // acknowledged Habbicon.
+        addAcknowledgedHabbicon(pending.thread, pending.id);
+    });
+
+    useMessageEvent<MessengerMessageFailedEvent>(MessengerMessageFailedEvent, (event) => {
+        const parser = event.getParser();
+        const pending = pendingHabbicons.current.get(parser.confirmationId);
+
+        if (!pending) return;
+
+        clearTimeout(pending.timer);
+        pendingHabbicons.current.delete(parser.confirmationId);
+
+        simpleAlert(localizeWithFallback('messenger.habbicon.failed', 'The Habicon could not be sent. Please try again.'));
+    });
+
+    useMessageEvent<MessengerMessageEvent>(MessengerMessageEvent, (event) => {
+        const message = event.getParser().message;
+
+        if (message.type !== MessengerMessageType.Habbicon) return;
+
+        const thread = getMessageThread(message.senderId);
+
+        if (!thread) return;
+
+        noteHabbiconMessage(message.conversationId, message.id);
+        sendMessage(
+            thread,
+            message.senderId,
+            message.message,
+            0,
+            message.metadata,
+            MessengerMessageType.Habbicon
+        );
+
+        if (thread.threadId === activeThreadId) {
+            SendMessageComposer(new MarkConsoleReadComposer(message.senderId));
+        }
+    });
+
+    useEffect(
+        () => () => {
+            for (const pending of pendingHabbicons.current.values()) clearTimeout(pending.timer);
+
+            pendingHabbicons.current.clear();
+        },
+        []
+    );
 
     const sendTypingStatus = (peerId: number, isTyping: boolean) => {
         if (!peerId || peerId <= 0) return;
@@ -436,12 +573,14 @@ const useMessengerState = () => {
     return {
         messageThreads,
         activeThread,
+        activeThreadId,
         iconState,
         visibleThreads,
         getMessageThread,
         setActiveThreadId,
         closeThread,
         sendMessage,
+        sendHabbiconMessage,
         persistentState,
         persistentActions,
         typingUserIds,

@@ -123,14 +123,7 @@
     color: #ffffff !important;
 }
 
-/* 8. Scrollbars */
-*::-webkit-scrollbar {
-    width: 8px !important;
-    height: 8px !important;
-    background-color: var(--bg-card-dark) !important;
-}
-
-*::-webkit-scrollbar-thumb {
-    background: var(--text-gold-muted) !important;
-    border-radius: 4px !important;
-}
+/* 8. Scrollbars
+ * Native scrollbar visuals are owned centrally by ClassicScrollbar.css.
+ * GlobalTheme intentionally does not compete with that interface skin.
+ */

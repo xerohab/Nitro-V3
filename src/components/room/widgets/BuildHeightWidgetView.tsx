@@ -1,23 +1,31 @@
-import { FC } from 'react';
+import { FC, useEffect } from 'react';
 import { LocalizeText } from '../../../api';
-import { Button, Column, Flex, NitroCardContentView, NitroCardHeaderView, NitroCardView, Slider, Text } from '../../../common';
+import { Button, Column, Flex, OctaneCardContentView, OctaneCardHeaderView, OctaneCardView, Slider, Text } from '../../../common';
 import { useBuildHeight } from '../../../hooks';
 
 const STEP = 0.1;
 
+const UNDERPASS_MIN_HEIGHT = 1.5;
+
 const format = (value: number) => (Number.isInteger(value) ? value.toString() : value.toFixed(1));
 
 export const BuildHeightWidgetView: FC<{}> = () => {
-    const { available, minHeight, maxHeight, isOpen, height, applyHeight, close } = useBuildHeight();
+    const { available, minHeight, maxHeight, isOpen, height, underpass, applyHeight, toggleUnderpass, close } = useBuildHeight();
+
+    const underpassAllowed = height >= UNDERPASS_MIN_HEIGHT;
+
+    useEffect(() => {
+        if (!underpassAllowed && underpass) toggleUnderpass(false);
+    }, [underpassAllowed, underpass, toggleUnderpass]);
 
     if (!available || !isOpen) return null;
 
     const clamp = (value: number) => Math.min(maxHeight, Math.max(minHeight, Math.round(value / STEP) * STEP));
 
     return (
-        <NitroCardView className="nitro-build-height-widget" theme="primary-slim" uniqueKey="build-height">
-            <NitroCardHeaderView headerText={LocalizeText('widget.buildheight.title')} onCloseClick={close} />
-            <NitroCardContentView className="gap-2">
+        <OctaneCardView className="octane-build-height-widget" theme="primary-slim" uniqueKey="build-height">
+            <OctaneCardHeaderView headerText={LocalizeText('widget.buildheight.title')} onCloseClick={close} />
+            <OctaneCardContentView className="gap-2">
                 <Text center>{LocalizeText('widget.buildheight.description')}</Text>
                 <Flex alignItems="center" justifyContent="center" gap={2}>
                     <Button variant="secondary" onClick={() => applyHeight(clamp(height - STEP))}>-</Button>
@@ -36,9 +44,24 @@ export const BuildHeightWidgetView: FC<{}> = () => {
                         <Text small>{format(minHeight)}</Text>
                         <Text small>{format(maxHeight)}</Text>
                     </Flex>
+                    <Flex
+                        alignItems="center"
+                        gap={1}
+                        className={underpassAllowed ? undefined : 'opacity-50'}
+                        title={underpassAllowed ? undefined : LocalizeText('widget.buildheight.underpass.min_height', ['height'], [format(UNDERPASS_MIN_HEIGHT)])}
+                    >
+                        <input
+                            className="form-check-input"
+                            type="checkbox"
+                            checked={underpass && underpassAllowed}
+                            disabled={!underpassAllowed}
+                            onChange={(event) => toggleUnderpass(event.target.checked)}
+                        />
+                        <Text>{LocalizeText('widget.buildheight.underpass')}</Text>
+                    </Flex>
                     <Button variant="danger" onClick={close}>{LocalizeText('widget.buildheight.reset')}</Button>
                 </Column>
-            </NitroCardContentView>
-        </NitroCardView>
+            </OctaneCardContentView>
+        </OctaneCardView>
     );
 };

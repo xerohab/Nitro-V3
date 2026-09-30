@@ -2,6 +2,8 @@ import {
     ConditionDefinition,
     GetRoomEngine,
     GetSessionDataManager,
+    IFurnitureData,
+    IRoomObject,
     OpenMessageComposer,
     RoomObjectCategory,
     RoomObjectVariable,
@@ -17,14 +19,34 @@ import {
     WiredOpenEvent,
     WiredSaveSuccessEvent,
     WiredValidationErrorEvent
-} from '@nitrots/nitro-renderer';
-import { useEffect, useState } from 'react';
+} from '@octane/renderer';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { registerSharedHook, useSharedHook } from '@/state/useSharedHook';
-import { GetRoomSession, IsOwnerOfFloorFurniture, LocalizeText, SendMessageComposer, WiredFurniType, WiredSelectionVisualizer } from '../../api';
+import {
+    GetRoomSession,
+    IsOwnerOfFloorFurniture,
+    LocalizeText,
+    localizeWithFallback,
+    pasteTriggerableData,
+    resetTriggerableData,
+    SendMessageComposer,
+    WiredClipboardEntry,
+    wiredClipboardKeyOf,
+    WiredFurniType,
+    WiredSelectionVisualizer
+} from '../../api';
 import { useMessageEvent } from '../events';
 import { useNotification } from '../notification';
 import { useLiveState } from '../useLiveState';
 import { useWiredTools } from '../wired-tools/useWiredTools';
+
+/** English for server error keys a hotel's texts may not have yet. */
+const WIRED_ERROR_FALLBACKS: Record<string, string> = {
+    'wiredfurni.error.invalid_api_keys': 'Invalid Web API keys'
+};
+
+/** Whether a clicked floor furni may be picked, from its room object and furnidata. */
+export type WiredFurniPickCheck = (roomObject: IRoomObject, furniData: IFurnitureData) => boolean;
 
 const useWiredState = () => {
     const [trigger, setTrigger, triggerRef] = useLiveState<Triggerable>(null);
@@ -38,8 +60,15 @@ const useWiredState = () => {
     const [neighborhoodInvert, setNeighborhoodInvert] = useState<boolean>(false);
     const [allowedInteractionTypes, setAllowedInteractionTypes] = useState<string[] | null>(null);
     const [allowedInteractionErrorKey, setAllowedInteractionErrorKey] = useState<string | null>(null);
+    // A view's own test for a floor furni pick, next to the interaction names.
+    const [allowedFurniCheck, setAllowedFurniCheckState] = useState<WiredFurniPickCheck | null>(null);
+    const setAllowedFurniCheck = useCallback((check: WiredFurniPickCheck | null) => setAllowedFurniCheckState(() => check), []);
     const { showConfirm = null, simpleAlert = null } = useNotification();
     const { requestUserVariables = null, roomSettings = null } = useWiredTools();
+    // The quick menu's clipboard: one entry per holder and code, kept for the session.
+    const [clipboard, setClipboard] = useState<Map<string, WiredClipboardEntry>>(() => new Map());
+    // "Save without closing": the next save success leaves the window open.
+    const keepOpenAfterSaveRef = useRef(false);
 
     const saveWired = () => {
         const save = (trigger: Triggerable) => {
@@ -213,7 +242,7 @@ const useWiredState = () => {
             return;
         }
 
-        if (category === RoomObjectCategory.FLOOR && allowedInteractionTypes && allowedInteractionTypes.length) {
+        if (category === RoomObjectCategory.FLOOR && ((allowedInteractionTypes && allowedInteractionTypes.length) || allowedFurniCheck)) {
             const roomId = GetRoomSession().roomId;
             const clickedObject = GetRoomEngine().getRoomObject(roomId, objectId, RoomObjectCategory.FLOOR);
 
@@ -223,7 +252,7 @@ const useWiredState = () => {
             const sourceFurniData = GetSessionDataManager().getFloorItemData(typeId);
 
             if (!sourceFurniData) return;
-            if (!isAllowedInteraction(sourceFurniData)) {
+            if (!isAllowedInteraction(sourceFurniData) || (allowedFurniCheck && !allowedFurniCheck(clickedObject, sourceFurniData))) {
                 handleDisallowedInteraction();
                 setFurniIds((prevValue) => {
                     if (!prevValue.includes(objectId)) return prevValue;
@@ -267,16 +296,97 @@ const useWiredState = () => {
     useMessageEvent<WiredSaveSuccessEvent>(WiredSaveSuccessEvent, (event) => {
         const parser = event.getParser();
 
-        WiredSelectionVisualizer.clearAllSelectionShaders();
         if (roomSettings?.canInspect && requestUserVariables) requestUserVariables();
+
+        if (keepOpenAfterSaveRef.current) {
+            // Saved without closing: the picks stay highlighted and the window stays up.
+            keepOpenAfterSaveRef.current = false;
+            return;
+        }
+
+        WiredSelectionVisualizer.clearAllSelectionShaders();
         setTrigger(null);
     });
+
+    /** Saves the box and keeps the window open, so the next change starts from what was saved. */
+    const saveWiredAndKeepOpen = useCallback(() => {
+        keepOpenAfterSaveRef.current = true;
+        saveWired();
+    }, [saveWired]);
+
+    /**
+     * Copies the box's current settings (what the view just pushed into the hook) to the
+     * clipboard slot of its holder and code.
+     */
+    const copyWiredToClipboard = useCallback(() => {
+        const current = triggerRef.current;
+
+        if (!current) return;
+
+        const entry: WiredClipboardEntry = {
+            key: wiredClipboardKeyOf(current),
+            intParams: [...(intParamsRef.current ?? [])],
+            stringParam: stringParamRef.current ?? '',
+            furniIds: [...(furniIdsRef.current ?? [])],
+            delayInPulses: actionDelayRef.current ?? 0
+        };
+
+        setClipboard((prevValue) => {
+            const next = new Map(prevValue);
+
+            next.set(entry.key, entry);
+
+            return next;
+        });
+    }, []);
+
+    /** The clipboard entry that fits the open box, if any. */
+    const clipboardEntry = trigger ? (clipboard.get(wiredClipboardKeyOf(trigger)) ?? null) : null;
+
+    /**
+     * Pastes the fitting clipboard entry into the open box. The views re-read the box because it
+     * is a new object; "paste into" keeps the box's own furni picks and delay.
+     */
+    const pasteWiredFromClipboard = useCallback(
+        (pasteInto: boolean = false) => {
+            const current = triggerRef.current;
+
+            if (!current) return;
+
+            const entry = clipboard.get(wiredClipboardKeyOf(current));
+
+            if (!entry) return;
+
+            setTrigger(pasteTriggerableData(current, entry, pasteInto));
+        },
+        [clipboard, setTrigger]
+    );
+
+    /** Puts the open box back to its catalog defaults; nothing is saved until "ready". */
+    const resetWiredToDefault = useCallback(() => {
+        const current = triggerRef.current;
+
+        if (!current) return;
+
+        setTrigger(resetTriggerableData(current));
+    }, [setTrigger]);
+
+    /** Drops every furni pick of the open box. */
+    const clearWiredPicks = useCallback(() => {
+        setFurniIds((prevValue) => {
+            if (prevValue && prevValue.length) WiredSelectionVisualizer.clearSelectionShaderFromFurni(prevValue);
+
+            return [];
+        });
+    }, [setFurniIds]);
 
     useMessageEvent<WiredValidationErrorEvent>(WiredValidationErrorEvent, (event) => {
         const parser = event.getParser();
 
         if (parser.info && parser.info.length) {
-            const message = /^[a-z0-9_.]+$/i.test(parser.info) ? LocalizeText(parser.info) : parser.info;
+            const message = /^[a-z0-9_.]+$/i.test(parser.info)
+                ? localizeWithFallback(parser.info, WIRED_ERROR_FALLBACKS[parser.info] ?? parser.info)
+                : parser.info;
 
             simpleAlert(message, null, null, null, LocalizeText('wiredfurni.title'));
         }
@@ -318,6 +428,7 @@ const useWiredState = () => {
             setNeighborhoodInvert(false);
             setAllowedInteractionTypes(null);
             setAllowedInteractionErrorKey(null);
+            setAllowedFurniCheckState(null);
         };
     }, [trigger]);
 
@@ -334,11 +445,18 @@ const useWiredState = () => {
         setActionDelay,
         setAllowsFurni,
         saveWired,
+        saveWiredAndKeepOpen,
+        clipboardEntry,
+        copyWiredToClipboard,
+        pasteWiredFromClipboard,
+        resetWiredToDefault,
+        clearWiredPicks,
         selectObjectForWired,
         setNeighborhoodTiles,
         setNeighborhoodInvert,
         setAllowedInteractionTypes,
-        setAllowedInteractionErrorKey
+        setAllowedInteractionErrorKey,
+        setAllowedFurniCheck
     };
 };
 

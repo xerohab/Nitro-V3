@@ -78,7 +78,7 @@ export const AvatarEditorIcon = ({ ref, icon = null, selected = false, className
 
     return (
         <div ref={ref} className={classNames('avatar-editor-icon flex items-center justify-center cursor-pointer', className)} {...rest}>
-            <img src={src} alt="" className="h-[22px] w-auto object-contain pointer-events-none" draggable={false} />
+            <img src={src} alt="" className="pointer-events-none" draggable={false} />
             {children}
         </div>
     );

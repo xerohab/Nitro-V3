@@ -1,6 +1,6 @@
 import { FC, useEffect, useRef, useState } from 'react';
 import { LocalizeText, SearchFilterOptions } from '../../../../api';
-import dropmenuChevron from '../../../../assets/images/habbo-skin/slices/dropmenu-chevron.png';
+import dropmenuArrow from '../../../../assets/images/habbo-skin/slices/dropmenu-default-arrow.png';
 
 interface NavigatorFilterChipsViewProps {
     value: number;
@@ -33,20 +33,20 @@ export const NavigatorFilterChipsView: FC<NavigatorFilterChipsViewProps> = (prop
     }, [open]);
 
     return (
-        <div ref={rootRef} className={`nitro-navigator-air__filter${open ? ' is-open' : ''}`}>
+        <div ref={rootRef} className={`octane-navigator-air__filter${open ? ' is-open' : ''}`}>
             <button
                 type="button"
-                className="nitro-navigator-air__filter-button"
+                className="octane-navigator-air__filter-button"
                 aria-haspopup="listbox"
                 aria-expanded={open}
                 aria-label={LocalizeText('navigator.filter.anything')}
                 onClick={() => setOpen((currentOpen) => !currentOpen)}
             >
                 <span>{LocalizeText('navigator.filter.' + current.name)}</span>
-                <img src={dropmenuChevron} alt="" width={11} height={7} />
+                <img src={dropmenuArrow} alt="" width={16} height={16} />
             </button>
             {open && (
-                <ul className="nitro-navigator-air__filter-list" role="listbox">
+                <ul className="octane-navigator-air__filter-list" role="listbox">
                     {SearchFilterOptions.map((filter, index) => (
                         <li key={filter.name}>
                             <button

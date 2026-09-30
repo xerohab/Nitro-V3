@@ -17,28 +17,28 @@
 
   const debug = (message) => {
     try {
-      window.__nitroLoaderDebug = message;
-      const log = Array.isArray(window.__nitroLoaderDebugLog) ? window.__nitroLoaderDebugLog : [];
+      window.__octaneLoaderDebug = message;
+      const log = Array.isArray(window.__octaneLoaderDebugLog) ? window.__octaneLoaderDebugLog : [];
       log.push(message);
-      window.__nitroLoaderDebugLog = log.slice(-30);
+      window.__octaneLoaderDebugLog = log.slice(-30);
       if(!isDebug()) {
-        document.getElementById("nitro-loader-debug")?.remove();
+        document.getElementById("octane-loader-debug")?.remove();
         return;
       }
-      let node = document.getElementById("nitro-loader-debug");
+      let node = document.getElementById("octane-loader-debug");
       if(!node) {
         node = document.createElement("div");
-        node.id = "nitro-loader-debug";
+        node.id = "octane-loader-debug";
         node.style.cssText = "position:fixed;left:8px;top:8px;z-index:2147483647;padding:6px 8px;max-width:70vw;background:rgba(0,0,0,.85);color:#fff;font:12px monospace;white-space:pre-wrap";
         document.body.appendChild(node);
       }
-      node.textContent = window.__nitroLoaderDebugLog.slice(-10).join("\n");
+      node.textContent = window.__octaneLoaderDebugLog.slice(-10).join("\n");
     } catch {}
   };
 
   const getBase = () => {
-    if(typeof window.__nitroLoaderBase === "string" && window.__nitroLoaderBase) {
-      try { return new URL(window.__nitroLoaderBase); } catch {}
+    if(typeof window.__octaneLoaderBase === "string" && window.__octaneLoaderBase) {
+      try { return new URL(window.__octaneLoaderBase); } catch {}
     }
     const source = document.currentScript?.src || location.href;
     return new URL(".", source);
@@ -197,22 +197,22 @@
 
   const readClientMode = async () => {
     try {
-      if(window.__nitroClientMode && typeof window.__nitroClientMode === "object") {
+      if(window.__octaneClientMode && typeof window.__octaneClientMode === "object") {
         debug("loader: client-mode preset");
-        return window.__nitroClientMode;
+        return window.__octaneClientMode;
       }
       const url = withCacheBust(new URL("./client-mode.json", getBase()));
       const response = await fetch(url, { cache: "no-store" });
       if(!response.ok) throw new Error("client-mode " + response.status);
       const payload = await response.json();
       const mode = { ...MODE_DEFAULTS, ...(payload && typeof payload === "object" ? payload : {}) };
-      window.__nitroClientMode = mode;
+      window.__octaneClientMode = mode;
       debug("loader: client-mode loaded");
       return mode;
     } catch(error) {
-      window.__nitroClientMode = { ...MODE_DEFAULTS };
+      window.__octaneClientMode = { ...MODE_DEFAULTS };
       debug("loader: client-mode fallback " + (error?.message || error));
-      return window.__nitroClientMode;
+      return window.__octaneClientMode;
     }
   };
 

@@ -1,8 +1,7 @@
-import { NavigatorSavedSearch } from '@nitrots/nitro-renderer';
+import { NavigatorSavedSearch } from '@octane/renderer';
 import { FC } from 'react';
 import { LocalizeText } from '../../../../api';
 import quicklinkAdd from '../../../../assets/images/navigator/air/quicklink-add.png';
-import { Column, Flex, Text } from '../../../../common';
 import { NavigatorSearchSavesResultItemView } from './NavigatorSearchSavesResultItemView';
 
 export interface NavigatorSearchSavesResultViewProps {
@@ -13,22 +12,20 @@ export const NavigatorSearchSavesResultView: FC<NavigatorSearchSavesResultViewPr
     const { searches = [] } = props;
 
     return (
-        <Column className="nitro-navigator-search-saves-result h-full" gap={0}>
-            <Flex className="nitro-navigator-search-saves-result__header shrink-0" gap={1} alignItems="center">
-                <img src={quicklinkAdd} alt="" />
-                <Text variant="white" truncate>
-                    {LocalizeText('navigator.quick.links.title')}
-                </Text>
-            </Flex>
-            <Column className="nitro-navigator-search-saves-result__list flex-1 min-h-0 overflow-x-hidden overflow-y-auto" gap={0}>
+        <div className="octane-navigator-search-saves-result">
+            <div className="octane-navigator-search-saves-result__header">
+                <img className="octane-navigator-search-saves-result__header-icon" src={quicklinkAdd} alt="" width={18} height={18} />
+                <span className="octane-navigator-search-saves-result__header-label">{LocalizeText('navigator.quick.links.title')}</span>
+            </div>
+            <div className="octane-navigator-search-saves-result__list">
                 {searches && searches.length > 0 ? (
                     searches.map((search: NavigatorSavedSearch) => <NavigatorSearchSavesResultItemView key={search.id} search={search} />)
                 ) : (
-                    <Flex center className="py-4 opacity-30">
-                        <img src={quicklinkAdd} alt="" />
-                    </Flex>
+                    <div className="octane-navigator-search-saves-result__empty">
+                        <img src={quicklinkAdd} alt="" width={18} height={18} />
+                    </div>
                 )}
-            </Column>
-        </Column>
+            </div>
+        </div>
     );
 };

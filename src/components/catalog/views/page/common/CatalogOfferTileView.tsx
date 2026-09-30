@@ -1,7 +1,7 @@
-import { MouseEventType } from '@nitrots/nitro-renderer';
+import { MouseEventType } from '@octane/renderer';
 import { FC, KeyboardEvent, MouseEvent, useEffect, useMemo, useRef, useState } from 'react';
-import { CatalogType, GetConfigurationValue, GetFurnitureData, IPurchasableOffer, Offer, ProductTypeEnum } from '../../../../../api';
-import { LayoutAvatarImageView, LayoutGridItem, LayoutGridItemProps } from '../../../../../common';
+import { CatalogType, GetConfigurationValue, GetProductIconUrl, IPurchasableOffer, Offer, ProductTypeEnum } from '../../../../../api';
+import { LayoutAvatarImageView, LayoutGridItem, LayoutGridItemProps, LayoutHabbiconImageView } from '../../../../../common';
 import { isAirBaseCatalogOffer } from './catalogAirGrid.helpers';
 
 export interface CatalogOfferTileViewProps extends LayoutGridItemProps {
@@ -48,41 +48,17 @@ export const CatalogOfferTileView: FC<CatalogOfferTileViewProps> = (props) => {
                     observer.disconnect();
                 }
             },
-            { root: element.closest('.nitro-catalog-default-layout, .nitro-catalog-window') ?? null, rootMargin: '120px' }
+            { root: element.closest('.octane-catalog-default-layout, .octane-catalog-window') ?? null, rootMargin: '120px' }
         );
         observer.observe(element);
         return () => observer.disconnect();
-    }, [offer?.offerId, offer?.product?.productClassId]);
+    }, [offer?.offerId]);
 
     const resolvedIconUrl = useMemo(() => {
         if (!offer || offer.pricingModel === Offer.PRICING_MODEL_BUNDLE) return null;
-        const product = offer.product;
-        if (!product) return null;
 
-        if (product.productType === ProductTypeEnum.FLOOR || product.productType === ProductTypeEnum.WALL) {
-            // Dynamically resolve furnitureData if it isn't attached to search offer products
-            const furniData = product.furnitureData || (product.productClassId ? GetFurnitureData(product.productClassId, product.productType) : null);
-            const className = furniData?.className;
-
-            if (className?.length) {
-                let param = '';
-                if (product.productType === ProductTypeEnum.WALL && product.extraParam?.length) {
-                    param = `_${product.extraParam}`;
-                } else if (product.productType === ProductTypeEnum.FLOOR && furniData?.hasIndexedColor && furniData.colorIndex > 0) {
-                    param = `_${furniData.colorIndex}`;
-                }
-
-                const configuredIconUrl = GetConfigurationValue<string>('furni.asset.icon.url', '');
-                if (configuredIconUrl?.length) {
-                    return configuredIconUrl.replace('%libname%', className).replace('%param%', param);
-                }
-            }
-
-            if (furniData?.iconUrl) return furniData.iconUrl;
-        }
-
-        return typeof product.getIconUrl === 'function' ? (product.getIconUrl(offer) ?? null) : null;
-    }, [offer, offer?.product?.productClassId, offer?.product?.furnitureData]);
+        return GetProductIconUrl(offer.product, offer);
+    }, [offer]);
 
     const prices = useMemo(() => {
         if (!offer) return [];
@@ -124,17 +100,16 @@ export const CatalogOfferTileView: FC<CatalogOfferTileViewProps> = (props) => {
 
     if (!offer?.product) return null;
     const product = offer.product;
-    const furniData = product.furnitureData || (product.productClassId ? GetFurnitureData(product.productClassId, product.productType) : null);
     const iconUrl = iconVisible ? resolvedIconUrl : null;
 
     return (
         <div
             ref={tileRef}
-            aria-label={offer.localizationName || furniData?.name || ''}
+            aria-label={offer.localizationName || product.furnitureData?.name || ''}
             aria-selected={itemActive}
             role="option"
             tabIndex={0}
-            title={showTechnicalDetails ? `ID: ${product.productClassId} | Offer: ${offer.offerId}` : (offer.localizationName || furniData?.name)}
+            title={showTechnicalDetails ? `ID: ${product.productClassId} | Offer: ${offer.offerId}` : offer.localizationName}
             onKeyDown={onKeyDown}
         >
             <LayoutGridItem
@@ -148,34 +123,35 @@ export const CatalogOfferTileView: FC<CatalogOfferTileViewProps> = (props) => {
                 onMouseUp={onMouseEvent}
                 {...rest}
             >
-                {iconUrl && product.productType !== ProductTypeEnum.ROBOT && (
+                {iconUrl && product.productType !== ProductTypeEnum.HABBICON && product.productType !== ProductTypeEnum.ROBOT && (
                     <img
-                        className="nitro-catalog-grid-offer-icon"
+                        className="octane-catalog-grid-offer-icon"
                         src={iconUrl}
                         draggable={false}
                         style={tintColor ? { filter: 'url(#guild-furni-recolor)', transform: 'translateZ(0)' } : undefined}
                         onError={(event) => {
-                            const fallbackIconUrl = furniData?.iconUrl || (typeof product.getIconUrl === 'function' ? product.getIconUrl(offer) : null);
-                            if (fallbackIconUrl && event.currentTarget.src !== fallbackIconUrl) {
-                                event.currentTarget.src = fallbackIconUrl;
-                            }
+                            const fallbackIconUrl = typeof product.getIconUrl === 'function' ? product.getIconUrl(offer) : null;
+                            if (fallbackIconUrl && event.currentTarget.src !== fallbackIconUrl) event.currentTarget.src = fallbackIconUrl;
                         }}
                     />
                 )}
+                {product.productType === ProductTypeEnum.HABBICON && (
+                    <LayoutHabbiconImageView className="octane-catalog-grid-habbicon-icon" id={product.productClassId} />
+                )}
                 {product.productType === ProductTypeEnum.ROBOT && <LayoutAvatarImageView direction={2} figure={product.extraParam} fit />}
                 {offer.clubLevel > 0 && (
-                    <span aria-label="Habbo Club" className="nitro-catalog-grid-club-level" title="Habbo Club">
-                        <i aria-hidden="true" className="nitro-icon icon-catalogue-hc_small" />
+                    <span aria-label="Habbo Club" className="octane-catalog-grid-club-level" title="Habbo Club">
+                        <i aria-hidden="true" className="octane-icon icon-catalogue-hc_small" />
                     </span>
                 )}
                 {showPrices && currentType !== CatalogType.BUILDER && prices.length > 0 && (
-                    <span className={`nitro-catalog-grid-price ${prices.length > 1 ? 'is-multi-price' : 'is-single-price'}`}>
+                    <span className={`octane-catalog-grid-price ${prices.length > 1 ? 'is-multi-price' : 'is-single-price'}`}>
                         {prices.map((price, index) => (
-                            <span key={`${price.type}-${index}`} className="nitro-catalog-grid-price-entry">
-                                {index > 0 && <span className="nitro-catalog-grid-price-plus">+</span>}
-                                <span className="nitro-catalog-grid-price-amount">{price.amount}</span>
+                            <span key={`${price.type}-${index}`} className="octane-catalog-grid-price-entry">
+                                {index > 0 && <span className="octane-catalog-grid-price-plus">+</span>}
+                                <span className="octane-catalog-grid-price-amount">{price.amount}</span>
                                 {!!getCurrencyIconUrl(price.type) && (
-                                    <img className="nitro-catalog-grid-price-currency" src={getCurrencyIconUrl(price.type)} draggable={false} />
+                                    <img className="octane-catalog-grid-price-currency" src={getCurrencyIconUrl(price.type)} draggable={false} />
                                 )}
                             </span>
                         ))}

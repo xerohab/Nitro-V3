@@ -4,6 +4,7 @@ export interface PetPaletteLike {
     rare: boolean;
     sellable: boolean;
     type: number;
+    clubOnly?: boolean;
 }
 
 export interface PetColorResultLike {
@@ -33,12 +34,13 @@ export const buildNewPetPaletteChoices = <TPalette extends PetPaletteLike>(
     for (const palette of filterPetPalettes(petType, palettes)) {
         const result = getColorResult(petType, palette.paletteId);
 
+        if (!result) continue;
+
         choices.push({
-            colors: result
-                ? result.primaryColor === result.secondaryColor
+            colors:
+                result.primaryColor === result.secondaryColor
                     ? [result.primaryColor]
-                    : [result.primaryColor, result.secondaryColor]
-                : [0xffffff],
+                    : [result.primaryColor, result.secondaryColor],
             palette
         });
 

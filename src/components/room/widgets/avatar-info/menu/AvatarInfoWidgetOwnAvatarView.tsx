@@ -6,8 +6,8 @@ import {
     RoomObjectCategory,
     RoomObjectVariable,
     RoomUnitDropHandItemComposer
-} from '@nitrots/nitro-renderer';
-import { Dispatch, FC, ReactNode, SetStateAction, useState } from 'react';
+} from '@octane/renderer';
+import { Dispatch, FC, SetStateAction, useState } from 'react';
 import {
     AvatarInfoUser,
     DispatchUiEvent,
@@ -35,11 +35,6 @@ interface AvatarInfoWidgetOwnAvatarViewProps {
     isDancing: boolean;
     setIsDecorating: Dispatch<SetStateAction<boolean>>;
     onClose: () => void;
-}
-
-interface AirMenuLabelProps {
-    children: ReactNode;
-    direction?: 'left' | 'right';
 }
 
 interface AirSign {
@@ -73,14 +68,6 @@ const AIR_SIGNS: AirSign[] = [
     { id: 17, icon: 'yellow' },
     { id: 16, icon: 'red' }
 ];
-
-const AirMenuLabel: FC<AirMenuLabelProps> = ({ children, direction = null }) => (
-    <span className="air-avatar-menu-label">
-        {direction === 'left' && <i className="air-avatar-menu-arrow air-avatar-menu-arrow--left" aria-hidden="true" />}
-        {children}
-        {direction === 'right' && <i className="air-avatar-menu-arrow air-avatar-menu-arrow--right" aria-hidden="true" />}
-    </span>
-);
 
 export const AvatarInfoWidgetOwnAvatarView: FC<AvatarInfoWidgetOwnAvatarViewProps> = (props) =>
 {
@@ -219,7 +206,7 @@ export const AvatarInfoWidgetOwnAvatarView: FC<AvatarInfoWidgetOwnAvatarViewProp
     return (
         <ContextMenuView
             category={RoomObjectCategory.UNIT}
-            classNames={['nitro-avatar-action-menu', 'nitro-avatar-action-menu--own']}
+            classNames={['octane-avatar-action-menu', 'octane-avatar-action-menu--own']}
             collapsable={true}
             freezePositionOnHover={true}
             maximumVerticalLeadRatio={0.05}
@@ -251,14 +238,14 @@ export const AvatarInfoWidgetOwnAvatarView: FC<AvatarInfoWidgetOwnAvatarViewProp
                         </ContextMenuListItemView>
                         {expressionsMenuEnabled ? (
                             <ContextMenuListItemView onClick={() => processAction('expressions')}>
-                                <AirMenuLabel direction="right">{LocalizeText('infostand.link.expressions')}</AirMenuLabel>
+                                {LocalizeText('infostand.link.expressions')}
                             </ContextMenuListItemView>
                         ) : (
                             <ContextMenuListItemView onClick={() => processAction('wave')}>{LocalizeText('widget.memenu.wave')}</ContextMenuListItemView>
                         )}
                         {hasClub && !isRidingHorse && (
                             <ContextMenuListItemView disabled={hasActiveEffect} onClick={() => processAction('dance_menu')}>
-                                <AirMenuLabel direction="right">{LocalizeText('widget.memenu.dance')}</AirMenuLabel>
+                                {LocalizeText('widget.memenu.dance')}
                             </ContextMenuListItemView>
                         )}
                         {!isDancing && !hasClub && !isRidingHorse && (
@@ -273,7 +260,7 @@ export const AvatarInfoWidgetOwnAvatarView: FC<AvatarInfoWidgetOwnAvatarViewProp
                         )}
                         {signsEnabled && (
                             <ContextMenuListItemView onClick={() => processAction('signs')}>
-                                <AirMenuLabel direction="right">{LocalizeText('infostand.show.signs')}</AirMenuLabel>
+                                {LocalizeText('infostand.show.signs')}
                             </ContextMenuListItemView>
                         )}
                         {avatarInfo.carryItem > 0 && avatarInfo.carryItem < 999999 && handItemDropEnabled && (
@@ -315,7 +302,7 @@ export const AvatarInfoWidgetOwnAvatarView: FC<AvatarInfoWidgetOwnAvatarViewProp
                         <ContextMenuListItemView onClick={() => processAction('dance_3')}>{LocalizeText('widget.memenu.dance3')}</ContextMenuListItemView>
                         <ContextMenuListItemView onClick={() => processAction('dance_4')}>{LocalizeText('widget.memenu.dance4')}</ContextMenuListItemView>
                         <ContextMenuListItemView onClick={() => processAction('back')}>
-                            <AirMenuLabel direction="left">{LocalizeText('generic.back')}</AirMenuLabel>
+                            {LocalizeText('generic.back')}
                         </ContextMenuListItemView>
                     </>
                 )}
@@ -358,7 +345,7 @@ export const AvatarInfoWidgetOwnAvatarView: FC<AvatarInfoWidgetOwnAvatarViewProp
                         </ContextMenuListItemView>
                         <ContextMenuListItemView onClick={() => processAction('idle')}>{LocalizeText('widget.memenu.idle')}</ContextMenuListItemView>
                         <ContextMenuListItemView onClick={() => processAction('back')}>
-                            <AirMenuLabel direction="left">{LocalizeText('generic.back')}</AirMenuLabel>
+                            {LocalizeText('generic.back')}
                         </ContextMenuListItemView>
                     </>
                 )}
@@ -377,7 +364,7 @@ export const AvatarInfoWidgetOwnAvatarView: FC<AvatarInfoWidgetOwnAvatarViewProp
                             ))}
                         </div>
                         <ContextMenuListItemView onClick={() => processAction('back')}>
-                            <AirMenuLabel direction="left">{LocalizeText('generic.back')}</AirMenuLabel>
+                            {LocalizeText('generic.back')}
                         </ContextMenuListItemView>
                     </>
                 )}

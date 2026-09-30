@@ -1,4 +1,4 @@
-import { GetAvatarRenderManager, GetSessionDataManager } from '@nitrots/nitro-renderer';
+import { GetAvatarRenderManager, GetSessionDataManager } from '@octane/renderer';
 import { cleanup, render, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useCatalogData, useCatalogUiState } from '../../../../../hooks';
@@ -103,6 +103,8 @@ describe('catalog product preview', () => {
             expect(avatarRenderManager.getFigureStringWithFigureIds).toHaveBeenCalledWith('base-figure', 'M', [101, 202]);
             expect(roomPreviewer.addAvatarIntoRoom).toHaveBeenCalledWith('composed-figure', 0);
             expect(roomPreviewer.zoomIn).toHaveBeenCalledOnce();
+            // 41px on a canvas the same step has already doubled: half that in engine pixels.
+            expect(roomPreviewer.addViewOffset.y).toBe(-21);
             expect(roomPreviewer.setAutomaticStateChange).toHaveBeenLastCalledWith(false);
         });
     });
@@ -130,8 +132,13 @@ describe('catalog product preview', () => {
             expect(roomPreviewer.addFurnitureIntoRoom).toHaveBeenCalledWith(500, expect.anything(), null, '');
             expect(roomPreviewer.addAvatarIntoRoom).not.toHaveBeenCalled();
             expect(roomPreviewer.zoomIn).not.toHaveBeenCalled();
+            // Furniture is not zoomed, but it is lifted: the canvas is centred in a box shorter
+            // than itself, so dead centre reads low for everything in it, not just avatars.
+            expect(roomPreviewer.addViewOffset.y).toBe(-21);
             expect(roomPreviewer.centerWallItems).toBe(true);
-            expect(roomPreviewer.updateObjectRoom).not.toHaveBeenCalled();
+            // The previewer is shared: without the neutral repaint, a wallpaper
+            // or landscape previewed earlier would still be on the walls here.
+            expect(roomPreviewer.updateObjectRoom).toHaveBeenCalledWith('default', 'default', 'default');
             expect(roomPreviewer.setAutomaticStateChange).toHaveBeenLastCalledWith(true);
         });
     });
@@ -160,6 +167,70 @@ describe('catalog product preview', () => {
             expect(avatarRenderManager.isValidFigureSetForGender).not.toHaveBeenCalled();
             expect(roomPreviewer.addAvatarIntoRoom).toHaveBeenCalledWith('base-figure', 0);
             expect(roomPreviewer.setAutomaticStateChange).toHaveBeenLastCalledWith(false);
+        });
+    });
+
+    /**
+     * The previewer is shared with every other catalog layout, and the offset is a live Point on
+     * it: an outfit's lift left behind is inherited by the next furniture drawn in the same box.
+     */
+    it('hands the previewer back unlifted when it stops driving it', async () => {
+        const roomPreviewer = createRoomPreviewer();
+
+        vi.mocked(GetAvatarRenderManager).mockReturnValue({
+            getFigureStringWithFigureIds: vi.fn(() => 'composed-figure'),
+            isValidFigureSetForGender: vi.fn(() => true)
+        } as any);
+        vi.mocked(GetSessionDataManager).mockReturnValue({
+            figure: 'base-figure',
+            gender: 'M',
+            getFloorItemData: () => ({ customParams: '101' })
+        } as any);
+        vi.mocked(useCatalogData).mockReturnValue({ currentOffer: createFloorOffer(23), roomPreviewer } as any);
+
+        const view = render(<CatalogViewProductWidgetView />);
+
+        await waitFor(() => expect(roomPreviewer.addViewOffset.y).toBe(-21));
+
+        view.unmount();
+
+        expect(roomPreviewer.addViewOffset.y).toBe(0);
+    });
+
+    it('previews a plain wall item on the neutral room instead of a picked wallpaper and landscape', async () => {
+        const roomPreviewer = createRoomPreviewer();
+        const offer = {
+            pricingModel: 'single',
+            product: {
+                productType: 'i',
+                productClassId: 700,
+                extraParam: '',
+                furnitureData: { id: 700, specialType: 1 }
+            }
+        };
+
+        vi.mocked(useCatalogData).mockReturnValue({ currentOffer: offer, roomPreviewer } as any);
+
+        render(<CatalogViewProductWidgetView />);
+
+        await waitFor(() => {
+            expect(roomPreviewer.updateObjectRoom).toHaveBeenCalledWith('default', 'default', 'default');
+            expect(roomPreviewer.addWallItemIntoRoom).toHaveBeenCalledWith(700, expect.anything(), '');
+        });
+    });
+
+    it('previews a landscape on neutral floor and walls', async () => {
+        const roomPreviewer = createRoomPreviewer();
+
+        vi.mocked(GetSessionDataManager).mockReturnValue({
+            getWallItemDataByName: () => ({ id: 600 })
+        } as any);
+        vi.mocked(useCatalogData).mockReturnValue({ currentOffer: createLandscapeOffer(), roomPreviewer } as any);
+
+        render(<CatalogViewProductWidgetView />);
+
+        await waitFor(() => {
+            expect(roomPreviewer.updateObjectRoom).toHaveBeenCalledWith('default', 'default', 'landscape');
         });
     });
 

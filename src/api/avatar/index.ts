@@ -1,3 +1,4 @@
+export * from './avatarThumbnailUrls';
 export * from './AvatarEditorAction';
 export * from './AvatarEditorColorSorter';
 export * from './AvatarEditorPartSorter';

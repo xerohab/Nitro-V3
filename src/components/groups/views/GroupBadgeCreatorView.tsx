@@ -26,38 +26,11 @@ export const GroupBadgeCreatorView: FC<GroupBadgeCreatorViewProps> = (props) => 
         if (property === 'key') setSelectedIndex(-1);
     };
 
-    const getSymbolNames = (item: { id: number; images: string[] }) => {
-        if (!item || !item.images || !item.images.length) return [];
-
-        return item.images.filter((value) => !!value && !!value.length).map((value) => value.replace('.png', '').replace('.gif', '').toLowerCase());
-    };
-
-    const isAlphaNumericSymbol = (name: string) => {
-        return /(^|_)symbol_[a-z0-9]$/i.test(name) || /(^|_)symbol_[a-z0-9]_part[12]$/i.test(name);
-    };
-
-    const getAvailableSymbols = () => {
-        const symbols = groupCustomize?.badgeSymbols || [];
-
-        if (selectedIndex < 0) return symbols;
-
-        switch (selectedIndex) {
-            case 1:
-                return symbols.filter((item) => getSymbolNames(item).some((name) => name.includes('_part1')));
-            case 2:
-                return symbols.filter((item) => getSymbolNames(item).some((name) => name.includes('_part2')));
-            case 3:
-                return symbols.filter((item) => getSymbolNames(item).some((name) => isAlphaNumericSymbol(name)));
-            case 4:
-                return symbols.filter((item) => {
-                    const names = getSymbolNames(item);
-
-                    return !names.some((name) => name.includes('_part1') || name.includes('_part2') || isAlphaNumericSymbol(name));
-                });
-            default:
-                return symbols;
-        }
-    };
+    // Every symbol slot offers the full symbol list. The picker briefly filtered
+    // symbols per slot on their _part1/_part2 name suffixes, but those suffixes are
+    // render layers of a single symbol, not categories — the filter just hid most
+    // symbols from most slots.
+    const getAvailableSymbols = () => groupCustomize?.badgeSymbols || [];
 
     if (!groupCustomize || !badgeParts || !badgeParts.length) return null;
 
@@ -109,7 +82,7 @@ export const GroupBadgeCreatorView: FC<GroupBadgeCreatorViewProps> = (props) => 
                     );
                 })}
             {selectedIndex >= 0 && (
-                <Grid columnCount={5} gap={1}>
+                <Grid className="octane-group-badge-part-picker" columnCount={5} fullHeight={false} gap={1}>
                     {badgeParts[selectedIndex].type === GroupBadgePart.SYMBOL && (
                         <Column center pointer className="bg-muted rounded p-1" onClick={(event) => setPartProperty(selectedIndex, 'key', 0)}>
                             <Flex center className="relative w-[40px] h-[40px] bg-no-repeat bg-center group-badge">

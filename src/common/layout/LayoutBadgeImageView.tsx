@@ -1,4 +1,4 @@
-import { BadgeImageReadyEvent, GetEventDispatcher, GetSessionDataManager, NitroSprite, TextureUtils } from '@nitrots/nitro-renderer';
+import { BadgeImageReadyEvent, GetEventDispatcher, GetSessionDataManager, OctaneSprite, TextureUtils } from '@octane/renderer';
 import { CSSProperties, FC, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
@@ -11,6 +11,7 @@ import {
     LocalizeText
 } from '../../api';
 import { Base, BaseProps } from '../Base';
+import { PIXEL_ART_RENDERING } from './PixelArtRendering';
 
 export interface LayoutBadgeImageViewProps extends BaseProps<HTMLDivElement> {
     badgeCode: string;
@@ -92,7 +93,7 @@ export const LayoutBadgeImageView: FC<LayoutBadgeImageViewProps> = (props) => {
             if (scale !== 1) {
                 newStyle.transform = `scale(${scale})`;
 
-                if (!(scale % 1)) newStyle.imageRendering = 'pixelated';
+                if (!(scale % 1)) newStyle.imageRendering = PIXEL_ART_RENDERING;
 
                 newStyle.width = imageElement.width * scale;
                 newStyle.height = imageElement.height * scale;
@@ -122,11 +123,12 @@ export const LayoutBadgeImageView: FC<LayoutBadgeImageViewProps> = (props) => {
             if (event.badgeId !== badgeCode) return;
 
             if (isGroup) {
-                const element = await TextureUtils.generateImage(new NitroSprite(event.image));
+                const sprite = new OctaneSprite(event.image);
+                const element = await TextureUtils.generateImage({ target: sprite, resolution: 1 });
 
-                // The generated image carries an already-decoded data-URL, so
-                // `onload` may have fired before we attach it and never run.
-                // Set immediately when complete; otherwise wait for load.
+                // Drop the wrapper only; the badge texture stays with the session data manager.
+                sprite.destroy();
+
                 if (element.complete && element.naturalWidth) setImageElement(element);
                 else element.onload = () => setImageElement(element);
             } else {
@@ -149,7 +151,10 @@ export const LayoutBadgeImageView: FC<LayoutBadgeImageViewProps> = (props) => {
         if (texture && !didSetBadge) {
             if (isGroup) {
                 (async () => {
-                    const element = await TextureUtils.generateImage(new NitroSprite(texture));
+                    const sprite = new OctaneSprite(texture);
+                    const element = await TextureUtils.generateImage({ target: sprite, resolution: 1 });
+
+                    sprite.destroy();
 
                     if (element.complete && element.naturalWidth) setImageElement(element);
                     else element.onload = () => setImageElement(element);

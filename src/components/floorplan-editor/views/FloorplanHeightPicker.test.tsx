@@ -43,7 +43,8 @@ describe('FloorplanHeightPicker', () => {
         const thumb = screen.getByTestId('height-thumb');
 
         expect(thumb).toBeInTheDocument();
-        expect(thumb.textContent).toBe('12');
+        expect(thumb.getAttribute('data-value')).toBe('12');
+        expect(screen.getByRole('slider').getAttribute('aria-valuenow')).toBe('12');
     });
 
     it('clicking near the top of the track picks HEIGHT_BRUSH_MAX', () => {

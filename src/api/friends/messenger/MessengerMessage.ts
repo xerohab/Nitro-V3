@@ -9,6 +9,7 @@ export interface MessengerMessage
     type: number;
     message: string;
     metadata: string;
+    replyToMessageId?: number;
     createdAt: number;
     status: MessengerMessageStatus;
     errorCode?: number;

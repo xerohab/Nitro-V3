@@ -1,6 +1,6 @@
-import { RelationshipStatusEnum, RelationshipStatusInfo } from '@nitrots/nitro-renderer';
+import { RelationshipStatusEnum, RelationshipStatusInfo } from '@octane/renderer';
 import { FC } from 'react';
-import { GetUserProfile, LocalizeText } from '../../../../../api';
+import { GetUserProfile, LocalizeText, localizeWithFallback } from '../../../../../api';
 import { Flex, Text } from '../../../../../common';
 
 interface InfoStandWidgetUserRelationshipsRelationshipItemViewProps {
@@ -17,12 +17,18 @@ export const InfoStandWidgetUserRelationshipsRelationshipItemView: FC<InfoStandW
 
     return (
         <div className="flex items-center gap-1">
-            <i className={`nitro-friends-spritesheet icon-${relationshipName}`} />
+            <i className={`octane-friends-spritesheet icon-${relationshipName}`} />
             <Flex alignItems="center" gap={0}>
                 <Text small variant="white" onClick={(event) => GetUserProfile(relationship.randomFriendId)}>
                     <u>{relationship.randomFriendName}</u>
                     {relationship.friendCount > 1 &&
-                        ' ' + LocalizeText(`extendedprofile.relstatus.others.${relationshipName}`, ['count'], [(relationship.friendCount - 1).toString()])}
+                        ' ' +
+                            localizeWithFallback(
+                                `infostand.relstatus.${relationshipName}.others`,
+                                LocalizeText(`extendedprofile.relstatus.others.${relationshipName}`, ['count'], [(relationship.friendCount - 1).toString()]),
+                                ['amount'],
+                                [(relationship.friendCount - 1).toString()]
+                            )}
                 </Text>
             </Flex>
         </div>

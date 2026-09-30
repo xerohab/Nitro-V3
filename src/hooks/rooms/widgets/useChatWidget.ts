@@ -12,7 +12,7 @@ import {
     RoomSessionChatEvent,
     RoomUserData,
     SystemChatStyleEnum
-} from '@nitrots/nitro-renderer';
+} from '@octane/renderer';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     ChatBubbleMessage,
@@ -22,13 +22,15 @@ import {
     GetConfigurationValue,
     GetRoomObjectScreenLocation,
     IRoomChatSettings,
+    loadEmojiShortcodes,
     LocalizeText,
     PlaySound,
     RoomChatFormatter
 } from '../../../api';
+import { getStoredChatTextSize } from '../../../components/room/widgets/chat-input/chatTextSize';
 import { SoundboardRoomMessageEvent } from '../../../events';
 import { useChatHistory } from './../../chat-history';
-import { useMessageEvent, useNitroEvent, useUiEvent } from '../../events';
+import { useMessageEvent, useOctaneEvent, useUiEvent } from '../../events';
 import { useUserDataSnapshot } from '../../session/useSessionSnapshots';
 import { useTranslation } from '../../translation';
 import { useRoom } from '../useRoom';
@@ -118,7 +120,7 @@ const useChatWidgetState = () => {
         }
     }, [chatSettings]);
 
-    useNitroEvent<RoomSessionChatEvent>(RoomSessionChatEvent.CHAT_EVENT, async (event) => {
+    useOctaneEvent<RoomSessionChatEvent>(RoomSessionChatEvent.CHAT_EVENT, async (event) => {
         const roomObject = GetRoomEngine().getRoomObject(roomSession.roomId, event.objectId, RoomObjectCategory.UNIT);
         const bubbleLocation = roomObject ? GetRoomObjectScreenLocation(roomSession.roomId, roomObject?.id, RoomObjectCategory.UNIT) : { x: 0, y: 0 };
         const userData = roomObject ? roomSession.userDataManager.getUserDataByIndex(event.objectId) : new RoomUserData(-1);
@@ -228,6 +230,10 @@ const useChatWidgetState = () => {
             imageUrl,
             color
         );
+        // The renderer adds bubbleWidthOverride to the chat event in Octane-Renderer#212; until that
+        // lands the published event has no such field, so it is read as optional.
+        chatMessage.textSize = getStoredChatTextSize();
+        chatMessage.bubbleWidthOverride = (event as RoomSessionChatEvent & { bubbleWidthOverride?: number }).bubbleWidthOverride ?? -1;
 
         if (outgoingTranslation) {
             applyTranslationToBubble(
@@ -324,6 +330,7 @@ const useChatWidgetState = () => {
             null,
             null
         );
+        bubble.textSize = getStoredChatTextSize();
 
         setChatMessages((previous) => {
             const next = [...previous, bubble];
@@ -345,7 +352,7 @@ const useChatWidgetState = () => {
         });
     });
 
-    useNitroEvent<RoomDragEvent>(RoomDragEvent.ROOM_DRAG, (event) => {
+    useOctaneEvent<RoomDragEvent>(RoomDragEvent.ROOM_DRAG, (event) => {
         if (!chatMessages.length || event.roomId !== roomSession.roomId) return;
 
         const offsetX = event.offsetX;
@@ -375,6 +382,8 @@ const useChatWidgetState = () => {
 
     useEffect(() => {
         isDisposed.current = false;
+
+        if (GetConfigurationValue<boolean>('chat.emoji.enabled', true)) loadEmojiShortcodes();
 
         return () => {
             isDisposed.current = true;

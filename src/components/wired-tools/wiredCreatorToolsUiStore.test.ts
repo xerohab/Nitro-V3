@@ -12,11 +12,10 @@ const INITIAL = {
     isInspectionGiveOpen: false,
     isVariableManageOpen: false,
     isManagedGiveOpen: false,
+    isRoomLogsOpen: false,
+    isSelfDonationOpen: false,
     monitorHistorySeverityFilter: 'ALL' as const,
     monitorHistoryTypeFilter: 'ALL',
-    variableManageTypeFilter: 'ALL',
-    variableManageSort: 'highest_value',
-    variableManagePage: 1,
     monitorSnapshot: createEmptyMonitorSnapshot(),
     selectedFurni: null,
     selectedFurniLiveState: null,
@@ -58,9 +57,8 @@ describe('useWiredCreatorToolsUiStore', () => {
         expect(state.isManagedGiveOpen).toBe(false);
         expect(state.monitorHistorySeverityFilter).toBe('ALL');
         expect(state.monitorHistoryTypeFilter).toBe('ALL');
-        expect(state.variableManageTypeFilter).toBe('ALL');
-        expect(state.variableManageSort).toBe('highest_value');
-        expect(state.variableManagePage).toBe(1);
+        expect(state.isRoomLogsOpen).toBe(false);
+        expect(state.isSelfDonationOpen).toBe(false);
         expect(state.monitorSnapshot).toEqual(createEmptyMonitorSnapshot());
         expect(state.selectedFurni).toBeNull();
         expect(state.selectedFurniLiveState).toBeNull();
@@ -172,26 +170,9 @@ describe('useWiredCreatorToolsUiStore', () => {
     });
 
     describe('variable manage UI', () => {
-        it('setVariableManageTypeFilter / setVariableManageSort store string filters', () => {
-            useWiredCreatorToolsUiStore.getState().setVariableManageTypeFilter('Number');
-            useWiredCreatorToolsUiStore.getState().setVariableManageSort('lowest_value');
-
-            expect(useWiredCreatorToolsUiStore.getState().variableManageTypeFilter).toBe('Number');
-            expect(useWiredCreatorToolsUiStore.getState().variableManageSort).toBe('lowest_value');
-        });
-
-        it('setVariableManagePage accepts a direct value', () => {
-            useWiredCreatorToolsUiStore.getState().setVariableManagePage(4);
-            expect(useWiredCreatorToolsUiStore.getState().variableManagePage).toBe(4);
-        });
-
-        it('setVariableManagePage accepts a functional updater (next/prev pagination)', () => {
-            useWiredCreatorToolsUiStore.getState().setVariableManagePage(2);
-            useWiredCreatorToolsUiStore.getState().setVariableManagePage((prev) => prev + 1);
-            expect(useWiredCreatorToolsUiStore.getState().variableManagePage).toBe(3);
-
-            useWiredCreatorToolsUiStore.getState().setVariableManagePage((prev) => Math.max(1, prev - 1));
-            expect(useWiredCreatorToolsUiStore.getState().variableManagePage).toBe(2);
+        it('setIsRoomLogsOpen takes a direct boolean', () => {
+            useWiredCreatorToolsUiStore.getState().setIsRoomLogsOpen(true);
+            expect(useWiredCreatorToolsUiStore.getState().isRoomLogsOpen).toBe(true);
         });
     });
 

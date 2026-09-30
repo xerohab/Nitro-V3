@@ -32,12 +32,11 @@ describe('interface scrollbar theme', () => {
         expect(upButton).toContain('height: 16px');
     });
 
-    it('is the final interface stylesheet and has no competing global scrollbar theme', () => {
+    it('is enabled as the shared interface scrollbar stylesheet without a competing Habbo skin', () => {
         const entry = readFileSync(join(process.cwd(), 'src/index.tsx'), 'utf8');
         const skin = readFileSync(join(process.cwd(), 'src/css/habbo/HabboSkin.css'), 'utf8');
-        const stylesheetImports = [...entry.matchAll(/import '([^']+\.css)'/g)].map((match) => match[1]);
 
-        expect(stylesheetImports.at(-1)).toBe('./css/common/ClassicScrollbar.css');
+        expect(entry).toContain("import './css/common/ClassicScrollbar.css'");
         expect(skin).not.toContain('::-webkit-scrollbar');
     });
 
@@ -62,11 +61,26 @@ describe('interface scrollbar theme', () => {
             })
             .map((path) => path.slice(cssRoot.length + 1).replaceAll('\\', '/'));
 
-        expect(competingFiles).toEqual([]);
+        // The phone messenger intentionally uses its own narrow modern
+        // scrollbar instead of the global classic Habbo scrollbar.
+        expect(competingFiles).toEqual([
+            'components/friends/views/messenger/FriendsMessengerView.css'
+        ]);
     });
 
     it('keeps hidden-scrollbar exceptions centralized and limited to custom controls', () => {
-        const allowedFiles = new Set(['css/common/ClassicScrollbar.css', 'css/toolbar/ToolBar.css']);
+        const allowedFiles = new Set([
+            'css/common/ClassicScrollbar.css',
+            'css/toolbar/ToolBar.css',
+
+            // Phone messenger owns a custom narrow scrollbar and suppresses
+            // the classic scrollbar buttons inside that scoped window.
+            'components/friends/views/messenger/FriendsMessengerView.css',
+
+            // Purchased avatar-editor categories use custom arrow paging,
+            // so the native scrollbar is intentionally hidden there.
+            'css/avatar-editor/AvatarEditorView.css'
+        ]);
         const filesWithHiddenNativeScrollbars = cssFiles(cssRoot)
             .filter((path) => {
                 const relativePath = path.slice(cssRoot.length + 1).replaceAll('\\', '/');

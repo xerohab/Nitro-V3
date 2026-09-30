@@ -8,24 +8,12 @@ import {
     ModMuteMessageComposer,
     ModTradingLockMessageComposer,
     SanctionBotSelectComposer
-} from '@nitrots/nitro-renderer';
+} from '@octane/renderer';
 import { FC, useEffect, useMemo, useRef, useState } from 'react';
-import { FaBan, FaBolt, FaEnvelope, FaExclamationTriangle, FaGavel, FaUserSlash, FaVolumeMute } from 'react-icons/fa';
+import { FaBan, FaBolt, FaEnvelope, FaExclamationTriangle, FaGavel, FaHistory, FaUserSlash, FaVolumeMute } from 'react-icons/fa';
 import { ISelectedUser, LocalizeText, ModActionDefinition, NotificationAlertType, SendMessageComposer } from '../../../../api';
-import { Button, DraggableWindowPosition, NitroCardContentView, NitroCardHeaderView, NitroCardView } from '../../../../common';
+import { Button, DraggableWindowPosition, OctaneCardContentView, OctaneCardHeaderView, OctaneCardView } from '../../../../common';
 import { useModTools, useNotification } from '../../../../hooks';
-
-interface SanctionBotProfile {
-    id: number;
-    name: string;
-    bot_id: number;
-    bot_name: string;
-    bot_figure?: string;
-    bot_gender?: string;
-    speech_enabled?: boolean;
-    speech_interval?: number;
-    follow_distance?: number;
-}
 
 interface ModToolsUserModActionViewProps {
     user: ISelectedUser;
@@ -65,57 +53,36 @@ const ACTION_TONE: Record<number, string> = {
     [ModActionDefinition.MESSAGE]: 'bg-zinc-100 text-zinc-800 border-zinc-200'
 };
 
+const formatSanctionTime = (at: number) => {
+    try {
+        return new Date(at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch {
+        return '';
+    }
+};
+
 export const ModToolsUserModActionView: FC<ModToolsUserModActionViewProps> = (props) => {
     const { user = null, onCloseClick = null } = props;
     const [selectedTopic, setSelectedTopic] = useState(-1);
     const [selectedAction, setSelectedAction] = useState(-1);
     const [message, setMessage] = useState<string>('');
-    const [sanctionBots, setSanctionBots] = useState<SanctionBotProfile[]>([]);
+    const [pendingSanction, setPendingSanction] = useState<ModActionDefinition>(null);
     const [selectedSanctionBot, setSelectedSanctionBot] = useState<number>(0);
-    const [sanctionBotsLoading, setSanctionBotsLoading] = useState<boolean>(true);
-    const { cfhCategories = null, settings = null } = useModTools();
+    const {
+        cfhCategories = null,
+        settings = null,
+        sanctionLog = null,
+        recordSanction = null,
+        sanctionBots = null,
+        refreshSanctionBots = null
+    } = useModTools();
     const { simpleAlert = null } = useNotification();
     const isSendingRef = useRef<boolean>(false);
+    const appliedThisSession = sanctionLog?.[user?.userId] ?? [];
 
     useEffect(() => {
-        let cancelled = false;
-
-        setSanctionBotsLoading(true);
-
-        fetch('/hotel-api/sanction-bots', {
-            method: 'GET',
-            credentials: 'same-origin',
-            headers: {
-                Accept: 'application/json'
-            }
-        })
-            .then((response) => {
-                if (!response.ok) throw new Error('Failed to load sanction bots');
-
-                return response.json();
-            })
-            .then((data) => {
-                if (cancelled) return;
-
-                const profiles = Array.isArray(data?.bots) ? data.bots : [];
-
-                setSanctionBots(profiles);
-            })
-            .catch(() => {
-                if (cancelled) return;
-
-                setSanctionBots([]);
-            })
-            .finally(() => {
-                if (cancelled) return;
-
-                setSanctionBotsLoading(false);
-            });
-
-        return () => {
-            cancelled = true;
-        };
-    }, []);
+        refreshSanctionBots?.();
+    }, [refreshSanctionBots]);
 
     const topics = useMemo(() => {
         const values: CallForHelpTopicData[] = [];
@@ -147,6 +114,27 @@ export const ModToolsUserModActionView: FC<ModToolsUserModActionViewProps> = (pr
         onCloseClick();
     };
 
+    // Ban, kick, mute and trade lock cannot be undone from this window, and the panel
+    // shows one user while another may be selected behind it. The confirmation names
+    // who and what before anything leaves the client.
+    const NEEDS_CONFIRMATION = [
+        ModActionDefinition.BAN,
+        ModActionDefinition.KICK,
+        ModActionDefinition.MUTE,
+        ModActionDefinition.TRADE_LOCK
+    ];
+
+    const requestSanction = () => {
+        const sanction = MOD_ACTION_DEFINITIONS[selectedAction];
+
+        if (sanction && NEEDS_CONFIRMATION.includes(sanction.actionType)) {
+            setPendingSanction(sanction);
+            return;
+        }
+
+        sendSanction();
+    };
+
     const sendSanction = () => {
         if (isSendingRef.current) return;
 
@@ -171,6 +159,8 @@ export const ModToolsUserModActionView: FC<ModToolsUserModActionViewProps> = (pr
                 selectedSanctionBot
             )
         );
+
+        recordSanction?.(user.userId, sanction.name);
 
         switch (sanction.actionType) {
             case ModActionDefinition.ALERT: {
@@ -216,16 +206,16 @@ export const ModToolsUserModActionView: FC<ModToolsUserModActionViewProps> = (pr
     const canSubmit = selectedTopic !== -1;
 
     return (
-        <NitroCardView
-            className="nitro-mod-tools-user-action min-w-0 w-[min(460px,calc(100vw-16px))] max-w-[calc(100vw-16px)] max-h-[calc(100vh-16px)]"
+        <OctaneCardView
+            className="octane-mod-tools-user-action min-w-0 w-[min(460px,calc(100vw-16px))] max-w-[calc(100vw-16px)] max-h-[calc(100vh-16px)]"
             theme="primary-slim"
             windowPosition={DraggableWindowPosition.TOP_LEFT}
         >
-            <NitroCardHeaderView
+            <OctaneCardHeaderView
                 headerText={LocalizeText('modtools.user.modaction.title', ['username'], [user.username])}
                 onCloseClick={() => onCloseClick()}
             />
-            <NitroCardContentView className="text-black" gap={2}>
+            <OctaneCardContentView className="text-black relative" gap={2}>
                 {/* Target header */}
                 <div className="flex items-center gap-2 bg-gradient-to-r from-rose-50 to-transparent rounded p-2 border border-rose-100">
                     <FaGavel className="text-rose-600 shrink-0" size={16} />
@@ -280,36 +270,22 @@ export const ModToolsUserModActionView: FC<ModToolsUserModActionViewProps> = (pr
                     <select
                         className="form-select form-select-sm"
                         value={selectedSanctionBot}
-                        disabled={sanctionBotsLoading}
-                        onChange={(event) =>
-                            setSelectedSanctionBot(
-                                parseInt(event.target.value)
-                            )
-                        }
+                        onChange={(event) => setSelectedSanctionBot(parseInt(event.target.value))}
                     >
-                        <option value={0}>
-                            None
-                        </option>
+                        <option value={0}>None</option>
 
-                        {sanctionBots.map((profile) => (
-                            <option
-                                key={profile.id}
-                                value={profile.id}
-                            >
-                                {profile.name}
-                                {profile.bot_name
-                                    ? ` — ${profile.bot_name}`
-                                    : ''}
+                        {(sanctionBots ?? []).map((profile) => (
+                            <option key={profile.id} value={profile.id}>
+                                {profile.profileName}
+                                {profile.botName ? ` — ${profile.botName}` : ''}
                             </option>
                         ))}
                     </select>
 
                     <div className="text-[.65rem] opacity-50">
-                        {sanctionBotsLoading
-                            ? 'Loading sanction bots...'
-                            : selectedSanctionBot === 0
-                                ? 'No escort bot will be attached.'
-                                : 'This bot will follow the user until the sanction expires.'}
+                        {selectedSanctionBot === 0
+                            ? 'No escort bot will be attached.'
+                            : 'This bot will follow the user until the sanction expires.'}
                     </div>
                 </div>
 
@@ -344,10 +320,26 @@ export const ModToolsUserModActionView: FC<ModToolsUserModActionViewProps> = (pr
                             )}
                             {selectedSanctionBot > 0 && (
                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border bg-violet-100 text-violet-800 border-violet-200">
-                                    Escort: {sanctionBots.find((profile) => profile.id === selectedSanctionBot)?.name || 'Bot'}
+                                    Escort: {(sanctionBots ?? []).find((profile) => profile.id === selectedSanctionBot)?.profileName || 'Bot'}
                                 </span>
                             )}
                         </div>
+                    </div>
+                )}
+
+                {/* What this moderator has already applied to this person, this session */}
+                {!!appliedThisSession.length && (
+                    <div className="flex flex-col gap-0.5 rounded border border-amber-200 bg-amber-50/60 p-1.5">
+                        <span className="text-[.6rem] uppercase tracking-wide font-semibold opacity-70">
+                            {LocalizeText('modtools.user.modaction.button.apply')}
+                        </span>
+                        {appliedThisSession.slice(-3).map((entry, index) => (
+                            <span key={index} className="text-[.65rem] flex items-center gap-1">
+                                <FaHistory className="opacity-50 shrink-0" size={8} />
+                                <strong className="truncate">{entry.label}</strong>
+                                <span className="opacity-60 tabular-nums shrink-0">{formatSanctionTime(entry.at)}</span>
+                            </span>
+                        ))}
                     </div>
                 )}
 
@@ -356,11 +348,39 @@ export const ModToolsUserModActionView: FC<ModToolsUserModActionViewProps> = (pr
                     <Button className="grow" disabled={!canSubmit} gap={1} variant="primary" onClick={sendDefaultSanction}>
                         <FaBolt size={12} /> {LocalizeText('modtools.user.modaction.button.default')}
                     </Button>
-                    <Button className="grow" disabled={!canSubmit || selectedAction === -1} gap={1} variant="success" onClick={sendSanction}>
+                    <Button className="grow" disabled={!canSubmit || selectedAction === -1} gap={1} variant="success" onClick={requestSanction}>
                         <FaGavel size={12} /> {LocalizeText('modtools.user.modaction.button.apply')}
                     </Button>
                 </div>
-            </NitroCardContentView>
-        </NitroCardView>
+                {pendingSanction && (
+                    <div
+                        aria-label="Confirm moderation action"
+                        aria-modal="true"
+                        className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-white/95 p-3 text-center"
+                        role="dialog"
+                    >
+                        <FaExclamationTriangle className="text-amber-500" size={20} />
+                        <div className="text-sm">
+                            <strong>{pendingSanction.name}</strong>
+                            <div className="opacity-70">{user?.username}</div>
+                        </div>
+                        <div className="flex gap-1.5">
+                            <Button variant="secondary" onClick={() => setPendingSanction(null)}>
+                                {LocalizeText('generic.cancel')}
+                            </Button>
+                            <Button
+                                variant="danger"
+                                onClick={() => {
+                                    setPendingSanction(null);
+                                    sendSanction();
+                                }}
+                            >
+                                {LocalizeText('modtools.user.modaction.button.apply')}
+                            </Button>
+                        </div>
+                    </div>
+                )}
+            </OctaneCardContentView>
+        </OctaneCardView>
     );
 };

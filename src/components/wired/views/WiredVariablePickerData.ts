@@ -84,7 +84,14 @@ const INTERNAL_VARIABLES: Record<'user' | 'furni' | 'global' | 'context', IInter
         createInternalMeta('@wallitem_offset', false, true),
         createInternalMeta('@dimensions.x', false, true),
         createInternalMeta('@dimensions.y', false, true),
-        createInternalMeta('@owner_id', false, true)
+        createInternalMeta('@owner_id', false, true),
+        createInternalMeta('@projectile.animation.position.x', false, true),
+        createInternalMeta('@projectile.animation.position.y', false, true),
+        createInternalMeta('@projectile.animation.position.altitude', false, true),
+        createInternalMeta('@projectile.animation.is_traveling', false, false),
+        createInternalMeta('@projectile.animation.tiles_traveled', false, true),
+        createInternalMeta('@projectile.animation.furni_collisions', false, true),
+        createInternalMeta('@projectile.animation.user_collisions', false, true)
     ],
     user: [
         createInternalMeta('@index', false, true),

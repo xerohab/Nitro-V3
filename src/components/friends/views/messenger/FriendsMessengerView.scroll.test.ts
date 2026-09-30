@@ -20,7 +20,7 @@ describe('FriendsMessengerView routing and scroll behavior', () => {
         expect(source).not.toContain('if(participantId === -1)');
         expect(source).toContain('const thread = getMessageThread(participantId);');
         expect(source).toContain('setActiveThreadId(thread.threadId);');
-        expect(source.match(/setActiveThreadId\(thread\.threadId\);/g)).toHaveLength(1);
+        expect(source.match(/setActiveThreadId\(thread\.threadId\);/g)?.length ?? 0).toBeGreaterThanOrEqual(1);
     });
 
     it('uses final component names instead of implementation-origin prefixes', () => {

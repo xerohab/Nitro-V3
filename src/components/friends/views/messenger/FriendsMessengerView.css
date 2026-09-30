@@ -37,7 +37,7 @@
     font-family: MessengerUbuntu, Arial, sans-serif;
     font-kerning: normal;
     font-synthesis: none;
-    image-rendering: pixelated;
+    image-rendering: var(--octane-pixel-art, pixelated);
     text-rendering: geometricPrecision;
     text-shadow: none;
 }
@@ -344,7 +344,7 @@
     margin: 0 !important;
     background-position: 0 0 !important;
     background-size: auto !important;
-    image-rendering: pixelated !important;
+    image-rendering: var(--octane-pixel-art, pixelated) !important;
     transform: none !important;
 }
 
@@ -429,7 +429,7 @@
     width: auto;
     min-width: 25px;
     height: auto;
-    image-rendering: pixelated;
+    image-rendering: var(--octane-pixel-art, pixelated);
 }
 
 .messenger-window .messenger-status-notification {
@@ -515,7 +515,7 @@
     border-radius: 0;
     background: transparent;
     box-shadow: none;
-    image-rendering: pixelated;
+    image-rendering: var(--octane-pixel-art, pixelated);
 }
 
 .messenger-window .messenger-habbicon-controls {
@@ -579,7 +579,7 @@
     border-radius: 0;
     background: transparent url("@/assets/images/habbicons/slices/promo-arrow-close.png") center no-repeat;
     opacity: .7;
-    image-rendering: pixelated;
+    image-rendering: var(--octane-pixel-art, pixelated);
 }
 
 .messenger-window .messenger-btn.messenger-habbicon-get-more {
@@ -639,7 +639,7 @@
     border-radius: 0;
     background: rgba(255, 255, 255, .85);
     box-shadow: none;
-    image-rendering: pixelated;
+    image-rendering: var(--octane-pixel-art, pixelated);
 }
 
 .messenger-window .messenger-habbicon-grid .empty {
@@ -659,7 +659,7 @@
     height: 40px;
     overflow: hidden;
     background-repeat: no-repeat;
-    image-rendering: pixelated;
+    image-rendering: var(--octane-pixel-art, pixelated);
     pointer-events: none;
 }
 
@@ -686,7 +686,7 @@
     margin-left: 10px;
     overflow: hidden;
     background-repeat: no-repeat;
-    image-rendering: pixelated;
+    image-rendering: var(--octane-pixel-art, pixelated);
 }
 
 .messenger-window .messenger-habbicon-message.mirrored {

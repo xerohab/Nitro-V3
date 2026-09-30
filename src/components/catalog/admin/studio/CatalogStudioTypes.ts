@@ -106,6 +106,8 @@ export interface CatalogStudioValidationState {
     revision: number;
     current: boolean;
     issues: CatalogStudioValidationIssue[];
+    /** When this report reached the client. A report says nothing without the moment it was taken. */
+    receivedAt: number;
 }
 
 export interface CatalogStudioDocumentResult {

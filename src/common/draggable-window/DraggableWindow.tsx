@@ -245,7 +245,7 @@ export const DraggableWindow: FC<DraggableWindowProps> = (props) => {
                 ...dragStyle,
                 left: 0,
                 top: 0,
-                transform: `translate3d(${offset.x + delta.x}px, ${offset.y + delta.y}px, 0)`,
+                transform: `translate3d(${Math.round(offset.x + delta.x)}px, ${Math.round(offset.y + delta.y)}px, 0)`,
                 willChange: isDragging ? 'transform' : undefined,
                 backfaceVisibility: 'hidden',
                 visibility: isPositioned ? 'visible' : 'hidden'

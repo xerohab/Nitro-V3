@@ -1,10 +1,10 @@
-.nitro-hotel-view {
+.octane-hotel-view {
     background-color: #27afcf;
     background-image: var(--hotel-view-background);
     background-position: center bottom;
     background-repeat: no-repeat;
     background-size: cover;
-    image-rendering: pixelated;
+    image-rendering: var(--octane-pixel-art, pixelated);
     z-index: 0;
 }
 
@@ -25,7 +25,7 @@
     overflow: hidden;
     color: #fff;
     font-family: Ubuntu, Arial, sans-serif;
-    image-rendering: pixelated;
+    image-rendering: var(--octane-pixel-art, pixelated);
     transform: scale(var(--hotel-view-scale));
     transform-origin: top left;
 }
@@ -53,11 +53,12 @@
     display: block;
     width: auto;
     height: auto;
-    image-rendering: pixelated;
+    image-rendering: var(--octane-pixel-art, pixelated);
 }
 
 .hotelview-edge-left {
     left: 0;
+    z-index: 4;
     transform: scale(var(--hotel-view-scene-scale));
     transform-origin: bottom left;
 }
@@ -322,7 +323,7 @@
     width: 34px;
     height: 37px;
     margin-left: 1px;
-    image-rendering: pixelated;
+    image-rendering: var(--octane-pixel-art, pixelated);
 }
 
 .hotelview-slot-nextlimitedrarecountdown .hotelview-slot-copy {
@@ -754,33 +755,57 @@
 .hotelview-hall-of-fame-user {
     position: relative;
     display: flex;
-    flex: 0 1 90px;
+    flex: 0 0 64px;
     align-items: center;
-    justify-content: end;
-    min-width: 72px;
+    justify-content: center;
+    min-width: 0;
     height: 148px;
+    transform: scale(min(1, calc(1 / var(--hotel-view-scale, 1))));
+    transform-origin: bottom center;
+}
+
+.hotelview-hall-of-fame-user::before {
+    content: '';
+    position: absolute;
+    bottom: 1px;
+    left: 50%;
+    width: 62px;
+    height: 18px;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at 50% 38%, #eef6f8 0%, #bcd6de 52%, #8fb2bd 80%, #6a909d 100%);
+    box-shadow: inset 0 1px rgb(255 255 255 / 60%), 0 3px 5px rgb(0 0 0 / 40%);
+    transform: translateX(-50%);
+    pointer-events: none;
 }
 
 .hotelview-hall-of-fame-avatar {
     position: absolute !important;
     bottom: -6px;
     left: 50%;
+    z-index: 1;
+    background-position: 50% 0 !important;
     transform-origin: bottom center;
     translate: -50% 0;
 }
 
 .hotelview-hall-of-fame-user span {
     position: absolute;
-    bottom: 126px;
+    bottom: 104px;
     left: 50%;
-    max-width: 82px;
+    max-width: 90px;
+    padding: 1px 7px;
     overflow: hidden;
+    border: 1px solid rgb(255 255 255 / 22%);
+    border-radius: 9px;
+    background: linear-gradient(rgb(19 76 94 / 88%), rgb(12 54 68 / 88%));
+    box-shadow: inset 0 1px rgb(255 255 255 / 18%), 0 1px 2px rgb(0 0 0 / 45%);
     color: #fff;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
+    letter-spacing: .2px;
     text-align: center;
     text-overflow: ellipsis;
-    text-shadow: 0 1px 2px #000;
+    text-shadow: 0 1px 1px rgb(0 0 0 / 65%);
     transform: translateX(-50%);
     white-space: nowrap;
 }
@@ -908,5 +933,13 @@
     .hotelview-stage {
         top: 0;
         transform: translateX(-50%);
+    }
+}
+
+@media (max-width: 767px) {
+    .hotelview-edge-right,
+    .hotelview-slots,
+    .hotelview-hall-of-fame {
+        display: none;
     }
 }

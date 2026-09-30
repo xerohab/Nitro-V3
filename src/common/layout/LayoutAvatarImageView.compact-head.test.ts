@@ -13,4 +13,10 @@ describe('LayoutAvatarImageView compact heads', () => {
             /figureKey\s*=\s*\[figure, gender, direction, headOnly, compactHead, compactHeadSize, compactHeadPadding, fit, airMeMenu, nativeCroppedHead\]/
         );
     });
+
+    it('paints the me-menu face as a 50px image instead of the 90x130 background box', () => {
+        expect(source).toContain("newClassNames = ['tb-memenu-face pointer-events-none']");
+        expect(source).toContain('tb-memenu-face-img');
+        expect(source).not.toContain("headOnly || airMeMenu");
+    });
 });

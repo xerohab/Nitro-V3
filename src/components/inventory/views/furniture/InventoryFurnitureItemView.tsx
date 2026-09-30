@@ -1,27 +1,27 @@
-import { MouseEventType } from '@nitrots/nitro-renderer';
+import { MouseEventType } from '@octane/renderer';
 import { FC, MouseEvent, useState } from 'react';
 import { attemptItemPlacement, GroupItem } from '../../../../api';
-import { useInventoryFurni } from '../../../../hooks';
 import { classNames, InfiniteGrid } from '../../../../layout';
 
 export const InventoryFurnitureItemView: FC<{
     groupItem: GroupItem;
+    isActive: boolean;
+    onSelect: (groupItem: GroupItem) => void;
 }> = (props) => {
-    const { groupItem = null, ...rest } = props;
+    const { groupItem = null, isActive = false, onSelect = null } = props;
     const [isMouseDown, setMouseDown] = useState(false);
-    const { selectedItem = null, setSelectedItem = null } = useInventoryFurni();
 
     const onMouseEvent = (event: MouseEvent) => {
         switch (event.type) {
             case MouseEventType.MOUSE_DOWN:
-                setSelectedItem(groupItem);
+                onSelect?.(groupItem);
                 setMouseDown(true);
                 return;
             case MouseEventType.MOUSE_UP:
                 setMouseDown(false);
                 return;
             case MouseEventType.ROLL_OUT:
-                if (!isMouseDown || !(groupItem === selectedItem)) return;
+                if (!isMouseDown || !isActive) return;
 
                 attemptItemPlacement(groupItem);
                 return;
@@ -35,16 +35,22 @@ export const InventoryFurnitureItemView: FC<{
 
     return (
         <InfiniteGrid.Item
-            className={classNames(!count && 'opacity-50')}
-            itemActive={groupItem === selectedItem}
-            itemCount={groupItem.getUnlockedCount()}
-            itemImage={groupItem.iconUrl}
+            className={classNames('octane-inventory-thumb', isActive && 'is-selected', groupItem.hasUnseenItems && 'is-unseen', !count && 'opacity-50')}
+            itemActive={isActive}
+            itemCount={count}
+            itemImage={groupItem.stuffData.uniqueNumber > 0 ? groupItem.iconUrl : undefined}
             itemUniqueNumber={groupItem.stuffData.uniqueNumber}
             itemUnseen={groupItem.hasUnseenItems}
             onDoubleClick={onMouseEvent}
             onMouseDown={onMouseEvent}
             onMouseOut={onMouseEvent}
             onMouseUp={onMouseEvent}
-        />
+        >
+            {groupItem.stuffData.uniqueNumber <= 0 && (
+                <div className="octane-inventory-thumb-image">
+                    <img src={groupItem.iconUrl} alt="" draggable={false} />
+                </div>
+            )}
+        </InfiniteGrid.Item>
     );
 };

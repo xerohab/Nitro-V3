@@ -1,8 +1,9 @@
-import { BotRemoveComposer } from '@nitrots/nitro-renderer';
+import { BotRemoveComposer } from '@octane/renderer';
 import { FC, useMemo } from 'react';
-import { FaTimes } from 'react-icons/fa';
 import { AvatarInfoRentableBot, BotSkillsEnum, LocalizeText, SendMessageComposer } from '../../../../../api';
 import { Button, Column, Flex, LayoutAvatarImageView, LayoutBadgeImageView, Text, UserProfileIconView } from '../../../../../common';
+import { InfoStandHeaderView } from './InfoStandHeaderView';
+import { InfoStandUnitIdView } from './InfoStandUnitIdView';
 
 interface InfoStandWidgetRentableBotViewProps {
     avatarInfo: AvatarInfoRentableBot;
@@ -26,16 +27,11 @@ export const InfoStandWidgetRentableBotView: FC<InfoStandWidgetRentableBotViewPr
 
     return (
         <div className="flex flex-col gap-1">
-            <div className="flex flex-col nitro-infostand rounded">
+            <div className="flex flex-col octane-infostand rounded">
                 <div className="flex flex-col gap-1 overflow-visible container-fluid content-area">
                     <div className="flex flex-col gap-1">
-                        <Flex alignItems="center" gap={1} justifyContent="between">
-                            <Text small wrap variant="white">
-                                {avatarInfo.name}
-                            </Text>
-                            <FaTimes className="cursor-pointer fa-icon" onClick={onClose} />
-                        </Flex>
-                        <hr className="m-0" />
+                        <InfoStandHeaderView name={avatarInfo.name} onClose={onClose} />
+                        <div className="octane-infostand__rule" />
                     </div>
                     <div className="flex flex-col gap-1">
                         <div className="flex gap-1">
@@ -49,7 +45,7 @@ export const InfoStandWidgetRentableBotView: FC<InfoStandWidgetRentableBotViewPr
                                     })}
                             </Column>
                         </div>
-                        <hr className="m-0" />
+                        <div className="octane-infostand__rule" />
                     </div>
                     <div className="flex flex-col gap-1">
                         <Flex alignItems="center" className="bg-light-dark rounded py-1 px-2">
@@ -57,7 +53,7 @@ export const InfoStandWidgetRentableBotView: FC<InfoStandWidgetRentableBotViewPr
                                 {avatarInfo.motto}
                             </Text>
                         </Flex>
-                        <hr className="m-0" />
+                        <div className="octane-infostand__rule" />
                     </div>
                     <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-1">
@@ -66,9 +62,10 @@ export const InfoStandWidgetRentableBotView: FC<InfoStandWidgetRentableBotViewPr
                                 {LocalizeText('infostand.text.botowner', ['name'], [avatarInfo.ownerName])}
                             </Text>
                         </div>
+                        <InfoStandUnitIdView id={avatarInfo.webID} ownerId={avatarInfo.ownerId} />
                         {avatarInfo.carryItem > 0 && (
                             <>
-                                <hr className="m-0" />
+                                <div className="octane-infostand__rule" />
                                 <Text small wrap variant="white">
                                     {LocalizeText('infostand.text.handitem', ['item'], [LocalizeText('handitem' + avatarInfo.carryItem)])}
                                 </Text>

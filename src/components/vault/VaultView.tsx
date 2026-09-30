@@ -9,7 +9,7 @@ import {
     ILinkEventTracker,
     RemoveLinkEventTracker,
     RequestEarningsCenterComposer
-} from '@nitrots/nitro-renderer';
+} from '@octane/renderer';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { LocalizeText, SendMessageComposer } from '../../api';
 import imgAchievements from '../../assets/images/vault/achievements.png';
@@ -22,7 +22,7 @@ import imgHcpayday from '../../assets/images/vault/hcpayday.png';
 import imgLevel from '../../assets/images/vault/levelprogression.png';
 import imgMarketplace from '../../assets/images/vault/marketplace.png';
 import imgSurprise from '../../assets/images/vault/surprise.png';
-import { LayoutCurrencyIcon, NitroCardContentView, NitroCardHeaderView, NitroCardView, Text } from '../../common';
+import { LayoutCurrencyIcon, OctaneCardContentView, OctaneCardHeaderView, OctaneCardView, Text } from '../../common';
 import { useMessageEvent } from '../../hooks';
 
 const localizeWithFallback = (key: string, fallback: string) => {
@@ -170,13 +170,13 @@ export const VaultView: FC<{}> = (props) => {
     if (!isVisible) return null;
 
     return (
-        <NitroCardView
-            className="nitro-vault min-w-0 w-[min(430px,calc(100vw-16px))] max-w-[calc(100vw-16px)] max-h-[calc(100vh-16px)]"
+        <OctaneCardView
+            className="octane-vault min-w-0 w-[min(430px,calc(100vw-16px))] max-w-[calc(100vw-16px)] max-h-[calc(100vh-16px)]"
             theme="primary-slim"
             uniqueKey="vault"
         >
-            <NitroCardHeaderView headerText={localizeWithFallback('earnings.title', 'Guadagni')} onCloseClick={() => setIsVisible(false)} />
-            <NitroCardContentView className="nitro-vault-content flex flex-col gap-[3px] text-black">
+            <OctaneCardHeaderView headerText={localizeWithFallback('earnings.title', 'Guadagni')} onCloseClick={() => setIsVisible(false)} />
+            <OctaneCardContentView className="octane-vault-content flex flex-col gap-[3px] text-black">
                 {CATEGORIES.map((category) => {
                     const entry = entriesByKey.get(category.key) ?? null;
                     const canClaim = !!entry && entry.enabled && entry.claimable;
@@ -186,7 +186,7 @@ export const VaultView: FC<{}> = (props) => {
                         <div key={category.key} className="flex items-center gap-2">
                             <div className="flex min-w-0 flex-1 items-center gap-2 rounded-[5px] border border-[#9aa0a8] bg-white px-1.5 py-1">
                                 <span className="flex h-[24px] w-[24px] shrink-0 items-center justify-center rounded border border-black/15 bg-white">
-                                    <img src={category.img} alt="" className="max-h-[20px] max-w-[20px] object-contain [image-rendering:pixelated]" />
+                                    <img src={category.img} alt="" className="max-h-[20px] max-w-[20px] object-contain image-rendering-pixelated" />
                                 </span>
                                 <Text bold className="truncate">
                                     {localizeWithFallback(category.textKey, category.label)}
@@ -239,7 +239,7 @@ export const VaultView: FC<{}> = (props) => {
                         {localizeWithFallback('earnings.claim.all', 'Richiedili Tutti')}
                     </button>
                 </div>
-            </NitroCardContentView>
-        </NitroCardView>
+            </OctaneCardContentView>
+        </OctaneCardView>
     );
 };

@@ -2,7 +2,7 @@ import {
     AddLinkEventTracker,
     CreateLinkEvent,
     ILinkEventTracker,
-    NitroSettingsEvent,
+    OctaneSettingsEvent,
     RemoveLinkEventTracker,
     SoundboardSaveVolumeComposer,
     UserSettingsCameraFollowComposer,
@@ -11,7 +11,7 @@ import {
     UserSettingsPrivacyComposer,
     UserSettingsRoomInvitesComposer,
     UserSettingsSoundComposer
-} from '@nitrots/nitro-renderer';
+} from '@octane/renderer';
 import { FC, ReactNode, useEffect, useState } from 'react';
 import { DispatchMainEvent, DispatchUiEvent, localizeWithFallback, SendMessageComposer } from '../../api';
 import { DraggableWindow } from '../../common';
@@ -57,11 +57,17 @@ const AirSettingsFrame: FC<AirSettingsFrameProps> = ({ backLabel, children, onBa
 
 const clampVolume = (value: number) => Math.max(0, Math.min(100, Number(value)));
 
+// The game privacy packet always carries every flag; the profile one is the optional fourth.
+const sendPrivacy = (settings: OctaneSettingsEvent) =>
+    SendMessageComposer(
+        new UserSettingsPrivacyComposer(settings.onlineStatusVisible, settings.friendsCanFollow, settings.friendRequestsAllowed, settings.profileVisible)
+    );
+
 export const UserSettingsView: FC<{}> = () => {
     const [isVisible, setIsVisible] = useState(false);
     const [section, setSection] = useState<SettingsSection>(null);
     const [returnToMenu, setReturnToMenu] = useState(false);
-    const [userSettings, setUserSettings] = useState<NitroSettingsEvent>(null);
+    const [userSettings, setUserSettings] = useState<OctaneSettingsEvent>(null);
     const [catalogPlaceMultipleObjects, setCatalogPlaceMultipleObjects] = useCatalogPlaceMultipleItems();
     const [catalogSkipPurchaseConfirmation, setCatalogSkipPurchaseConfirmation] = useCatalogSkipPurchaseConfirmation();
     const { density: catalogGridDensity, setDensity: setCatalogGridDensity, showTilePrices, setShowTilePrices } = useCatalogDisplayPreferences();
@@ -96,15 +102,19 @@ export const UserSettingsView: FC<{}> = () => {
                 break;
             case 'online_status_visible':
                 clone.onlineStatusVisible = value as boolean;
-                SendMessageComposer(new UserSettingsPrivacyComposer(clone.onlineStatusVisible, clone.friendsCanFollow, clone.friendRequestsAllowed));
+                sendPrivacy(clone);
                 break;
             case 'friends_can_follow':
                 clone.friendsCanFollow = value as boolean;
-                SendMessageComposer(new UserSettingsPrivacyComposer(clone.onlineStatusVisible, clone.friendsCanFollow, clone.friendRequestsAllowed));
+                sendPrivacy(clone);
                 break;
             case 'friend_requests_allowed':
                 clone.friendRequestsAllowed = value as boolean;
-                SendMessageComposer(new UserSettingsPrivacyComposer(clone.onlineStatusVisible, clone.friendsCanFollow, clone.friendRequestsAllowed));
+                sendPrivacy(clone);
+                break;
+            case 'profile_visible':
+                clone.profileVisible = value as boolean;
+                sendPrivacy(clone);
                 break;
             case 'system_volume':
                 clone.volumeSystem = clampVolume(value as number);
@@ -143,7 +153,7 @@ export const UserSettingsView: FC<{}> = () => {
 
     useMessageEvent<UserSettingsEvent>(UserSettingsEvent, (event) => {
         const parser = event.getParser();
-        const settingsEvent = new NitroSettingsEvent();
+        const settingsEvent = new OctaneSettingsEvent();
 
         settingsEvent.volumeSystem = parser.volumeSystem;
         settingsEvent.volumeFurni = parser.volumeFurni;
@@ -157,6 +167,7 @@ export const UserSettingsView: FC<{}> = () => {
         settingsEvent.onlineStatusVisible = parser.onlineStatusVisible;
         settingsEvent.friendsCanFollow = parser.friendsCanFollow;
         settingsEvent.friendRequestsAllowed = parser.friendRequestsAllowed;
+        settingsEvent.profileVisible = parser.profileVisible;
 
         setUserSettings(settingsEvent);
         DispatchMainEvent(settingsEvent);
@@ -459,6 +470,30 @@ export const UserSettingsView: FC<{}> = () => {
                             onChange={(event) => processAction('friend_requests_allowed', event.target.checked)}
                         />
                         <span>{localizeWithFallback('settings.privacy.friend_requests_description', 'Other Habbos can send me a friend request')}</span>
+                    </label>
+                </fieldset>
+                <fieldset>
+                    <legend>{localizeWithFallback('privacy.settings.profile.title', 'Profile')}</legend>
+                    <p>{localizeWithFallback('settings.privacy.profile_page_description', 'Who can see my profile page')}</p>
+                    <label className="air-settings-check-row">
+                        <input
+                            checked={userSettings.profileVisible}
+                            className="air-settings-radio"
+                            name="profile-visibility"
+                            type="radio"
+                            onChange={() => processAction('profile_visible', true)}
+                        />
+                        <span>{localizeWithFallback('settings.privacy.everyone', 'Everyone')}</span>
+                    </label>
+                    <label className="air-settings-check-row">
+                        <input
+                            checked={!userSettings.profileVisible}
+                            className="air-settings-radio"
+                            name="profile-visibility"
+                            type="radio"
+                            onChange={() => processAction('profile_visible', false)}
+                        />
+                        <span>{localizeWithFallback('settings.privacy.noone', 'Nobody')}</span>
                     </label>
                 </fieldset>
             </div>

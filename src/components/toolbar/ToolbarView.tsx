@@ -1,4 +1,4 @@
-import { CreateLinkEvent, Dispose, DropBounce, EaseOut, FindNewFriendsMessageComposer, JumpBy, Motions, NitroToolbarAnimateIconEvent, PerkAllowancesMessageEvent, PerkEnum, Queue, Wait, YouTubeRoomSettingsEvent } from '@nitrots/nitro-renderer';
+import { CreateLinkEvent, Dispose, DropBounce, EaseOut, FindNewFriendsMessageComposer, JumpBy, Motions, OctaneToolbarAnimateIconEvent, PerkAllowancesMessageEvent, PerkEnum, Queue, Wait, YouTubeRoomSettingsEvent } from '@octane/renderer';
 import { AnimatePresence, motion, Variants } from 'framer-motion';
 import { CSSProperties, FC, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { GetConfigurationValue, isHousekeepingEnabled, localizeWithFallback, MessengerIconState, OpenMessengerChat, SendMessageComposer, setYoutubeRoomEnabled, VisitDesktop } from '../../api';
@@ -9,7 +9,7 @@ import memenuBgImg from '../../assets/images/toolbar/air/memenu-bg.png';
 import memenuCircleImg from '../../assets/images/toolbar/air/memenu-circle.png';
 import { Flex, LayoutAvatarImageView, LayoutItemCountView } from '../../common';
 import { SoundboardRoomMessageEvent } from '../../events';
-import { useAchievements, useBuildHeight, useFriends, useHasPermission, useInventoryUnseenTracker, useMentionsSnapshot, useMessageEvent, useMessenger, useModTools, useNitroEvent, useSessionInfo, useSoundboard, useUiEvent, useWiredTools } from '../../hooks';
+import { useAchievements, useBuildHeight, useDailyTasks, useFriends, useHasPermission, useInventoryUnseenTracker, useMentionsSnapshot, useMessageEvent, useMessenger, useModTools, useOctaneEvent, useRewardTracks, useSessionInfo, useSoundboard, useUiEvent, useWiredTools } from '../../hooks';
 import { BottomDockLayout, resolveBottomDockLayout } from './bottomDockLayout';
 import { ToolbarItemView } from './ToolbarItemView';
 import { ToolbarMeView } from './ToolbarMeView';
@@ -69,6 +69,10 @@ export const ToolbarView: FC<{ isInRoom: boolean }> = props =>
     const { userFigure = null } = useSessionInfo();
     const { getFullCount = 0 } = useInventoryUnseenTracker();
     const { getTotalUnseen = 0 } = useAchievements();
+    const { unseenCount: unseenDailyTaskCount = 0 } = useDailyTasks();
+    const { unseenCount: unseenRewardTrackCount = 0 } = useRewardTracks();
+    // HabboToolbar.setUnseenItemCount("HTIE_ICON_PROGRESSION", unseenProgMenuCount): achievements + daily tasks + reward track rewards.
+    const unseenProgMenuCount = getTotalUnseen + unseenDailyTaskCount + unseenRewardTrackCount;
     const { requests = [] } = useFriends();
     const { iconState = MessengerIconState.HIDDEN } = useMessenger();
     const { unreadCount: mentionsUnread = 0 } = useMentionsSnapshot();
@@ -310,7 +314,7 @@ export const ToolbarView: FC<{ isInRoom: boolean }> = props =>
     {
         const measure = () =>
         {
-            const roomTools = document.querySelector('.nitro-room-tools-container') as HTMLElement | null;
+            const roomTools = document.querySelector('.octane-room-tools-container') as HTMLElement | null;
             const next = roomTools
                 ? Math.max(8, Math.round(window.innerHeight - roomTools.getBoundingClientRect().top + 15))
                 : null;
@@ -337,7 +341,7 @@ export const ToolbarView: FC<{ isInRoom: boolean }> = props =>
         setUseGuideTool(event.getParser().isAllowed(PerkEnum.USE_GUIDE_TOOL));
     });
 
-    useNitroEvent<NitroToolbarAnimateIconEvent>(NitroToolbarAnimateIconEvent.ANIMATE_ICON, event =>
+    useOctaneEvent<OctaneToolbarAnimateIconEvent>(OctaneToolbarAnimateIconEvent.ANIMATE_ICON, event =>
     {
         const animationIconToToolbar = (iconName: string, image: HTMLImageElement, x: number, y: number) =>
         {
@@ -395,7 +399,7 @@ export const ToolbarView: FC<{ isInRoom: boolean }> = props =>
                 animate={ visibilityVariant }
                 variants={ shellVariants }
                 transition={ SHELL_TRANSITION }
-                className={ `nitro-toolbar nitro-toolbar-hobba absolute bottom-0 left-0 right-0 z-[70] h-[46px] ${ desktopBlockClasses }` } />
+                className={ `octane-toolbar octane-toolbar-hobba absolute bottom-0 left-0 right-0 z-[70] h-[46px] ${ desktopBlockClasses }` } />
 
             <motion.div
                 ref={ leftDockRef }
@@ -470,11 +474,11 @@ export const ToolbarView: FC<{ isInRoom: boolean }> = props =>
                                 setMeExpanded(value => !value);
                                 event.stopPropagation();
                             } }>
-                            <LayoutAvatarImageView airMeMenu={ true } direction={ 3 } figure={ userFigure } className="tb-icon tb-avatar-head" />
+                            <LayoutAvatarImageView airMeMenu={ true } direction={ 3 } figure={ userFigure } />
                         </motion.div>
                         <img src={ memenuCircleImg } alt="" className="tb-memenu-circle" />
-                        { (getTotalUnseen > 0) &&
-                            <LayoutItemCountView count={ getTotalUnseen } className="pointer-events-none absolute -right-1 -top-1 z-10" /> }
+                        { (unseenProgMenuCount > 0) &&
+                            <LayoutItemCountView count={ unseenProgMenuCount } className="pointer-events-none absolute -right-1 -top-1 z-10" /> }
                     </motion.div> }
                     { (!leftCollapsed && isInRoom && showToolbarButton) &&
                         <motion.div variants={ itemVariants } className="tb-slot tb-slot-tall">
@@ -556,7 +560,7 @@ export const ToolbarView: FC<{ isInRoom: boolean }> = props =>
                 </button>
             </motion.div>
             <div
-                className={ `tb-mobile-primary-wrapper fixed bottom-0 left-1/2 z-[71] flex items-center overflow-visible ${ mobileOnlyClasses } ${ isInRoom ? 'nitro-toolbar-mobile-hobba px-[4px] py-[3px] mb-[3px]' : '' }` }>
+                className={ `tb-mobile-primary-wrapper fixed bottom-0 left-1/2 z-[71] flex items-center overflow-visible ${ mobileOnlyClasses } ${ isInRoom ? 'octane-toolbar-mobile-hobba px-[4px] py-[3px] mb-[3px]' : '' }` }>
                 <motion.div
                     initial="visible"
                     animate={ visibilityVariant }
@@ -592,11 +596,11 @@ export const ToolbarView: FC<{ isInRoom: boolean }> = props =>
                                 setMeExpanded(value => !value);
                                 event.stopPropagation();
                             } }>
-                            <LayoutAvatarImageView airMeMenu={ true } direction={ 3 } figure={ userFigure } className="tb-icon tb-avatar-head" />
+                            <LayoutAvatarImageView airMeMenu={ true } direction={ 3 } figure={ userFigure } />
                         </motion.div>
                         <img src={ memenuCircleImg } alt="" className="tb-memenu-circle" />
-                        { (getTotalUnseen > 0) &&
-                            <LayoutItemCountView count={ getTotalUnseen } className="pointer-events-none absolute -right-1 -top-1 z-10" /> }
+                        { (unseenProgMenuCount > 0) &&
+                            <LayoutItemCountView count={ unseenProgMenuCount } className="pointer-events-none absolute -right-1 -top-1 z-10" /> }
                     </motion.div>
                     <motion.div variants={ itemVariants } className="relative tb-mobile-primary-slot">
                         <ToolbarItemView icon="friendall" onClick={ () => CreateLinkEvent('friends/toggle') } className="tb-icon" />

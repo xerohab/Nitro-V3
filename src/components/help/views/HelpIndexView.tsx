@@ -1,4 +1,4 @@
-import { GetCfhStatusMessageComposer } from '@nitrots/nitro-renderer';
+import { GetCfhStatusMessageComposer } from '@octane/renderer';
 import { FC } from 'react';
 import { FaArrowCircleRight } from 'react-icons/fa';
 import { CreateLinkEvent, DispatchUiEvent, GetConfigurationValue, LocalizeText, ReportState, ReportType, SendMessageComposer } from '../../../api';
@@ -28,7 +28,7 @@ export const HelpIndexView: FC<{}> = (props) => {
                 {LocalizeText('help.main.frame.description')}
             </Text>
             <div className="flex justify-center py-1">
-                <img src={helpDuck} alt="" className="h-[105px] w-auto [image-rendering:pixelated]" />
+                <img src={helpDuck} alt="" className="h-[105px] w-auto image-rendering-pixelated" />
             </div>
             <div className="flex flex-col gap-1.5">
                 <button type="button" className="habbo-btn-green" onClick={onReportClick}>

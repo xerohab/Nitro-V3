@@ -1,3 +1,10 @@
+import { execFile } from 'node:child_process';
+import { appendFileSync } from 'node:fs';
+import { promisify } from 'node:util';
+import { pathToFileURL } from 'node:url';
+
+const execFileAsync = promisify(execFile);
+
 const companionRefsFor = (headRef) => {
     if (!headRef) return [];
 
@@ -6,6 +13,11 @@ const companionRefsFor = (headRef) => {
     if (headRef.endsWith('-ui')) {
         const baseRef = headRef.slice(0, -3);
         refs.push(`${baseRef}-renderer`, baseRef);
+    }
+
+    if (headRef.endsWith('-client')) {
+        const baseRef = headRef.slice(0, -7);
+        refs.push(`${baseRef}-protocol`, `${baseRef}-renderer`, baseRef);
     }
 
     refs.push(headRef);
@@ -19,10 +31,13 @@ export const resolveRenderer = async (input, hasRef) => {
     const explicitRef = input.inputRef || input.variableRef;
     let ref = explicitRef || automaticRef;
     let repository = input.inputRepository || input.variableRepository;
+    // A push carries no PR head, but the pushed branch may still have a companion in the renderer:
+    // the push run of a feature branch then pairs like its pull_request run instead of falling to Dev.
+    const headRef = input.headRef || (input.eventName === 'push' && !['main', 'Dev'].includes(input.refName) ? input.refName : '');
 
     if (!repository && input.headOwner && input.headOwner !== input.repositoryOwner) {
         const headRepository = `${input.headOwner}/Octane-Renderer`;
-        const forkRefs = explicitRef ? [explicitRef] : companionRefsFor(input.headRef);
+        const forkRefs = explicitRef ? [explicitRef] : companionRefsFor(headRef);
 
         for (const companionRef of forkRefs) {
             if (await hasRef(headRepository, companionRef)) {
@@ -38,8 +53,8 @@ export const resolveRenderer = async (input, hasRef) => {
         repository = (await hasRef(ownerRepository, ref)) ? ownerRepository : input.upstreamRepository;
     }
 
-    if (!explicitRef && input.headRef) {
-        const candidates = [...companionRefsFor(input.headRef), automaticRef, 'integration'];
+    if (!explicitRef && headRef) {
+        const candidates = [...companionRefsFor(headRef), automaticRef, 'integration'];
 
         for (const candidate of candidates) {
             if (await hasRef(repository, candidate)) {
@@ -58,6 +73,14 @@ export const resolveRenderer = async (input, hasRef) => {
     return { repository, ref };
 };
 
+/**
+ * `git ls-remote --exit-code` leaves the process with a non-zero status when the ref is absent, and
+ * that status is an answer: the branch is not there. Anything else -- git missing from PATH, a
+ * programming error inside this file -- is a fault, and swallowing it would answer "no such ref" to
+ * every question and quietly pair every build with the fallback branch.
+ */
+export const isAbsentRefFailure = (error) => typeof error?.code === 'number';
+
 const hasRemoteRef = async (repository, ref) => {
     try {
         await execFileAsync('git', [
@@ -69,8 +92,10 @@ const hasRemoteRef = async (repository, ref) => {
         ]);
 
         return true;
-    } catch {
-        return false;
+    } catch (error) {
+        if (isAbsentRefFailure(error)) return false;
+
+        throw error;
     }
 };
 
@@ -103,9 +128,3 @@ const run = async () => {
 };
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) await run();
-import { execFile } from 'node:child_process';
-import { appendFileSync } from 'node:fs';
-import { promisify } from 'node:util';
-import { pathToFileURL } from 'node:url';
-
-const execFileAsync = promisify(execFile);

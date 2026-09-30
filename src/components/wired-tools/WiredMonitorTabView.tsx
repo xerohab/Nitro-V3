@@ -13,6 +13,8 @@ export interface WiredMonitorTabViewProps {
     monitorHistoryRows: { id: string }[];
     onOpenMonitorInfo: () => void;
     onOpenMonitorHistory: () => void;
+    /** Opens the room's paged wired log window. */
+    onOpenRoomLogs: () => void;
     onClearMonitorLogs: () => void;
     onOpenMonitorLogDetails: (type: string, details: Pick<MonitorLogDetails, 'severity' | 'amount' | 'latest' | 'reason' | 'sourceLabel' | 'sourceId'>) => void;
 }
@@ -22,10 +24,10 @@ export interface WiredMonitorTabViewProps {
  * parent's inline JSX. The three modal overlays that used to live
  * inside this block were dead code (`{ false && ... }`) and have been
  * dropped; the live versions of those modals (Monitor History, Monitor
- * Info, Error Info) are mounted outside the NitroCardView by the parent.
+ * Info, Error Info) are mounted outside the OctaneCardView by the parent.
  */
 export const WiredMonitorTabView = (props: WiredMonitorTabViewProps) => {
-    const { monitorStats, monitorLogs, monitorHistoryRows, onOpenMonitorInfo, onOpenMonitorHistory, onClearMonitorLogs, onOpenMonitorLogDetails } = props;
+    const { monitorStats, monitorLogs, monitorHistoryRows, onOpenMonitorInfo, onOpenMonitorHistory, onOpenRoomLogs, onClearMonitorLogs, onOpenMonitorLogDetails } = props;
 
     return (
         <div className="p-3 flex flex-col gap-3 relative">
@@ -97,9 +99,14 @@ export const WiredMonitorTabView = (props: WiredMonitorTabViewProps) => {
                     >
                         Clear all
                     </Button>
-                    <Button disabled={!monitorHistoryRows.length} variant="secondary" onClick={onOpenMonitorHistory}>
-                        View full logs
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button variant="secondary" onClick={onOpenRoomLogs}>
+                            Room logs
+                        </Button>
+                        <Button disabled={!monitorHistoryRows.length} variant="secondary" onClick={onOpenMonitorHistory}>
+                            View full logs
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>

@@ -1,4 +1,4 @@
-import { UseStickerComposer } from '@nitrots/nitro-renderer';
+import { UseStickerComposer } from '@octane/renderer';
 import * as Popover from '@radix-ui/react-popover';
 import { FC, useEffect, useMemo, useState } from 'react';
 import { GetConfigurationValue, SendMessageComposer } from '../../../../api';

@@ -1,4 +1,4 @@
-import { CreateLinkEvent, FurnitureListComposer, PurchaseFromCatalogComposer } from '@nitrots/nitro-renderer';
+import { CreateLinkEvent, FurnitureListComposer, PurchaseFromCatalogComposer } from '@octane/renderer';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     BuilderFurniPlaceableStatus,
@@ -15,7 +15,9 @@ import {
     SendMessageComposer
 } from '../../../../../api';
 import { getCatalogBundlePrice } from '../../../../../api/catalog/CatalogBundleDiscount';
-import { Button, LayoutLoadingSpinnerView, Text } from '../../../../../common';
+import { useHabbiconCatalog } from '../../../../../api/habbicons';
+import { localizeWithFallback } from '../../../../../api/utils/localizeWithFallback';
+import { LayoutLoadingSpinnerView, Text } from '../../../../../common';
 import {
     CatalogEvent,
     CatalogInitGiftEvent,
@@ -39,13 +41,15 @@ import { CatalogClubUpgradeButton } from './CatalogClubUpgradeButton';
 import { canPurchaseCatalogOffer } from './catalogPurchase.helpers';
 
 interface CatalogPurchaseWidgetViewProps {
+    disabled?: boolean;
     noGiftOption?: boolean;
     purchaseCallback?: () => void;
 }
 
 export const CatalogPurchaseWidgetView: FC<CatalogPurchaseWidgetViewProps> = (props) => {
-    const { noGiftOption = false, purchaseCallback = null } = props;
+    const { disabled = false, noGiftOption = false, purchaseCallback = null } = props;
     const [builderPlaceableRefreshTick, setBuilderPlaceableRefreshTick] = useState(0);
+    const habbicons = useHabbiconCatalog();
     const [purchaseWillBeGift, setPurchaseWillBeGift] = useState(false);
     const [purchaseState, setPurchaseState] = useState(CatalogPurchaseState.NONE);
     const purchasePendingRef = useRef(false);
@@ -67,7 +71,8 @@ export const CatalogPurchaseWidgetView: FC<CatalogPurchaseWidgetViewProps> = (pr
     const { getCurrencyAmount = null } = usePurse();
     const { showConfirm = null, showSingleBubble = null, simpleAlert = null } = useNotification();
 
-    // Ensure purchaseOptions is always populated even for direct search results
+    // Search results can select a real offer before the normal page widget
+    // has populated purchaseOptions. Always provide safe purchase defaults.
     useEffect(() => {
         if (!currentOffer || !setPurchaseOptions) return;
 
@@ -192,17 +197,16 @@ export const CatalogPurchaseWidgetView: FC<CatalogPurchaseWidgetViewProps> = (pr
                     setPurchaseWillBeGift(false);
                     setPurchaseState(CatalogPurchaseState.NONE);
 
-                    // Some emulator builds acknowledge the catalogue purchase before
-                    // the inventory insert packet reaches the client. Ask for a fresh
-                    // furni list just after the successful purchase so newly bought
-                    // items appear in Inventory without waiting for the next periodic
-                    // refresh / reopen. The short delay avoids racing the DB commit.
+                    // The purchase acknowledgement can arrive before the
+                    // inventory insert reaches the client. Refresh shortly
+                    // afterwards so the newly purchased furni appears.
                     if (inventoryRefreshTimeoutRef.current) clearTimeout(inventoryRefreshTimeoutRef.current);
 
                     inventoryRefreshTimeoutRef.current = setTimeout(() => {
                         SendMessageComposer(new FurnitureListComposer());
                         inventoryRefreshTimeoutRef.current = null;
                     }, 200);
+
                     return;
                 case CatalogPurchaseFailureEvent.PURCHASE_FAILED:
                     resetPurchaseGuard();
@@ -232,6 +236,8 @@ export const CatalogPurchaseWidgetView: FC<CatalogPurchaseWidgetViewProps> = (pr
     const isLimitedSoldOut = useMemo(() => {
         if (!currentOffer) return false;
 
+        if (purchaseOptions.extraParamRequired && (!purchaseOptions.extraData || !purchaseOptions.extraData.length)) return false;
+
         if (currentOffer.pricingModel === Offer.PRICING_MODEL_SINGLE) {
             const product = currentOffer.product;
 
@@ -239,26 +245,37 @@ export const CatalogPurchaseWidgetView: FC<CatalogPurchaseWidgetViewProps> = (pr
         }
 
         return false;
-    }, [currentOffer]);
+    }, [currentOffer, purchaseOptions]);
+
+    const habbiconOwned =
+        currentOffer?.product?.productType === ProductTypeEnum.HABBICON &&
+        habbicons.entries.some((entry) => entry.id === currentOffer.product.productClassId && (entry.owned || entry.claimable));
 
     const purchase = (isGift: boolean = false) => {
-        if (purchasePendingRef.current || !currentOffer) return;
+        if (habbiconOwned || purchasePendingRef.current || !currentOffer) return;
+
+        // Normal unavailable rent offers must remain blocked. Search/lazy
+        // virtual offers are resolved to their real catalogue IDs below.
+        if (!canPurchaseCatalogOffer(currentOffer)) return;
 
         if (GetClubMemberLevel() < currentOffer.clubLevel) {
             CreateLinkEvent('habboUI/open/hccenter');
+
             return;
         }
 
         const quantity = purchaseOptions?.quantity ?? 1;
         const extraData = purchaseOptions?.extraData ?? '';
 
-        // Search results are virtual UI offers. They carry the exact real catalogue
-        // page/offer pair generated from catalog_items; never substitute furniture ids.
+        // Search results are virtual UI offers. They carry the exact real
+        // catalogue page/offer pair generated from catalog_items; never
+        // substitute furniture ids.
         let pageId = (currentOffer as any).__searchCatalogPageId ?? currentOffer.page?.pageId ?? -1;
         const offerId = (currentOffer as any).__searchCatalogOfferId ?? currentOffer.offerId;
 
         if ((pageId === -1 || pageId === -12345678) && getNodesByOfferId && offerId > 0) {
             const nodes = getNodesByOfferId(offerId, true) || getNodesByOfferId(offerId);
+
             if (nodes && nodes.length > 0) pageId = nodes[0].pageId;
         }
 
@@ -298,10 +315,13 @@ export const CatalogPurchaseWidgetView: FC<CatalogPurchaseWidgetViewProps> = (pr
             resetPurchaseGuard();
             setPurchaseWillBeGift(false);
             setPurchaseState(CatalogPurchaseState.FAILED);
+
             return;
         }
 
-        SendMessageComposer(new PurchaseFromCatalogComposer(pageId, offerId, extraData, quantity));
+        SendMessageComposer(
+            new PurchaseFromCatalogComposer(pageId, offerId, extraData, quantity)
+        );
     };
 
     useEffect(() => {
@@ -364,17 +384,31 @@ export const CatalogPurchaseWidgetView: FC<CatalogPurchaseWidgetViewProps> = (pr
     if (!currentOffer) return null;
 
     const isLimitedEditionOffer = !!(currentOffer.product && currentOffer.product.isUniqueLimitedItem);
-    
-    // Bypass canPurchaseCatalogOffer lock for search results and lazy-loaded items
-    const isOfferUnavailable = !currentOffer || (currentOffer.isRentOffer && !canPurchaseCatalogOffer(currentOffer));
+    // Search results and lazy-loaded offers are virtual UI offers and
+    // resolve to real catalogue IDs during purchase. Do not disable them
+    // solely because the temporary offer fails the generic helper.
+    const isOfferUnavailable =
+        !canPurchaseCatalogOffer(currentOffer);
+    // A club-locked offer replaces the purchase buttons with the club invitation; either
+    // button would only open the club centre for a player below the offer's club level.
+    const isClubLocked = !isBuildersClubOffer && !isOfferUnavailable && !habbiconOwned && GetClubMemberLevel() < currentOffer.clubLevel;
 
     const PurchaseButton = () => {
-        const standardButtonClassNames = ['nitro-catalog-standard-button'];
-        const purchaseButtonClassNames = [...standardButtonClassNames, 'nitro-catalog-standard-buy-button'];
+        const standardButtonClassNames = ['octane-catalog-standard-button'];
+        const purchaseButtonClassNames = [...standardButtonClassNames, 'octane-catalog-standard-buy-button'];
+
+        if (habbiconOwned)
+            return (
+                <button type="button" className={purchaseButtonClassNames.join(' ')} disabled>
+                    {localizeWithFallback('generic.owned', 'Owned')}
+                </button>
+            );
 
         if (isBuildersClubPlaceable) {
+            const hasMissingExtraParam = purchaseOptions.extraParamRequired && (!purchaseOptions.extraData || !purchaseOptions.extraData.length);
             const isBlockedByVisitors = builderPlaceableStatus === BuilderFurniPlaceableStatus.VISITORS_IN_ROOM;
             const isDisabled =
+                hasMissingExtraParam ||
                 isBlockedByVisitors ||
                 builderPlaceableStatus === BuilderFurniPlaceableStatus.MISSING_OFFER ||
                 builderPlaceableStatus === BuilderFurniPlaceableStatus.NOT_IN_ROOM ||
@@ -395,17 +429,18 @@ export const CatalogPurchaseWidgetView: FC<CatalogPurchaseWidgetViewProps> = (pr
             return (
                 <div className="flex flex-col gap-1.5 items-start">
                     <div className="flex gap-1.5 flex-wrap">
-                        <Button classNames={standardButtonClassNames} disabled={isDisabled} onClick={() => startBuilderPlacement(true)}>
+                        <button type="button" className={standardButtonClassNames.join(' ')} disabled={isDisabled} onClick={() => startBuilderPlacement(true)}>
                             {LocalizeText('builder.placement_widget.place_many')}
-                        </Button>
-                        <Button
-                            classNames={standardButtonClassNames}
+                        </button>
+                        <button
+                            type="button"
+                            className={standardButtonClassNames.join(' ')}
                             disabled={isDisabled}
                             onClick={() => startBuilderPlacement(false)}
                             style={buildersClubPlaceOneButtonStyle}
                         >
                             {LocalizeText('builder.placement_widget.place_one')}
-                        </Button>
+                        </button>
                     </div>
                     {isBlockedByVisitors && (
                         <Text className="max-w-full" small variant="danger">
@@ -423,52 +458,50 @@ export const CatalogPurchaseWidgetView: FC<CatalogPurchaseWidgetViewProps> = (pr
 
         if (isOfferUnavailable)
             return (
-                <Button classNames={purchaseButtonClassNames} disabled>
-                    {currentOffer.isLazy ? LocalizeText('generic.loading') : LocalizeText('catalog.alert.not_available')}
-                </Button>
+                <button type="button" className={purchaseButtonClassNames.join(' ')} disabled>
+                    {currentOffer.isLazy ? LocalizeText('generic.loading') : LocalizeText('catalog.purchase_confirmation.' + (currentOffer.isRentOffer ? 'rent' : 'buy'))}
+                </button>
             );
-
-        if (GetClubMemberLevel() < currentOffer.clubLevel) return <CatalogClubUpgradeButton />;
 
         if (isLimitedSoldOut)
             return (
-                <Button classNames={purchaseButtonClassNames} disabled variant="danger">
+                <button type="button" className={purchaseButtonClassNames.join(' ')} disabled>
                     {LocalizeText('catalog.alert.limited_edition_sold_out.title')}
-                </Button>
+                </button>
             );
 
         switch (purchaseState) {
             case CatalogPurchaseState.CONFIRM:
                 return (
-                    <Button classNames={[...purchaseButtonClassNames, 'pointer-events-none']} variant="success">
+                    <button type="button" className={`${purchaseButtonClassNames.join(' ')} pointer-events-none`}>
                         {LocalizeText('catalog.purchase_confirmation.' + (currentOffer.isRentOffer ? 'rent' : 'buy'))}
-                    </Button>
+                    </button>
                 );
             case CatalogPurchaseState.PURCHASE:
                 return (
-                    <Button classNames={purchaseButtonClassNames} disabled>
+                    <button type="button" className={purchaseButtonClassNames.join(' ')} disabled>
                         <LayoutLoadingSpinnerView />
-                    </Button>
+                    </button>
                 );
             case CatalogPurchaseState.FAILED:
                 return (
-                    <Button classNames={purchaseButtonClassNames} variant="danger">
+                    <button type="button" className={purchaseButtonClassNames.join(' ')}>
                         {LocalizeText('generic.failed')}
-                    </Button>
+                    </button>
                 );
             case CatalogPurchaseState.SOLD_OUT:
                 return (
-                    <Button classNames={purchaseButtonClassNames} variant="danger">
+                    <button type="button" className={purchaseButtonClassNames.join(' ')}>
                         {LocalizeText('generic.failed') + ' - ' + LocalizeText('catalog.alert.limited_edition_sold_out.title')}
-                    </Button>
+                    </button>
                 );
             case CatalogPurchaseState.NONE:
             default:
                 return (
-                    <Button
-                        classNames={purchaseButtonClassNames}
-                        variant="success"
-                        disabled={!!purchaseOptions?.extraParamRequired && (!purchaseOptions?.extraData || !purchaseOptions.extraData.length)}
+                    <button
+                        type="button"
+                        className={purchaseButtonClassNames.join(' ')}
+                        disabled={disabled || (purchaseOptions.extraParamRequired && (!purchaseOptions.extraData || !purchaseOptions.extraData.length))}
                         onClick={() => {
                             if (catalogSkipPurchaseConfirmation && !isLimitedEditionOffer) {
                                 confirmationOpenRef.current = false;
@@ -486,22 +519,26 @@ export const CatalogPurchaseWidgetView: FC<CatalogPurchaseWidgetViewProps> = (pr
                         }}
                     >
                         {LocalizeText('catalog.purchase_confirmation.' + (currentOffer.isRentOffer ? 'rent' : 'buy'))}
-                    </Button>
+                    </button>
                 );
         }
     };
 
     return (
         <>
-            {!isBuildersClubOffer && !noGiftOption && !currentOffer.isRentOffer && (
-                <Button
-                    variant="secondary"
-                    classNames={['nitro-catalog-standard-button', 'nitro-catalog-standard-gift-button']}
+            {isClubLocked && <CatalogClubUpgradeButton />}
+            {!isClubLocked && !isBuildersClubOffer && !noGiftOption && !currentOffer.isRentOffer && (
+                <button
+                    type="button"
+                    className="octane-catalog-standard-button octane-catalog-standard-gift-button"
                     disabled={
-                        (purchaseOptions?.quantity ?? 1) > 1 ||
+                        disabled ||
+                        purchaseOptions.quantity > 1 ||
                         isOfferUnavailable ||
                         !currentOffer.giftable ||
-                        isLimitedSoldOut
+                        currentOffer.product?.productType === ProductTypeEnum.HABBICON ||
+                        isLimitedSoldOut ||
+                        (purchaseOptions.extraParamRequired && (!purchaseOptions.extraData || !purchaseOptions.extraData.length))
                     }
                     onClick={() => {
                         if (showInsufficientBalanceAlert()) return;
@@ -511,17 +548,17 @@ export const CatalogPurchaseWidgetView: FC<CatalogPurchaseWidgetViewProps> = (pr
                         setPurchaseState(CatalogPurchaseState.CONFIRM);
                     }}
                 >
-                    {LocalizeText('catalog.purchase_confirmation.gift').replace(/\bgift\b/i, 'Gift')}
-                </Button>
+                    {LocalizeText('catalog.purchase_confirmation.gift')}
+                </button>
             )}
-            <PurchaseButton />
+            {!isClubLocked && <PurchaseButton />}
             {confirmationOpenRef.current && (purchaseState === CatalogPurchaseState.CONFIRM || purchaseState === CatalogPurchaseState.PURCHASE) && (
                 <CatalogPurchaseConfirmView
                     isGift={purchaseWillBeGift}
                     isSubmitting={purchaseState === CatalogPurchaseState.PURCHASE}
                     bundleDiscountRuleset={bundleDiscountRuleset}
                     offer={currentOffer}
-                    quantity={purchaseOptions?.quantity ?? 1}
+                    quantity={purchaseOptions.quantity}
                     onCancel={() => {
                         confirmationOpenRef.current = false;
                         resetPlacedOfferData?.();

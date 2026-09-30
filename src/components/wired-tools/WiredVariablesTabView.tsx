@@ -1,7 +1,8 @@
 import { FC } from 'react';
+import { localizeWithFallback } from '../../api';
 import { Button, Text } from '../../common';
 import { VARIABLES_ELEMENTS } from './WiredCreatorTools.constants';
-import { VariableDefinition, VariableTextValue } from './WiredCreatorTools.types';
+import { VariableDefinition, VariablesElementButton, VariablesElementType, VariableTextValue } from './WiredCreatorTools.types';
 import { useWiredCreatorToolsUiStore } from './wiredCreatorToolsUiStore';
 
 export interface WiredVariablesTabViewProps {
@@ -11,17 +12,25 @@ export interface WiredVariablesTabViewProps {
     canVariableHighlight: boolean;
     variableManageCanOpen: boolean;
     onOpenManagePanel: () => void;
+    arrayInspectorCanOpen: boolean;
+    onOpenArrayInspector: () => void;
+    canVariableClear: boolean;
+    onClearVariable: () => void;
     selectedVariableProperties: { key: string; value: string }[];
     selectedVariableTextValues: VariableTextValue[];
+    /** Set together with `onVariablesTypeChange` to drive the type from outside the creator tools store. */
+    variablesType?: VariablesElementType;
+    onVariablesTypeChange?: (type: VariablesElementType) => void;
+    variableElements?: VariablesElementButton[];
+    showHighlight?: boolean;
+    showArrayInspector?: boolean;
+    showTextValues?: boolean;
+    clearLabel?: string;
+    onOpenWebApiExplorer?: () => void;
+    /** Shown in the picker while it has nothing to list. */
+    emptyPickerText?: string;
 }
 
-/**
- * The "Variables" tab body of WiredCreatorToolsView. Extracted so the
- * parent module no longer carries 110 lines of inline JSX. Pure
- * presentation: every piece of state and every callback is supplied as
- * a prop, so this component is trivially memoizable and (eventually)
- * testable in isolation.
- */
 export const WiredVariablesTabView: FC<WiredVariablesTabViewProps> = ({
     variablePickerDefinitions,
     selectedVariableDefinition,
@@ -29,11 +38,27 @@ export const WiredVariablesTabView: FC<WiredVariablesTabViewProps> = ({
     canVariableHighlight,
     variableManageCanOpen,
     onOpenManagePanel,
+    arrayInspectorCanOpen,
+    onOpenArrayInspector,
+    canVariableClear,
+    onClearVariable,
     selectedVariableProperties,
-    selectedVariableTextValues
+    selectedVariableTextValues,
+    variablesType: controlledVariablesType,
+    onVariablesTypeChange,
+    variableElements = VARIABLES_ELEMENTS,
+    showHighlight = true,
+    showArrayInspector = true,
+    showTextValues = true,
+    clearLabel,
+    onOpenWebApiExplorer,
+    emptyPickerText
 }) => {
-    const variablesType = useWiredCreatorToolsUiStore((s) => s.variablesType);
-    const setVariablesType = useWiredCreatorToolsUiStore((s) => s.setVariablesType);
+    const storeVariablesType = useWiredCreatorToolsUiStore((s) => s.variablesType);
+    const setStoreVariablesType = useWiredCreatorToolsUiStore((s) => s.setVariablesType);
+    const isControlled = controlledVariablesType !== undefined && !!onVariablesTypeChange;
+    const variablesType = isControlled ? controlledVariablesType : storeVariablesType;
+    const setVariablesType = isControlled ? onVariablesTypeChange : setStoreVariablesType;
     const isVariableHighlightActive = useWiredCreatorToolsUiStore((s) => s.isVariableHighlightActive);
     const setIsVariableHighlightActive = useWiredCreatorToolsUiStore((s) => s.setIsVariableHighlightActive);
 
@@ -43,7 +68,7 @@ export const WiredVariablesTabView: FC<WiredVariablesTabViewProps> = ({
                 <div className="flex flex-col gap-1">
                     <Text bold>Variable type:</Text>
                     <div className="flex gap-1">
-                        {VARIABLES_ELEMENTS.map((element) => (
+                        {variableElements.map((element) => (
                             <button
                                 key={element.key}
                                 type="button"
@@ -72,18 +97,38 @@ export const WiredVariablesTabView: FC<WiredVariablesTabViewProps> = ({
                                             <td className="px-3 py-1 text-[#444]">{variable.key}</td>
                                         </tr>
                                     ))}
+                                    {!variablePickerDefinitions.length && !!emptyPickerText && (
+                                        <tr>
+                                            <td className="px-3 py-2 text-[#777] text-center">{emptyPickerText}</td>
+                                        </tr>
+                                    )}
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
-                <div className="flex gap-2">
-                    <Button disabled={!canVariableHighlight} variant="secondary" onClick={() => setIsVariableHighlightActive((value) => !value)}>
-                        {isVariableHighlightActive ? 'Undo' : 'Highlight'}
-                    </Button>
+                <div className="flex flex-wrap gap-2">
+                    {showHighlight && (
+                        <Button disabled={!canVariableHighlight} variant="secondary" onClick={() => setIsVariableHighlightActive((value) => !value)}>
+                            {isVariableHighlightActive ? 'Undo' : 'Highlight'}
+                        </Button>
+                    )}
                     <Button disabled={!variableManageCanOpen} variant="secondary" onClick={onOpenManagePanel}>
                         Manage
                     </Button>
+                    {showArrayInspector && (
+                        <Button disabled={!arrayInspectorCanOpen} variant="secondary" onClick={onOpenArrayInspector}>
+                            Contents
+                        </Button>
+                    )}
+                    <Button disabled={!canVariableClear} variant="secondary" onClick={onClearVariable}>
+                        {clearLabel ?? localizeWithFallback('wiredmenu.variable_overview.delete_all.title', 'Clear this variable')}
+                    </Button>
+                    {!!onOpenWebApiExplorer && (
+                        <Button variant="secondary" onClick={onOpenWebApiExplorer}>
+                            {localizeWithFallback('wiredmenu.variables.web_api_explorer', 'Web API explorer')}
+                        </Button>
+                    )}
                 </div>
             </div>
             <div className="min-w-0 grow flex flex-col gap-3">
@@ -114,34 +159,36 @@ export const WiredVariablesTabView: FC<WiredVariablesTabViewProps> = ({
                         </div>
                     </div>
                 </div>
-                <div className="flex flex-col gap-1 min-h-0 grow">
-                    <Text bold>Text values:</Text>
-                    <div className="grow rounded border border-[#bdb8ab] bg-white overflow-hidden">
-                        <div className="grid grid-cols-[120px_1fr] border-b border-[#d8d4c8] bg-[#f5f2ea] px-3 py-2 text-[12px] font-bold text-[#333]">
-                            <span>Value</span>
-                            <span>Text</span>
+                {showTextValues && (
+                    <div className="flex flex-col gap-1 min-h-0 grow">
+                        <Text bold>Text values:</Text>
+                        <div className="grow rounded border border-[#bdb8ab] bg-white overflow-hidden">
+                            <div className="grid grid-cols-[120px_1fr] border-b border-[#d8d4c8] bg-[#f5f2ea] px-3 py-2 text-[12px] font-bold text-[#333]">
+                                <span>Value</span>
+                                <span>Text</span>
+                            </div>
+                            {!selectedVariableTextValues.length && (
+                                <div className="h-[calc(100%-37px)] flex items-center justify-center text-[#b1aca2] text-[20px]">
+                                    <Text>Nothing to display</Text>
+                                </div>
+                            )}
+                            {!!selectedVariableTextValues.length && (
+                                <div className="max-h-[178px] overflow-y-auto">
+                                    <table className="w-full text-[12px]">
+                                        <tbody>
+                                            {selectedVariableTextValues.map((entry, index) => (
+                                                <tr key={`${entry.value}-${index}`} className={index % 2 === 0 ? 'bg-white' : 'bg-[#f3f3f3]'}>
+                                                    <td className="px-3 py-1 text-[#444]">{entry.value}</td>
+                                                    <td className="px-3 py-1 text-[#222]">{entry.text}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
                         </div>
-                        {!selectedVariableTextValues.length && (
-                            <div className="h-[calc(100%-37px)] flex items-center justify-center text-[#b1aca2] text-[20px]">
-                                <Text>Nothing to display</Text>
-                            </div>
-                        )}
-                        {!!selectedVariableTextValues.length && (
-                            <div className="max-h-[178px] overflow-y-auto">
-                                <table className="w-full text-[12px]">
-                                    <tbody>
-                                        {selectedVariableTextValues.map((entry, index) => (
-                                            <tr key={`${entry.value}-${index}`} className={index % 2 === 0 ? 'bg-white' : 'bg-[#f3f3f3]'}>
-                                                <td className="px-3 py-1 text-[#444]">{entry.value}</td>
-                                                <td className="px-3 py-1 text-[#222]">{entry.text}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
                     </div>
-                </div>
+                )}
             </div>
         </div>
     );

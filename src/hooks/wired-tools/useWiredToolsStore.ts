@@ -1,17 +1,26 @@
 import {
     CreateLinkEvent,
     GetSessionDataManager,
+    WiredMenuPermissionsSaveComposer,
     WiredRoomSettingsDataEvent,
     WiredRoomSettingsRequestComposer,
-    WiredRoomSettingsSaveComposer,
+    WiredRoomStateActionComposer,
     WiredUserVariableManageComposer,
     WiredUserVariablesDataEvent,
     WiredUserVariablesRequestComposer,
     WiredUserVariableUpdateComposer
-} from '@nitrots/nitro-renderer';
+} from '@octane/renderer';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { registerSharedHook } from '@/state/useSharedHook';
-import { createPacketCooldownGate, LocalizeText, NotificationAlertType, SendMessageComposer } from '../../api';
+import {
+    createPacketCooldownGate,
+    LocalizeText,
+    NotificationAlertType,
+    normalizeWiredStyle,
+    SendMessageComposer,
+    WIRED_STYLE_DEFAULT,
+    WiredStyleName
+} from '../../api';
 import { useMessageEvent } from '../events';
 import { useNotification } from '../notification';
 import { useRoom } from '../rooms';
@@ -20,6 +29,8 @@ export interface IWiredAccountPreferences {
     showInspectButton: boolean;
     showSystemNotifications: boolean;
     showToolbarButton: boolean;
+    /** The look of the wired box windows; one of WIRED_STYLE_OPTIONS. */
+    wiredStyle: WiredStyleName;
 }
 
 export interface IWiredRoomSettings {
@@ -30,6 +41,8 @@ export interface IWiredRoomSettings {
     isLoaded: boolean;
     modifyMask: number;
     roomId: number;
+    /** The room's wired timezone as the server keeps it; empty when the hotel's own applies. */
+    timezone: string;
 }
 
 export interface IWiredUserVariableDefinition {
@@ -39,6 +52,8 @@ export interface IWiredUserVariableDefinition {
     isTextConnected: boolean;
     itemId: number;
     name: string;
+    /** The value-to-text table of a text connected definition, when the server sent one. */
+    textConnector?: Array<{ key: number; value: string }>;
 }
 
 export interface IWiredUserVariableAssignment {
@@ -56,6 +71,8 @@ export interface IWiredFurniVariableDefinition {
     isTextConnected: boolean;
     itemId: number;
     name: string;
+    /** The value-to-text table of a text connected definition, when the server sent one. */
+    textConnector?: Array<{ key: number; value: string }>;
 }
 
 export interface IWiredFurniVariableAssignment {
@@ -73,6 +90,8 @@ export interface IWiredRoomVariableDefinition {
     isTextConnected: boolean;
     itemId: number;
     name: string;
+    /** The value-to-text table of a text connected definition, when the server sent one. */
+    textConnector?: Array<{ key: number; value: string }>;
 }
 
 export interface IWiredRoomVariableAssignment {
@@ -90,6 +109,8 @@ export interface IWiredContextVariableDefinition {
     isTextConnected: boolean;
     itemId: number;
     name: string;
+    /** The value-to-text table of a text connected definition, when the server sent one. */
+    textConnector?: Array<{ key: number; value: string }>;
 }
 
 const WIRED_VARIABLE_TARGET_USER = 0;
@@ -97,13 +118,15 @@ const WIRED_VARIABLE_TARGET_FURNI = 1;
 const WIRED_VARIABLE_TARGET_ROOM = 3;
 const WIRED_VARIABLE_MANAGE_ACTION_ASSIGN = 0;
 const WIRED_VARIABLE_MANAGE_ACTION_REMOVE = 1;
+const WIRED_VARIABLE_MANAGE_ACTION_CLEAR_ALL = 2;
 
 const WIRED_TOOLS_STORAGE_PREFIX = 'nitro.wired.tools.preferences';
 const getCurrentUnixTime = () => Math.floor(Date.now() / 1000);
 const DEFAULT_ACCOUNT_PREFERENCES: IWiredAccountPreferences = {
     showToolbarButton: false,
     showInspectButton: false,
-    showSystemNotifications: false
+    showSystemNotifications: false,
+    wiredStyle: WIRED_STYLE_DEFAULT
 };
 
 const DEFAULT_ROOM_SETTINGS: IWiredRoomSettings = {
@@ -113,7 +136,8 @@ const DEFAULT_ROOM_SETTINGS: IWiredRoomSettings = {
     canInspect: false,
     canModify: false,
     canManageSettings: false,
-    isLoaded: false
+    isLoaded: false,
+    timezone: ''
 };
 
 /**
@@ -173,7 +197,8 @@ export const useWiredToolsStore = () => {
 
             setAccountPreferences({
                 ...DEFAULT_ACCOUNT_PREFERENCES,
-                ...(parsedValue || {})
+                ...(parsedValue || {}),
+                wiredStyle: normalizeWiredStyle(parsedValue?.wiredStyle)
             });
         } catch {
             setAccountPreferences(DEFAULT_ACCOUNT_PREFERENCES);
@@ -239,7 +264,8 @@ export const useWiredToolsStore = () => {
             canInspect: parser.canInspect,
             canModify: parser.canModify,
             canManageSettings: parser.canManageSettings,
-            isLoaded: true
+            isLoaded: true,
+            timezone: parser.timezone ?? ''
         });
     });
 
@@ -276,20 +302,42 @@ export const useWiredToolsStore = () => {
         }));
     }, []);
 
+    // The official permissions packet carries the timezone too, so every save sends all three and
+    // the server answers with the settings it kept.
     const saveRoomSettings = useCallback(
-        (inspectMask: number, modifyMask: number) => {
+        (inspectMask: number, modifyMask: number, timezone: string = roomSettings.timezone) => {
             if (!roomSettings.canManageSettings) return;
 
             setRoomSettings((prevValue) => ({
                 ...prevValue,
                 inspectMask,
-                modifyMask
+                modifyMask,
+                timezone
             }));
 
-            SendMessageComposer(new WiredRoomSettingsSaveComposer(inspectMask, modifyMask));
+            SendMessageComposer(new WiredMenuPermissionsSaveComposer(modifyMask, inspectMask, timezone));
         },
-        [roomSettings.canManageSettings]
+        [roomSettings.canManageSettings, roomSettings.timezone]
     );
+
+    const saveRoomTimezone = useCallback(
+        (timezone: string) => saveRoomSettings(roomSettings.inspectMask, roomSettings.modifyMask, timezone),
+        [saveRoomSettings, roomSettings.inspectMask, roomSettings.modifyMask]
+    );
+
+    /** Drops the room's cached wired stacks so its boxes are wired up again from the furniture as it stands. */
+    const reloadRoomWired = useCallback(() => {
+        if (!roomSettings.canModify) return;
+
+        SendMessageComposer(new WiredRoomStateActionComposer(false));
+    }, [roomSettings.canModify]);
+
+    /** Re-reads every box from storage, discarding edits that were never saved, then rebuilds the stacks. */
+    const rollbackRoomWired = useCallback(() => {
+        if (!roomSettings.canModify) return;
+
+        SendMessageComposer(new WiredRoomStateActionComposer(true));
+    }, [roomSettings.canModify]);
 
     const updateUserVariableValue = useCallback(
         (userId: number, variableItemId: number, value: number) => {
@@ -564,6 +612,43 @@ export const useWiredToolsStore = () => {
         [roomSettings.canModify]
     );
 
+    /**
+     * Takes a variable away from every holder at once, the official "clear this variable". The
+     * server decides who may (the owner of the definition box); the room is told through the next
+     * snapshot, but the local copy drops the holders straight away so the tab does not lag behind.
+     */
+    const clearVariableForAllHolders = useCallback(
+        (scope: 'user' | 'furni', variableItemId: number) => {
+            if (!roomSettings.canModify || !variableItemId) return;
+
+            const strip = (prevValue: Record<number, { variableItemId: number }[]>) => {
+                const nextValue: typeof prevValue = {};
+
+                for (const [holderId, assignments] of Object.entries(prevValue)) {
+                    const remaining = assignments.filter((assignment) => assignment.variableItemId !== variableItemId);
+
+                    if (remaining.length) nextValue[Number(holderId)] = remaining;
+                }
+
+                return nextValue;
+            };
+
+            if (scope === 'furni') setFurniVariableAssignments((prevValue) => strip(prevValue) as typeof prevValue);
+            else setUserVariableAssignments((prevValue) => strip(prevValue) as typeof prevValue);
+
+            SendMessageComposer(
+                new WiredUserVariableManageComposer(
+                    WIRED_VARIABLE_MANAGE_ACTION_CLEAR_ALL,
+                    scope === 'furni' ? WIRED_VARIABLE_TARGET_FURNI : WIRED_VARIABLE_TARGET_USER,
+                    0,
+                    variableItemId,
+                    0
+                )
+            );
+        },
+        [roomSettings.canModify]
+    );
+
     const showInvalidRoomAlert = useCallback(() => {
         if (!simpleAlert) return;
 
@@ -621,12 +706,16 @@ export const useWiredToolsStore = () => {
         areUserVariablesLoaded,
         updateAccountPreferences,
         saveRoomSettings,
+        saveRoomTimezone,
+        reloadRoomWired,
+        rollbackRoomWired,
         requestUserVariables,
         assignUserVariable,
         removeUserVariable,
         updateUserVariableValue,
         assignFurniVariable,
         removeFurniVariable,
+        clearVariableForAllHolders,
         updateFurniVariableValue,
         updateRoomVariableValue,
         openMonitor,

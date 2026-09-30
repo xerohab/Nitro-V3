@@ -20,13 +20,14 @@ const rendererTypes = vi.hoisted(() => {
     return { StringDataType };
 });
 
-vi.mock('@nitrots/nitro-renderer', () => ({ StringDataType: rendererTypes.StringDataType }));
+vi.mock('@octane/renderer', () => ({ StringDataType: rendererTypes.StringDataType }));
 
 vi.mock('../../../../../api', () => ({
     GetConfigurationValue: vi.fn(),
     LocalizeBadgeDescription: (code: string) => ({ BETA: 'Builder helper', GAMMA: 'Music fan' })[code] ?? '',
     LocalizeBadgeName: (code: string) => ({ ALPHA: 'Alpha badge', BETA: 'Beta badge', GAMMA: 'Gamma badge' })[code] ?? code,
-    LocalizeText: (key: string) => key
+    LocalizeText: (key: string) => key,
+    localizeWithFallback: (key: string) => key
 }));
 
 vi.mock('../../../../../common', () => ({

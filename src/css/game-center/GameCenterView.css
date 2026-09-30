@@ -158,7 +158,7 @@
   flex: 0 0 auto;
   color: #1077ac;
   font-family: Ubuntu, Arial, sans-serif;
-  image-rendering: pixelated;
+  image-rendering: var(--octane-pixel-art, pixelated);
   filter: drop-shadow(4px 4px 4px rgba(0, 0, 0, 0.34));
 }
 .snowwar-leaderboard button {
@@ -806,7 +806,7 @@
   inset: 0;
   z-index: 520;
   pointer-events: none;
-  image-rendering: pixelated;
+  image-rendering: var(--octane-pixel-art, pixelated);
 }
 .snowwar-official-hud__quit {
   position: absolute;
@@ -868,7 +868,7 @@
   background: url('../../assets/images/snowstorm/original/ui_make_balls_up.png') center / 57px 58px no-repeat;
   pointer-events: auto;
   cursor: pointer;
-  image-rendering: pixelated;
+  image-rendering: var(--octane-pixel-art, pixelated);
 }
 .snowwar-official-hud__make-ball:active:not(:disabled) {
   background-image: url('../../assets/images/snowstorm/original/ui_make_balls_down.png');
@@ -1080,7 +1080,7 @@
   height: auto;
   max-width: none;
   pointer-events: none;
-  image-rendering: pixelated;
+  image-rendering: var(--octane-pixel-art, pixelated);
 }
 
 /* The official room-ad already paints the snow field. Keep the logical canvas
@@ -1135,7 +1135,7 @@
 .snowwar-machine__official-indicator,
 .snowwar-machine__official-shadow {
   position: absolute;
-  image-rendering: pixelated;
+  image-rendering: var(--octane-pixel-art, pixelated);
   pointer-events: none;
 }
 
@@ -1195,7 +1195,7 @@
      intentional zero width, making every authoritative flight invisible. */
   max-width: none;
   opacity: 0.392;
-  image-rendering: pixelated;
+  image-rendering: var(--octane-pixel-art, pixelated);
 }
 .snowwar-snowball__ball {
   position: absolute;
@@ -1204,7 +1204,7 @@
   width: 14px;
   height: 14px;
   max-width: none;
-  image-rendering: pixelated;
+  image-rendering: var(--octane-pixel-art, pixelated);
 }
 
 /* AIR keeps its exact three SNOW_SPLASH bitmaps alive for 500ms. */
@@ -1221,7 +1221,7 @@
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  image-rendering: pixelated;
+  image-rendering: var(--octane-pixel-art, pixelated);
   opacity: 0;
 }
 .snowwar-splash__frame--1 { animation: snowwar-splash-frame-1 500ms step-end; }
@@ -1296,7 +1296,7 @@
   padding: 10px 15px 10px 32px;
   white-space: nowrap;
   pointer-events: none;
-  image-rendering: pixelated;
+  image-rendering: var(--octane-pixel-art, pixelated);
 }
 .snowwar-chat-bubble--blue {
   --snowwar-chat-base: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADUAAAAjCAYAAAA0aUL2AAAEQ0lEQVRYw92ZX2hbVRzHP+feJC2rdW1Ha10SRikYaNbUUqTtaKoPUqSFIQwFcT74YmU6X9wmolD2oGK3F8GBikMY/oHBHiy0vvhiE2ombrGpmeuw1jbJIsoMa9eY5iY5PtzlrknTuq1teu2BcMK9596cT76/3/f87rlCSsl6TQixaoCUUmDiZvkvmPoLyTXPmRXOshbQnq8SZOLz5NLLZP+8jtXRhBadxepoou6z66gP1iCEkGYEE8XhlwdKB32o9maysRkAVHszANnYDLaOJ1AsFnK5LDeeqTadYkoxUM0HYdJBH9nINNnYDNnI9KqLsn9E9Ny6tUj9hWTJvDOFUgZQYAzV6QJAmw6gOlpQHqghO/+LcTzfKjufNL7/dWiXaRRTig+oThdaeJzF4YNYXV1ko1dKAqn2ZlIXv0WLzprOKJSVKmVjM2jhcePk4vBBUl+/i6h7mNzSAtp0AISih6SiGqGZjmuYNqfyk0yNnsYX1ZBSIqVk6czhO4OWl8glE2hXf9T7a0FM6X5CCFl9YsRQ54d4hscaVb6PQbfdMBHyY1R7M2rDXjLxedTaev5+ca+pHNCyEigfepcvT7Dc2kWP0wqAP6KrJkTpeZvN0gsW39ToaT4aHcfT5iU06aPH6TXO5cE+HvMV3ODlgd5ttfRSf6glH07pwJgRZqFJH+7WLh0mrtHjtOKPaPgjGu7bCn7yjZ+WRztx7YH4a9/d00TSYT9vvHl8c/KnRMlmyVcJKy3b0+YlFPKhKl567DrQyuaPa7R6epj6yX97EU5gdXfd1SSSY2c5P3xi05Qa+V3jUkIWlGyKvjY9UlA5TIX8uPd3EZr0rQICIAOhSZ9pcqijVjAUTBuq6Zau6J2t+zCD/V6klFz5+aLudIqV8FQALBT0QggG+73Mdb/N4qmn0cIBc61T2bmrqE4XSl2jkVcSiafNy1TIh6fNSzgYMHqAlv2dAFQ8dXzbIS4ldJ/Kq2UBsLV7+WfkU6zuXqzuXgb7vUxEJaFJH0IIpkJ+o/e06Y54wCHY/eFNbr66m6oj58gtLZCZm17fave5Ciax5ZZuFLHhcaqOfskBh24mE9HCCeSPAwYQgPrQPnOtUzeeq6Vy4Nidcum3y1QOHCOl2QogAAOioLg1EZCRUzVnrumPEv0vGb1cTFAz8LwBW3Xk3IaBkmNny6eUtdFBqrivrsXqaCK1xoX3qk467Cd1/i2GgunyFbTrDVqp0P2EWjmBTrbbdKWklEIIIUuF10Zzp5xAaz75rgVzv2ZQ0dFH5bPv8P57p7YHKj/54s+GquhUkl19LwCUDUwpx49kYrNlBVPKFRKZ2CwVHX07R6lt3yLbUVBSSrEw9Pj/GuZkuw0ppdiRSlmKNzGEELLqlc+35MfUBicAv97Kbfq9v/BWGvsUotRLt3zZtBVwaoOTdNjPoaOvbxpM8caLWO9NotneZtztFtm/1u71q8FPDMwAAAAASUVORK5CYII=");

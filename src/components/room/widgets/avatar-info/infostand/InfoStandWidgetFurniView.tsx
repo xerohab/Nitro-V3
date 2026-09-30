@@ -11,17 +11,28 @@ import {
     RoomObjectCategory,
     RoomObjectOperationType,
     RoomObjectVariable,
+    RoomRemoveBackgroundComposer,
     RoomWidgetEnumItemExtradataParameter,
     RoomWidgetFurniInfoUsagePolicyEnum,
     SetObjectDataMessageComposer,
     SongInfoReceivedEvent,
     StringDataType,
     UpdateFurniturePositionComposer
-} from '@nitrots/nitro-renderer';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { FaCrosshairs, FaTimes } from 'react-icons/fa';
+} from '@octane/renderer';
+import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import { FaCrosshairs, FaEraser, FaTimes } from 'react-icons/fa';
 import { GrFormNextLink, GrRotateLeft, GrRotateRight } from 'react-icons/gr';
-import { AvatarInfoFurni, GetConfigurationValue, GetGroupInformation, IPhotoData, isSafeExternalUrl, LocalizeText, SendMessageComposer } from '../../../../../api';
+import {
+    AvatarInfoFurni,
+    CopyToClipboard,
+    GetConfigurationValue,
+    GetGroupInformation,
+    IPhotoData,
+    isSafeExternalUrl,
+    LocalizeText,
+    localizeWithFallback,
+    SendMessageComposer
+} from '../../../../../api';
 import {
     Button,
     Column,
@@ -31,11 +42,12 @@ import {
     LayoutLimitedEditionCompactPlateView,
     LayoutRarityLevelView,
     LayoutRoomObjectImageView,
+    PIXEL_ART_RENDERING,
     Text,
     UserProfileIconView
 } from '../../../../../common';
-import { useHasPermission, useMessageEvent, useNitroEvent, useRareValues, useRoom, useWiredTools } from '../../../../../hooks';
-import { NitroInput } from '../../../../../layout';
+import { useFurniPickupGuard, useHasPermission, useMessageEvent, useOctaneEvent, useRareValues, useRoom, useWiredTools } from '../../../../../hooks';
+import { OctaneInput } from '../../../../../layout';
 import { ImagePositionEditorView } from './ImagePositionEditorView';
 
 interface InfoStandWidgetFurniViewProps {
@@ -46,6 +58,51 @@ interface InfoStandWidgetFurniViewProps {
 const PICKUP_MODE_NONE: number = 0;
 const PICKUP_MODE_EJECT: number = 1;
 const PICKUP_MODE_FULL: number = 2;
+
+const removeLandscapeLabel = () => {
+    const localized = LocalizeText('infostand.button.remove_landscape');
+
+    return !localized || localized === 'infostand.button.remove_landscape' ? 'Remove Landscape' : localized;
+};
+
+// An infostand id line (icon + "Label: value") that copies its value on click
+// and shows a check in place of the value for a moment.
+const InfoStandCopyValue: FC<{ icon: ReactNode; label: string; value: string | number }> = ({ icon, label, value }) => {
+    const [copied, setCopied] = useState(false);
+
+    useEffect(() => {
+        if (!copied) return;
+
+        const timeout = setTimeout(() => setCopied(false), 1200);
+
+        return () => clearTimeout(timeout);
+    }, [copied]);
+
+    return (
+        <div
+            className="flex items-center gap-1 cursor-pointer"
+            title={localizeWithFallback('infostand.copy.tooltip', 'Click to copy')}
+            onClick={() => void CopyToClipboard(String(value)).then((ok) => setCopied(ok))}
+        >
+            {icon}
+            <Text small wrap variant="white" className={copied ? '!text-[#7ec8e3]' : undefined}>
+                {label}: {copied ? '✓' : value}
+            </Text>
+        </div>
+    );
+};
+
+function formatPlantDuration(totalSeconds: number): string {
+    const seconds = Math.max(0, Math.floor(totalSeconds));
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+
+    if (hours > 0) return `${hours}h ${minutes}m`;
+    if (minutes > 0) return `${minutes}m ${secs}s`;
+
+    return `${secs}s`;
+}
 
 function getValidRoomObjectDirection(roomObject: any, isPositive: boolean) {
     if (!roomObject || !roomObject.model) return 0;
@@ -95,9 +152,6 @@ export const InfoStandWidgetFurniView: FC<InfoStandWidgetFurniViewProps> = (prop
     const { getValue: getRareValue } = useRareValues();
     const rareValue = useMemo(() => (avatarInfo ? getRareValue(avatarInfo.spriteId) : null), [avatarInfo, getRareValue]);
 
-    // Photos (interaction type external_image) carry their thumbnail URL in
-    // the room object's stuff data; show the actual photo instead of the
-    // generic furni sprite.
     const externalImagePhotoUrl = useMemo(() => {
         if (!avatarInfo || !roomSession) return null;
 
@@ -121,6 +175,8 @@ export const InfoStandWidgetFurniView: FC<InfoStandWidgetFurniViewProps> = (prop
     const [canMove, setCanMove] = useState(false);
     const [canRotate, setCanRotate] = useState(false);
     const [canUse, setCanUse] = useState(false);
+    const { pickupRoomObject } = useFurniPickupGuard();
+    const [canRemoveBackground, setCanRemoveBackground] = useState(false);
     const [furniKeys, setFurniKeys] = useState<string[]>([]);
     const [furniValues, setFurniValues] = useState<string[]>([]);
     const [customKeys, setCustomKeys] = useState<string[]>([]);
@@ -128,6 +184,11 @@ export const InfoStandWidgetFurniView: FC<InfoStandWidgetFurniViewProps> = (prop
     const [isCrackable, setIsCrackable] = useState(false);
     const [crackableHits, setCrackableHits] = useState(0);
     const [crackableTarget, setCrackableTarget] = useState(0);
+    const [isPlant, setIsPlant] = useState(false);
+    const [plantWaterSeconds, setPlantWaterSeconds] = useState(0);
+    const [plantDeathSeconds, setPlantDeathSeconds] = useState(0);
+    const [plantDead, setPlantDead] = useState(false);
+    const plantClassnames = GetConfigurationValue<string[]>('furni.plant.classnames', []) ?? [];
     const [godMode, setGodMode] = useState(false);
     const [canSeeFurniId, setCanSeeFurniId] = useState(false);
     const [groupName, setGroupName] = useState<string>(null);
@@ -208,7 +269,7 @@ export const InfoStandWidgetFurniView: FC<InfoStandWidgetFurniViewProps> = (prop
         [furniLocationZ, sendUpdate]
     );
 
-    useNitroEvent<NowPlayingEvent>(
+    useOctaneEvent<NowPlayingEvent>(
         NowPlayingEvent.NPE_SONG_CHANGED,
         (event) => {
             setSongId(event.id);
@@ -216,7 +277,7 @@ export const InfoStandWidgetFurniView: FC<InfoStandWidgetFurniViewProps> = (prop
         isJukeBox || isSongDisk
     );
 
-    useNitroEvent<NowPlayingEvent>(
+    useOctaneEvent<NowPlayingEvent>(
         SongInfoReceivedEvent.SIR_TRAX_SONG_INFO_RECEIVED,
         (event) => {
             if (event.id !== songId) return;
@@ -243,6 +304,10 @@ export const InfoStandWidgetFurniView: FC<InfoStandWidgetFurniViewProps> = (prop
         let isCrackable = false;
         let crackableHits = 0;
         let crackableTarget = 0;
+        let isPlant = false;
+        let plantWaterSeconds = 0;
+        let plantDeathSeconds = 0;
+        let plantDead = false;
         let godMode = false;
         let canSeeFurniId = false;
         let furniIsJukebox = false;
@@ -263,10 +328,18 @@ export const InfoStandWidgetFurniView: FC<InfoStandWidgetFurniViewProps> = (prop
 
         const isValidController = avatarInfo.roomControllerLevel >= RoomControllerLevel.GUEST;
 
+        let removeBackgroundAllowed = false;
+
         if (isValidController || avatarInfo.isOwner || avatarInfo.isRoomOwner || avatarInfo.isAnyRoomController) {
             canMove = true;
             canRotate = !avatarInfo.isWallItem;
             if (avatarInfo.roomControllerLevel >= RoomControllerLevel.MODERATOR) godMode = true;
+
+            if (avatarInfo.isWallItem) {
+                const maskType = roomObjForLocation?.model?.getValue<string>(RoomObjectVariable.FURNITURE_PLANE_MASK_TYPE);
+
+                if (maskType && maskType.length) removeBackgroundAllowed = true;
+            }
         }
 
         if (avatarInfo.isAnyRoomController) {
@@ -286,9 +359,18 @@ export const InfoStandWidgetFurniView: FC<InfoStandWidgetFurniViewProps> = (prop
                 const stuffData = avatarInfo.stuffData as CrackableDataType;
 
                 canUse = true;
-                isCrackable = true;
-                crackableHits = stuffData?.hits ?? 0;
-                crackableTarget = stuffData?.target ?? 0;
+
+                if (roomObjForLocation && plantClassnames.indexOf(roomObjForLocation.type) >= 0) {
+                    isPlant = true;
+                    const rawDeath = stuffData?.target ?? 0;
+                    plantDead = rawDeath < 0;
+                    plantWaterSeconds = Math.max(0, stuffData?.hits ?? 0);
+                    plantDeathSeconds = plantDead ? 0 : rawDeath;
+                } else {
+                    isCrackable = true;
+                    crackableHits = stuffData?.hits ?? 0;
+                    crackableTarget = stuffData?.target ?? 0;
+                }
             } else if (avatarInfo.extraParam === RoomWidgetEnumItemExtradataParameter.JUKEBOX) {
                 const playlist = GetSoundManager().musicController.getRoomItemPlaylist();
 
@@ -350,6 +432,7 @@ export const InfoStandWidgetFurniView: FC<InfoStandWidgetFurniViewProps> = (prop
         setCanMove(canMove);
         setCanRotate(canRotate);
         setCanUse(canUse);
+        setCanRemoveBackground(removeBackgroundAllowed);
         setFurniKeys(furniKeyss);
         setFurniValues(furniValuess);
         setCustomKeys(customKeyss);
@@ -357,6 +440,10 @@ export const InfoStandWidgetFurniView: FC<InfoStandWidgetFurniViewProps> = (prop
         setIsCrackable(isCrackable);
         setCrackableHits(crackableHits);
         setCrackableTarget(crackableTarget);
+        setIsPlant(isPlant);
+        setPlantWaterSeconds(plantWaterSeconds);
+        setPlantDeathSeconds(plantDeathSeconds);
+        setPlantDead(plantDead);
         setGodMode(godMode);
         setCanSeeFurniId(canSeeFurniId);
         setGroupName(null);
@@ -386,6 +473,19 @@ export const InfoStandWidgetFurniView: FC<InfoStandWidgetFurniViewProps> = (prop
 
         setItemLocation({ x: item.x, y: item.y, z: item.z });
         setFurniLocationZ(item.z);
+
+        if (isPlant) {
+            const data = item.data as CrackableDataType;
+
+            if (data) {
+                const rawDeath = data.target ?? 0;
+                const dead = rawDeath < 0;
+
+                setPlantDead(dead);
+                setPlantWaterSeconds(Math.max(0, data.hits ?? 0));
+                setPlantDeathSeconds(dead ? 0 : rawDeath);
+            }
+        }
     });
 
     useEffect(() => {
@@ -394,6 +494,17 @@ export const InfoStandWidgetFurniView: FC<InfoStandWidgetFurniViewProps> = (prop
         setSongName(songInfo?.name ?? '');
         setSongCreator(songInfo?.creator ?? '');
     }, [songId]);
+
+    useEffect(() => {
+        if (!isPlant || plantDead) return;
+
+        const handle = setInterval(() => {
+            setPlantWaterSeconds((seconds) => (seconds > 0 ? seconds - 1 : 0));
+            setPlantDeathSeconds((seconds) => (seconds > 0 ? seconds - 1 : 0));
+        }, 1000);
+
+        return () => clearInterval(handle);
+    }, [isPlant, plantDead]);
 
     const onFurniSettingChange = useCallback(
         (index: number, value: string) => {
@@ -448,8 +559,6 @@ export const InfoStandWidgetFurniView: FC<InfoStandWidgetFurniViewProps> = (prop
 
     const hasBrandingOffsets = isBranded && furniKeys.indexOf('offsetX') >= 0;
 
-    // Persist the position from the editor: rebuild the branding map with the
-    // new offsets and send it (same path as Save), then reflect it in the fields.
     const savePositionEditor = useCallback(
         (x: number, y: number, z: number, scale: number, alpha: number) => {
             const map = new Map<string, string>();
@@ -476,7 +585,6 @@ export const InfoStandWidgetFurniView: FC<InfoStandWidgetFurniViewProps> = (prop
                 map.set(key, value);
             }
 
-            // older branding furni may not carry scale/alpha keys yet — always send them
             if (!hasScale) map.set('scale', String(scale));
             if (!hasAlpha) map.set('alpha', String(alpha));
 
@@ -503,14 +611,17 @@ export const InfoStandWidgetFurniView: FC<InfoStandWidgetFurniViewProps> = (prop
                     GetRoomEngine().processRoomObjectOperation(avatarInfo.id, avatarInfo.category, RoomObjectOperationType.OBJECT_ROTATE_POSITIVE);
                     break;
                 case 'pickup':
-                    if (pickupMode === PICKUP_MODE_FULL) {
-                        GetRoomEngine().processRoomObjectOperation(avatarInfo.id, avatarInfo.category, RoomObjectOperationType.OBJECT_PICKUP);
-                    } else {
-                        GetRoomEngine().processRoomObjectOperation(avatarInfo.id, avatarInfo.category, RoomObjectOperationType.OBJECT_EJECT);
-                    }
+                    pickupRoomObject(
+                        avatarInfo.id,
+                        avatarInfo.category,
+                        pickupMode === PICKUP_MODE_FULL ? RoomObjectOperationType.OBJECT_PICKUP : RoomObjectOperationType.OBJECT_EJECT
+                    );
                     break;
                 case 'use':
                     GetRoomEngine().useRoomObject(avatarInfo.id, avatarInfo.category);
+                    break;
+                case 'remove_background':
+                    SendMessageComposer(new RoomRemoveBackgroundComposer());
                     break;
                 case 'save_branding_configuration': {
                     const mapData = new Map<string, string>();
@@ -542,7 +653,7 @@ export const InfoStandWidgetFurniView: FC<InfoStandWidgetFurniViewProps> = (prop
                 }
             }
         },
-        [avatarInfo, pickupMode, customKeys, customValues, getFurniSettingsAsString]
+        [avatarInfo, pickupMode, customKeys, customValues, getFurniSettingsAsString, pickupRoomObject]
     );
 
     const getGroupBadgeCode = useCallback(() => {
@@ -554,6 +665,16 @@ export const InfoStandWidgetFurniView: FC<InfoStandWidgetFurniViewProps> = (prop
     }, [avatarInfo]);
 
     if (!avatarInfo) return null;
+
+    const furniTypeId = roomSession
+        ? (GetRoomEngine()
+              .getRoomObject(roomSession.roomId, avatarInfo.id, avatarInfo.isWallItem ? RoomObjectCategory.WALL : RoomObjectCategory.FLOOR)
+              ?.model?.getValue<number>(RoomObjectVariable.FURNITURE_TYPE_ID) ?? '?')
+        : '?';
+    const showLocation = itemLocation.x > -1 && itemLocationEnabled && (!itemLocationRequireAccess || canMove);
+    const showIds = godMode && canSeeFurniId;
+    const showEditFurni = godMode && isModerator;
+    const showBuildtools = godMode && !avatarInfo.isWallItem && canMove;
 
     return (
         <Column alignItems="end" gap={1}>
@@ -591,7 +712,7 @@ export const InfoStandWidgetFurniView: FC<InfoStandWidgetFurniViewProps> = (prop
                                                 alt=""
                                                 draggable={false}
                                                 src={externalImagePhotoUrl}
-                                                style={{ width: 64, height: 64, objectFit: 'contain', imageRendering: 'pixelated' }}
+                                                style={{ width: 64, height: 64, objectFit: 'contain', imageRendering: PIXEL_ART_RENDERING }}
                                             />
                                         </div>
                                     ) : (
@@ -675,6 +796,39 @@ export const InfoStandWidgetFurniView: FC<InfoStandWidgetFurniViewProps> = (prop
                                 </Text>
                             </>
                         )}
+                        {isPlant && (
+                            <>
+                                <hr className="m-0 bg-[#0003] border-0 opacity-[.5] h-px" />
+                                {plantDead ? (
+                                    <Text small wrap variant="danger">
+                                        {LocalizeText('infostand.plant.dead')}
+                                    </Text>
+                                ) : (
+                                    <div className="flex flex-col gap-1">
+                                        <Flex alignItems="center" gap={1} justifyContent="between">
+                                            <Text small wrap variant="white">
+                                                {LocalizeText('infostand.plant.rewater')}
+                                            </Text>
+                                            <Text small wrap variant={plantWaterSeconds > 0 ? 'white' : 'success'}>
+                                                {plantWaterSeconds > 0
+                                                    ? formatPlantDuration(plantWaterSeconds)
+                                                    : LocalizeText('infostand.plant.ready')}
+                                            </Text>
+                                        </Flex>
+                                        <Flex alignItems="center" gap={1} justifyContent="between">
+                                            <Text small wrap variant="white">
+                                                {LocalizeText('infostand.plant.dies')}
+                                            </Text>
+                                            <Text small wrap variant={plantDeathSeconds > 0 ? 'white' : 'danger'}>
+                                                {plantDeathSeconds > 0
+                                                    ? formatPlantDuration(plantDeathSeconds)
+                                                    : LocalizeText('infostand.plant.needswater')}
+                                            </Text>
+                                        </Flex>
+                                    </div>
+                                )}
+                            </>
+                        )}
                         {avatarInfo.groupId > 0 && (
                             <>
                                 <hr className="m-0 bg-[#0003] border-0 opacity-[.5] h-px" />
@@ -686,15 +840,43 @@ export const InfoStandWidgetFurniView: FC<InfoStandWidgetFurniViewProps> = (prop
                                 </Flex>
                             </>
                         )}
-                        {itemLocation.x > -1 && itemLocationEnabled && (!itemLocationRequireAccess || canMove) && (
+                        {(showLocation || showIds) && (
                             <>
                                 <hr className="m-0 bg-[#0003] border-0 opacity-[.5] h-px" />
-                                <div className="flex items-center gap-1 min-w-0">
-                                    <FaCrosshairs className="fa-icon shrink-0" />
-                                    <Text small textBreak variant="white">
-                                        X: {itemLocation.x} · Y: {itemLocation.y} · H: {itemLocation.z < 0.01 ? 0 : itemLocation.z}
-                                    </Text>
-                                </div>
+                                {showLocation && (
+                                    <div className="flex items-center gap-1 min-w-0">
+                                        <FaCrosshairs className="fa-icon shrink-0" />
+                                        <Text small textBreak variant="white">
+                                            X: {itemLocation.x} · Y: {itemLocation.y} · H: {itemLocation.z < 0.01 ? 0 : itemLocation.z}
+                                        </Text>
+                                    </div>
+                                )}
+                                {showIds && (
+                                    <div className="flex items-center gap-3">
+                                        <InfoStandCopyValue
+                                            icon={
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 text-[#7ec8e3]">
+                                                    <path
+                                                        fillRule="evenodd"
+                                                        d="M4.93 1.31a41.401 41.401 0 0 1 10.14 0C16.194 1.45 17 2.414 17 3.517V18.25a.75.75 0 0 1-1.075.676l-2.8-1.344-2.8 1.344a.75.75 0 0 1-.65 0l-2.8-1.344-2.8 1.344A.75.75 0 0 1 3 18.25V3.517c0-1.103.806-2.068 1.93-2.207Z"
+                                                        clipRule="evenodd"
+                                                    />
+                                                </svg>
+                                            }
+                                            label="ID"
+                                            value={avatarInfo.id}
+                                        />
+                                        <InfoStandCopyValue
+                                            icon={
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 text-[#7ec8e3]">
+                                                    <path d="M5.127 3.502 5.25 3.5h9.5c.041 0 .082 0 .123.002A2.251 2.251 0 0 0 12.75 2h-5.5a2.25 2.25 0 0 0-2.123 1.502ZM1 10.25A2.25 2.25 0 0 1 3.25 8h13.5A2.25 2.25 0 0 1 19 10.25v5.5A2.25 2.25 0 0 1 16.75 18H3.25A2.25 2.25 0 0 1 1 15.75v-5.5ZM3.25 6.5c-.04 0-.082 0-.123.002A2.25 2.25 0 0 1 5.25 5h9.5c.98 0 1.814.627 2.123 1.502a3.819 3.819 0 0 0-.123-.002H3.25Z" />
+                                                </svg>
+                                            }
+                                            label="Sprite"
+                                            value={furniTypeId}
+                                        />
+                                    </div>
+                                )}
                             </>
                         )}
                         {rareValue && rareValue.points > 0 && (
@@ -713,72 +895,39 @@ export const InfoStandWidgetFurniView: FC<InfoStandWidgetFurniViewProps> = (prop
                                 </Flex>
                             </>
                         )}
-                        {godMode && (
+                        {(showEditFurni || showBuildtools) && (
                             <>
                                 <hr className="m-0 bg-[#0003] border-0 opacity-[.5] h-px" />
-                                {canSeeFurniId && (
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex items-center gap-1">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 text-[#7ec8e3]">
-                                                <path
-                                                    fillRule="evenodd"
-                                                    d="M4.93 1.31a41.401 41.401 0 0 1 10.14 0C16.194 1.45 17 2.414 17 3.517V18.25a.75.75 0 0 1-1.075.676l-2.8-1.344-2.8 1.344a.75.75 0 0 1-.65 0l-2.8-1.344-2.8 1.344A.75.75 0 0 1 3 18.25V3.517c0-1.103.806-2.068 1.93-2.207Z"
-                                                    clipRule="evenodd"
-                                                />
-                                            </svg>
-                                            <Text small wrap variant="white">
-                                                ID: {avatarInfo.id}
-                                            </Text>
-                                        </div>
-                                        <div className="flex items-center gap-1">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 text-[#7ec8e3]">
-                                                <path d="M5.127 3.502 5.25 3.5h9.5c.041 0 .082 0 .123.002A2.251 2.251 0 0 0 12.75 2h-5.5a2.25 2.25 0 0 0-2.123 1.502ZM1 10.25A2.25 2.25 0 0 1 3.25 8h13.5A2.25 2.25 0 0 1 19 10.25v5.5A2.25 2.25 0 0 1 16.75 18H3.25A2.25 2.25 0 0 1 1 15.75v-5.5ZM3.25 6.5c-.04 0-.082 0-.123.002A2.25 2.25 0 0 1 5.25 5h9.5c.98 0 1.814.627 2.123 1.502a3.819 3.819 0 0 0-.123-.002H3.25Z" />
-                                            </svg>
-                                            <Text small wrap variant="white">
-                                                Sprite: {(() => {
-                                                    const ro = GetRoomEngine().getRoomObject(
-                                                        roomSession.roomId,
-                                                        avatarInfo.id,
-                                                        avatarInfo.isWallItem ? RoomObjectCategory.WALL : RoomObjectCategory.FLOOR
-                                                    );
-                                                    return ro?.model?.getValue(RoomObjectVariable.FURNITURE_TYPE_ID) ?? '?';
-                                                })()}
-                                            </Text>
-                                        </div>
+                                {(showEditFurni || showBuildtools) && (
+                                    <div className="flex gap-1 w-full">
+                                        {showEditFurni && (
+                                            <button
+                                                className="flex-1 min-w-0 text-white text-xs bg-[#418db0] hover:bg-[#3789a8] border border-[#ffffff33] rounded px-2 py-1 cursor-pointer transition-colors"
+                                                onClick={() => {
+                                                    CreateLinkEvent('furni-editor/show');
+
+                                                    if (furniTypeId !== '?') window.dispatchEvent(new CustomEvent('furni-editor:open', { detail: { spriteId: furniTypeId } }));
+                                                }}
+                                            >
+                                                {localizeWithFallback('infostand.button.edit_furni', 'Edit furni')}
+                                            </button>
+                                        )}
+                                        {showBuildtools && (
+                                            <button
+                                                className="flex-1 min-w-0 text-white text-xs bg-[#2a2a3a] hover:bg-[#3a3a4a] border border-[#ffffff33] rounded px-2 py-1 cursor-pointer transition-colors"
+                                                onClick={() => setDropdownOpen(!dropdownOpen)}
+                                            >
+                                                {dropdownOpen
+                                                    ? localizeWithFallback('infostand.button.buildtools.close', 'Close Buildtools')
+                                                    : localizeWithFallback('infostand.button.buildtools.open', 'Open Buildtools')}
+                                            </button>
+                                        )}
                                     </div>
                                 )}
-                                {isModerator && (
-                                    <button
-                                        className="w-full text-white text-xs bg-[#418db0] hover:bg-[#3789a8] border border-[#ffffff33] rounded px-2 py-1 cursor-pointer transition-colors"
-                                        onClick={() => {
-                                            const roomObject = GetRoomEngine().getRoomObject(
-                                                roomSession.roomId,
-                                                avatarInfo.id,
-                                                avatarInfo.isWallItem ? RoomObjectCategory.WALL : RoomObjectCategory.FLOOR
-                                            );
-                                            const typeId = roomObject?.model?.getValue(RoomObjectVariable.FURNITURE_TYPE_ID);
-
-                                            CreateLinkEvent('furni-editor/show');
-
-                                            if (typeId) window.dispatchEvent(new CustomEvent('furni-editor:open', { detail: { spriteId: typeId } }));
-                                        }}
-                                    >
-                                        Edit Furni
-                                    </button>
-                                )}
-                                {!avatarInfo.isWallItem && canMove && (
+                                {showBuildtools && (
                                     <>
-                                        <button
-                                            className="w-full text-white text-xs bg-[#2a2a3a] hover:bg-[#3a3a4a] border border-[#ffffff33] rounded px-2 py-1 cursor-pointer transition-colors"
-                                            onClick={() => setDropdownOpen(!dropdownOpen)}
-                                        >
-                                            {dropdownOpen
-                                                ? `${LocalizeText('widget.furni.present.close')} Buildtools`
-                                                : `${LocalizeText('navigator.roomsettings.doormode.open')} Buildtools`}
-                                        </button>
                                         {dropdownOpen && (
                                             <div className="flex gap-[4px] w-full">
-                                                {/* Left panel: position + rotation */}
                                                 <div className="flex-1 bg-[#3D5D63] rounded-[6px] border border-white p-[2px] flex flex-col gap-1">
                                                     <Text small variant="white">
                                                         {LocalizeText('group.edit.badge.position')}
@@ -831,7 +980,6 @@ export const InfoStandWidgetFurniView: FC<InfoStandWidgetFurniViewProps> = (prop
                                                         </div>
                                                     </div>
                                                 </div>
-                                                {/* Right panel: height */}
                                                 <div className="flex-1 bg-[#3D5D63] rounded-[6px] border border-white p-[2px] flex flex-col gap-1">
                                                     <Text small variant="white">
                                                         {LocalizeText('stack.magic.tile.height.label')}
@@ -915,7 +1063,7 @@ export const InfoStandWidgetFurniView: FC<InfoStandWidgetFurniViewProps> = (prop
                                                         <Text small wrap align="end" className="col-span-4" variant="white">
                                                             {key}
                                                         </Text>
-                                                        <NitroInput
+                                                        <OctaneInput
                                                             type="text"
                                                             className="text-black"
                                                             style={{ color: '#000' }}
@@ -940,7 +1088,7 @@ export const InfoStandWidgetFurniView: FC<InfoStandWidgetFurniViewProps> = (prop
                                                 <Text small wrap align="end" className="col-span-4" variant="white">
                                                     {key}
                                                 </Text>
-                                                <NitroInput
+                                                <OctaneInput
                                                     type="text"
                                                     className="text-black"
                                                     style={{ color: '#000' }}
@@ -974,12 +1122,22 @@ export const InfoStandWidgetFurniView: FC<InfoStandWidgetFurniViewProps> = (prop
                 )}
                 {pickupMode !== PICKUP_MODE_NONE && (
                     <Button variant="dark" onClick={(event) => processButtonAction('pickup')}>
-                        {LocalizeText(pickupMode === PICKUP_MODE_EJECT ? 'infostand.button.eject' : 'infostand.button.pickup')}
+                        {isPlant && plantDead
+                            ? LocalizeText('generic.delete')
+                            : LocalizeText(pickupMode === PICKUP_MODE_EJECT ? 'infostand.button.eject' : 'infostand.button.pickup')}
                     </Button>
                 )}
                 {canUse && (
                     <Button variant="dark" onClick={(event) => processButtonAction('use')}>
                         {LocalizeText('infostand.button.use')}
+                    </Button>
+                )}
+                {canRemoveBackground && (
+                    <Button variant="dark" onClick={(event) => processButtonAction('remove_background')}>
+                        <Flex alignItems="center" gap={1}>
+                            <FaEraser className="fa-icon" />
+                            {removeLandscapeLabel()}
+                        </Flex>
                     </Button>
                 )}
                 {hasBrandingOffsets && (

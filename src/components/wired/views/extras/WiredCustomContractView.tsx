@@ -1,39 +1,34 @@
 import { FC, useEffect, useState } from 'react';
 import { WiredFurniType } from '../../../../api';
-import { Button, Text } from '../../../../common';
+import { Text } from '../../../../common';
 import { useWired } from '../../../../hooks';
-import { CONTRACT_DIR_PAY, ContractTermRow, parseContractTerms, serializeContractTerms } from './contractTermWire';
-import { WiredContractTermRow } from './WiredContractTermRow';
+import {
+    CONTRACT_DIR_PAY,
+    CONTRACT_DIR_RECEIVE,
+    ContractTermRow,
+    emptyRow,
+    parseContractRules,
+    serializeContractRules,
+} from './contractTermWire';
+import { WiredContractRulesEditor } from './WiredContractRulesEditor';
 import { WiredExtraBaseView } from './WiredExtraBaseView';
 
-const MAX_TERMS = 8;
-
+/** Custom: the unconstrained one — both halves, both editable, alternatives on the paying side. */
 export const WiredCustomContractView: FC<{}> = () => {
     const { trigger = null, setIntParams = null, setStringParam = null } = useWired();
-    const [rows, setRows] = useState<ContractTermRow[]>([
-        { direction: CONTRACT_DIR_PAY, kind: 0, currencyType: -1, wallItem: false, baseItemId: 0, amount: 0 },
-    ]);
+    const [giveRules, setGiveRules] = useState<ContractTermRow[][]>([[emptyRow(CONTRACT_DIR_PAY)]]);
+    const [getRule, setGetRule] = useState<ContractTermRow[]>([]);
 
     useEffect(() => {
         if (!trigger) return;
-        const parsed = parseContractTerms(trigger.intData ?? [], trigger.stringData ?? '');
-        if (parsed.length) setRows(parsed);
+
+        const parsed = parseContractRules(trigger.intData ?? [], trigger.stringData ?? '');
+        setGiveRules(parsed.giveRules.length ? parsed.giveRules : [[emptyRow(CONTRACT_DIR_PAY)]]);
+        setGetRule(parsed.getRule);
     }, [trigger]);
 
-    const update = (index: number, patch: Partial<ContractTermRow>) =>
-        setRows((prev) => prev.map((row, i) => (i === index ? { ...row, ...patch } : row)));
-
-    const addRow = () =>
-        setRows((prev) =>
-            prev.length >= MAX_TERMS
-                ? prev
-                : [...prev, { direction: CONTRACT_DIR_PAY, kind: 0, currencyType: -1, wallItem: false, baseItemId: 0, amount: 0 }],
-        );
-
-    const removeRow = (index: number) => setRows((prev) => prev.filter((_, i) => i !== index));
-
     const save = () => {
-        const payload = serializeContractTerms(rows);
+        const payload = serializeContractRules({ giveRules, getRule });
         setIntParams(payload.intParams);
         setStringParam(payload.stringParam);
     };
@@ -41,17 +36,17 @@ export const WiredCustomContractView: FC<{}> = () => {
     return (
         <WiredExtraBaseView hasSpecialInput={true} requiresFurni={WiredFurniType.STUFF_SELECTION_OPTION_BY_ID} save={save} cardStyle={{ width: 420 }}>
             <div className="flex flex-col gap-2">
-                <Text bold>Contract terms (PAY = user pays, RECEIVE = user gets):</Text>
-                {rows.map((row, index) => (
-                    <div key={index} className="flex gap-1">
-                        <div className="flex-1">
-                            <WiredContractTermRow row={row} showDirection onChange={(patch) => update(index, patch)} />
-                        </div>
-                        <Button variant="danger" onClick={() => removeRow(index)}>×</Button>
-                    </div>
-                ))}
-                {rows.length < MAX_TERMS && <Button variant="secondary" onClick={addRow}>+ Add term</Button>}
-                <Text small>Pick a chest above to deposit PAY into / source RECEIVE from its pool.</Text>
+                <Text bold>The user PAYS:</Text>
+                <WiredContractRulesEditor direction={CONTRACT_DIR_PAY} rules={giveRules} onChange={setGiveRules} />
+                <div className="octane-wired__divider" />
+                <Text bold>The user RECEIVES:</Text>
+                <WiredContractRulesEditor
+                    allowAlternatives={false}
+                    direction={CONTRACT_DIR_RECEIVE}
+                    rules={[getRule]}
+                    onChange={(rules) => setGetRule(rules[0] ?? [])}
+                />
+                <Text small>Leave the receive side empty for a contract that only takes.</Text>
             </div>
         </WiredExtraBaseView>
     );

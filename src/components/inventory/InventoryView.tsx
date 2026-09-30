@@ -11,49 +11,75 @@ import {
     RoomEngineObjectPlacedEvent,
     RoomPreviewer,
     RoomSessionEvent
-} from '@nitrots/nitro-renderer';
+} from '@octane/renderer';
 import { FC, useEffect, useMemo, useState } from 'react';
-import { GroupItem, isObjectMoverRequested, LocalizeText, setObjectMoverRequested, UnseenItemCategory } from '../../api';
-import { NitroCardHeaderView, NitroCardTabsItemView, NitroCardTabsView, NitroCardView } from '../../common';
+import {
+    ensureBadgeLeaderboardLoaded,
+    filterFurnitureGroupItems,
+    FURNI_MAIN_FILTER,
+    FurniMainFilter,
+    getCachedBadgeRarityStat,
+    GroupItem,
+    isObjectMoverRequested,
+    LocalizeBadgeName,
+    LocalizeText,
+    setObjectMoverRequested,
+    UnseenItemCategory
+} from '../../api';
+import { OctaneCardHeaderView, OctaneCardTabsItemView, OctaneCardTabsView, OctaneCardView } from '../../common';
 import {
     useInventoryBadges,
     useInventoryFurni,
-    useInventoryPrefixes,
     useInventoryTrade,
+    useWiredTrading,
     useInventoryUnseenTracker,
     useMessageEvent,
-    useNitroEvent
+    useOctaneEvent
 } from '../../hooks';
 import { InventoryBadgeView } from './views/badge/InventoryBadgeView';
 import { InventoryBotView } from './views/bot/InventoryBotView';
 import { InventoryFurnitureDeleteView } from './views/furniture/InventoryFurnitureDeleteView';
 import { InventoryFurnitureView } from './views/furniture/InventoryFurnitureView';
 import { InventoryTradeView } from './views/furniture/InventoryTradeView';
-import { InventoryCategoryFilterView } from './views/InventoryCategoryFilterView';
+import { InventoryWiredTradeView } from './views/furniture/InventoryWiredTradeView';
+import { BADGE_MAIN_ACHIEVEMENTS, BADGE_MAIN_ALL, BADGE_MAIN_NORMAL, BADGE_RARITY_ALL, InventoryCategoryFilterView } from './views/InventoryCategoryFilterView';
 import { InventoryPetView } from './views/pet/InventoryPetView';
 import { InventoryPrefixView } from './views/prefix/InventoryPrefixView';
 
-const TAB_FURNITURE: string = 'inventory.furni';
-const TAB_CLOTHING: string = 'inventory.clothing';
-const TAB_BOTS: string = 'inventory.bots';
-const TAB_PETS: string = 'inventory.furni.tab.pets';
-const TAB_BADGES: string = 'inventory.badges';
-const TAB_PREFIXES: string = 'inventory.prefixes';
+const TAB_FURNITURE = 'inventory.furni';
+const TAB_CLOTHING = 'inventory.clothing';
+const TAB_BOTS = 'inventory.bots';
+const TAB_PETS = 'inventory.furni.tab.pets';
+const TAB_BADGES = 'inventory.badges';
+const TAB_PREFIXES = 'inventory.prefixes';
+const TABS = [TAB_FURNITURE, TAB_CLOTHING, TAB_PETS, TAB_BADGES, TAB_BOTS, TAB_PREFIXES];
 
-const TABS = [
-    TAB_FURNITURE,
-    TAB_CLOTHING,
-    TAB_PETS,
-    TAB_BADGES,
-    TAB_PREFIXES,
-    TAB_BOTS
-];
+const TAB_LABEL_FALLBACK: Record<string, string> = {
+    [TAB_FURNITURE]: 'Furniture',
+    [TAB_CLOTHING]: 'Clothing',
+    [TAB_PETS]: 'Pets',
+    [TAB_BADGES]: 'Badges',
+    [TAB_BOTS]: 'Bots',
+    [TAB_PREFIXES]: 'Prefixes'
+};
 
-const getTabLabel = (tab: string): string => {
-    if (tab === TAB_CLOTHING) return 'Clothing';
-    if (tab === TAB_PREFIXES) return 'Prefixes';
+const tabLabel = (name: string) => {
+    const value = LocalizeText(name);
 
-    return LocalizeText(tab);
+    if (name === TAB_BADGES && value === 'Achieved badges') return 'Badges';
+
+    return value && value !== name ? value : TAB_LABEL_FALLBACK[name] || name;
+};
+
+const TAB_BY_CODE: Record<string, string> = {
+    furni: TAB_FURNITURE,
+    furniture: TAB_FURNITURE,
+    clothing: TAB_CLOTHING,
+    clothes: TAB_CLOTHING,
+    pets: TAB_PETS,
+    badges: TAB_BADGES,
+    prefixes: TAB_PREFIXES,
+    bots: TAB_BOTS
 };
 
 const getFurnitureDataForGroup = (groupItem: GroupItem): any => {
@@ -74,84 +100,151 @@ const isClothingGroup = (groupItem: GroupItem): boolean => {
     return furnitureData?.specialType === 23 || groupItem.category === 23;
 };
 
+const getInventoryFurnitureForTab = (
+    tab: string,
+    groupItems: GroupItem[]
+): GroupItem[] => {
+    if (tab === TAB_CLOTHING)
+        return groupItems.filter((item) => isClothingGroup(item));
 
+    if (tab === TAB_FURNITURE)
+        return groupItems.filter((item) => !isClothingGroup(item));
 
-const getInventoryFurnitureForTab = (tab: string, groupItems: GroupItem[]): GroupItem[] => {
-    switch (tab) {
-        case TAB_CLOTHING:
-            return groupItems.filter((item) => isClothingGroup(item));
-
-        case TAB_FURNITURE:
-        default:
-            return groupItems.filter((item) => !isClothingGroup(item));
-    }
+    return groupItems;
 };
 
-const getUnseenCategoryForTab = (tab: string): number => {
-    switch (tab) {
-        case TAB_PETS:
-            return UnseenItemCategory.PET;
-
-        case TAB_BADGES:
-            return UnseenItemCategory.BADGE;
-
-        case TAB_PREFIXES:
-            return UnseenItemCategory.PREFIX;
-
-        case TAB_BOTS:
-            return UnseenItemCategory.BOT;
-
-        default:
-            return -1;
-    }
-};
-
-const getFurnitureTabUnseenCount = (tab: string, groupItems: GroupItem[]): number => {
+const getFurnitureTabUnseenCount = (
+    tab: string,
+    groupItems: GroupItem[]
+): number => {
     if (tab !== TAB_FURNITURE && tab !== TAB_CLOTHING) return 0;
 
     return getInventoryFurnitureForTab(tab, groupItems)
         .filter((item) => item.hasUnseenItems)
         .length;
 };
-// Maps an optional link code (inventory/show/<code>) to a tab so other views
-// (e.g. the profile "Change Badges" button) can deep-link to a specific tab.
-const TAB_BY_CODE: Record<string, string> = {
-    furni: TAB_FURNITURE,
-    furniture: TAB_FURNITURE,
-    clothing: TAB_CLOTHING,
-    clothes: TAB_CLOTHING,
-    pets: TAB_PETS,
-    badges: TAB_BADGES,
-    prefixes: TAB_PREFIXES,
-    bots: TAB_BOTS
+
+const UNSEEN_BY_TAB: Record<string, number> = {
+    [TAB_FURNITURE]: UnseenItemCategory.FURNI,
+    [TAB_CLOTHING]: UnseenItemCategory.FURNI,
+    [TAB_PETS]: UnseenItemCategory.PET,
+    [TAB_BADGES]: UnseenItemCategory.BADGE,
+    [TAB_BOTS]: UnseenItemCategory.BOT,
+    [TAB_PREFIXES]: UnseenItemCategory.PREFIX
 };
-export const InventoryView: FC<{}> = (props) => {
+
+// AIR 13 keeps rented furni in the furni tab, so their unseen counter lands with owned furni.
+const getTabUnseenCount = (name: string, getCount: (category: number) => number) => {
+    const category = UNSEEN_BY_TAB[name];
+    const count = getCount(category);
+    return category === UnseenItemCategory.FURNI ? count + getCount(UnseenItemCategory.RENTABLE) : count;
+};
+
+const RARITY_TO_ID: Record<string, number> = {
+    common: 0,
+    uncommon: 1,
+    rare: 2,
+    epic: 3,
+    mythical: 4,
+    legendary: 5,
+    unique: 6
+};
+
+export const InventoryView: FC<{}> = () => {
     const [isVisible, setIsVisible] = useState(false);
     const [currentTab, setCurrentTab] = useState<string>(TABS[0]);
     const [roomSession, setRoomSession] = useState<IRoomSession>(null);
     const [roomPreviewer, setRoomPreviewer] = useState<RoomPreviewer>(null);
-    const [filteredGroupItems, setFilteredGroupItems] = useState<GroupItem[]>([]);
-    const [filteredBadgeCodes, setFilteredBadgeCodes] = useState<string[]>([]);
+    const [searchValue, setSearchValue] = useState('');
+    const [appliedSearch, setAppliedSearch] = useState('');
+    const [badgeMetadata, setBadgeMetadata] = useState<Awaited<ReturnType<typeof ensureBadgeLeaderboardLoaded>>>(null);
+    const [mainFilter, setMainFilter] = useState<string>(FURNI_MAIN_FILTER.ALL);
+    const [typeFilter, setTypeFilter] = useState<string>('any');
     const { isTrading = false, stopTrading = null } = useInventoryTrade();
+    const { isOpen: isWiredTrading = false } = useWiredTrading();
     const { getCount = null } = useInventoryUnseenTracker();
     const { groupItems = [] } = useInventoryFurni();
     const { badgeCodes = [] } = useInventoryBadges();
 
+    useEffect(() => {
+        setSearchValue('');
+        setAppliedSearch('');
+        if (currentTab === TAB_BADGES) {
+            setMainFilter(BADGE_MAIN_ALL);
+            setTypeFilter(String(BADGE_RARITY_ALL));
+            ensureBadgeLeaderboardLoaded()
+                .then(setBadgeMetadata)
+                .catch(() => setBadgeMetadata(null));
+        } else {
+            setMainFilter(FURNI_MAIN_FILTER.ALL);
+            setTypeFilter('any');
+        }
+    }, [currentTab]);
+
+    useEffect(() => {
+        if (currentTab !== TAB_FURNITURE && currentTab !== TAB_CLOTHING) return;
+
+        setTypeFilter('any');
+    }, [mainFilter, currentTab]);
+
+    const filteredGroupItems = useMemo(() => {
+        if (currentTab !== TAB_FURNITURE && currentTab !== TAB_CLOTHING)
+            return groupItems;
+
+        const tabGroupItems = getInventoryFurnitureForTab(currentTab, groupItems);
+
+        return filterFurnitureGroupItems(
+            tabGroupItems,
+            appliedSearch,
+            mainFilter as FurniMainFilter,
+            typeFilter
+        );
+    }, [groupItems, appliedSearch, mainFilter, typeFilter, currentTab]);
+
+    const filteredBadgeCodes = useMemo(() => {
+        const comparison = appliedSearch.toLocaleLowerCase().trim();
+        const rarityFilter = Number(typeFilter);
+
+        const achievementBadges = badgeCodes.filter((badge) => badge.startsWith('ACH_'));
+        const numberMap: { [key: string]: number } = {};
+
+        achievementBadges.forEach((badge) => {
+            const name = badge.split(/[\d]+/)[0];
+            const number = Number(badge.replace(name, ''));
+
+            if (numberMap[name] === undefined || number > numberMap[name]) numberMap[name] = number;
+        });
+
+        let deduped = Object.keys(numberMap)
+            .map((name) => `${name}${numberMap[name]}`)
+            .concat(badgeCodes.filter((badge) => !badge.startsWith('ACH_')));
+
+        if (mainFilter === BADGE_MAIN_NORMAL) deduped = deduped.filter((code) => !code.startsWith('ACH_'));
+        if (mainFilter === BADGE_MAIN_ACHIEVEMENTS) deduped = deduped.filter((code) => code.startsWith('ACH_'));
+
+        return deduped.filter((badgeCode) => {
+            if (!LocalizeBadgeName(badgeCode).toLocaleLowerCase().includes(comparison)) return false;
+            if (rarityFilter === BADGE_RARITY_ALL) return true;
+
+            const stat = badgeMetadata ? getCachedBadgeRarityStat(badgeCode) : null;
+            if (!stat) return rarityFilter === 0;
+
+            return (RARITY_TO_ID[stat.rarity] ?? -99) === rarityFilter;
+        });
+    }, [badgeCodes, appliedSearch, mainFilter, typeFilter, badgeMetadata]);
+
     const onClose = () => {
         if (isTrading) stopTrading();
-
         setIsVisible(false);
     };
 
-    useNitroEvent<RoomEngineObjectPlacedEvent>(RoomEngineObjectEvent.PLACED, (event) => {
+    useOctaneEvent<RoomEngineObjectPlacedEvent>(RoomEngineObjectEvent.PLACED, (event) => {
         if (!isObjectMoverRequested()) return;
-
         setObjectMoverRequested(false);
-
         if (!event.placedInRoom) setIsVisible(true);
     });
 
-    useNitroEvent<RoomSessionEvent>([RoomSessionEvent.CREATED, RoomSessionEvent.ENDED], (event) => {
+    useOctaneEvent<RoomSessionEvent>([RoomSessionEvent.CREATED, RoomSessionEvent.ENDED], (event) => {
         switch (event.type) {
             case RoomSessionEvent.CREATED:
                 setRoomSession(event.session);
@@ -165,7 +258,6 @@ export const InventoryView: FC<{}> = (props) => {
 
     useMessageEvent<BadgePointLimitsEvent>(BadgePointLimitsEvent, (event) => {
         const parser = event.getParser();
-
         for (const data of parser.data) GetLocalizationManager().setBadgePointLimit(data.badgeId, data.limit);
     });
 
@@ -173,7 +265,6 @@ export const InventoryView: FC<{}> = (props) => {
         const linkTracker: ILinkEventTracker = {
             linkReceived: (url: string) => {
                 const parts = url.split('/');
-
                 if (parts.length < 2) return;
 
                 switch (parts[1]) {
@@ -194,87 +285,90 @@ export const InventoryView: FC<{}> = (props) => {
         };
 
         AddLinkEventTracker(linkTracker);
-
         return () => RemoveLinkEventTracker(linkTracker);
     }, []);
 
     useEffect(() => {
-        setRoomPreviewer(new RoomPreviewer(GetRoomEngine(), ++RoomPreviewer.PREVIEW_COUNTER));
-
+        const previewer = new RoomPreviewer(GetRoomEngine(), ++RoomPreviewer.PREVIEW_COUNTER);
+        previewer.backgroundColor = null;
+        setRoomPreviewer(previewer);
         return () => {
             setRoomPreviewer((prevValue) => {
                 prevValue.dispose();
-
                 return null;
             });
         };
     }, []);
 
     useEffect(() => {
-        if (!isVisible && isTrading) setIsVisible(true);
-    }, [isVisible, isTrading]);
+        if (!isVisible && (isTrading || isWiredTrading)) setIsVisible(true);
+    }, [isVisible, isTrading, isWiredTrading]);
+
+    if (!isVisible) return null;
 
     const isFurnitureTab =
         currentTab === TAB_FURNITURE ||
         currentTab === TAB_CLOTHING;
 
-    const tabGroupItems = useMemo(
-        () =>
-            isFurnitureTab
-                ? getInventoryFurnitureForTab(currentTab, groupItems)
-                : groupItems,
-        [currentTab, groupItems, isFurnitureTab]
-    );
-
-    if (!isVisible) return null;
-
-    const showFilter = !isTrading && (isFurnitureTab || currentTab === TAB_BADGES);
+    const showFilter =
+        !isTrading &&
+        !isWiredTrading &&
+        ((isFurnitureTab && getInventoryFurnitureForTab(currentTab, groupItems).length > 0) ||
+            currentTab === TAB_BADGES);
 
     return (
         <>
-            <NitroCardView
-                className="nitro-inventory-window min-w-0 w-[min(528px,calc(100vw-16px))] h-[min(420px,calc(100vh-16px))] min-h-0 max-w-[calc(100vw-16px)] max-h-[calc(100vh-16px)]"
+            <OctaneCardView
+                className={`octane-inventory-window max-w-[calc(100vw-16px)] ${currentTab === TAB_BADGES ? 'has-badge-controls' : currentTab === TAB_PETS ? 'has-pet-controls' : ''}`}
+                frameStyle={3}
+                resizeAxis="vertical"
                 uniqueKey="inventory"
             >
-                <NitroCardHeaderView headerText={LocalizeText('inventory.title')} onCloseClick={onClose} />
-                {!isTrading && (
+                <OctaneCardHeaderView headerText={LocalizeText('inventory.title')} onCloseClick={onClose} />
+                {!isTrading && !isWiredTrading && (
                     <>
-                        <NitroCardTabsView classNames={['nitro-inventory-tabs-shell']}>
+                        <OctaneCardTabsView classNames={['octane-inventory-tabs-shell']}>
                             {TABS.map((name) => {
-                                const unseenCategory = getUnseenCategoryForTab(name);
                                 const isFurnitureDerivedTab =
                                     name === TAB_FURNITURE ||
                                     name === TAB_CLOTHING;
 
                                 const unseenCount = isFurnitureDerivedTab
                                     ? getFurnitureTabUnseenCount(name, groupItems)
-                                    : unseenCategory >= 0
-                                      ? getCount(unseenCategory)
-                                      : 0;
+                                    : getTabUnseenCount(name, getCount);
 
                                 return (
-                                    <NitroCardTabsItemView
+                                    <OctaneCardTabsItemView
                                         key={name}
                                         count={unseenCount}
                                         isActive={currentTab === name}
-                                        onClick={(event) => setCurrentTab(name)}
+                                        onClick={() => setCurrentTab(name)}
                                     >
-                                        <span className="nitro-inventory-tab-label">{getTabLabel(name)}</span>
-                                    </NitroCardTabsItemView>
+                                        <span className="octane-inventory-tab-label">{tabLabel(name)}</span>
+                                    </OctaneCardTabsItemView>
                                 );
                             })}
-                        </NitroCardTabsView>
-                        <div className="nitro-inventory-body flex flex-col overflow-hidden p-2 h-full gap-2">
+                        </OctaneCardTabsView>
+                        <div className="octane-inventory-body">
                             {showFilter && (
                                 <InventoryCategoryFilterView
-                                    badgeCodes={badgeCodes}
-                                    currentTab={currentTab}
-                                    groupItems={tabGroupItems}
-                                    setBadgeCodes={setFilteredBadgeCodes}
-                                    setGroupItems={setFilteredGroupItems}
+                                    currentTab={currentTab === TAB_CLOTHING ? TAB_FURNITURE : currentTab}
+                                    mainFilter={mainFilter}
+                                    typeFilter={typeFilter}
+                                    searchValue={searchValue}
+                                    onMainFilterChange={(value) => {
+                                        setMainFilter(value);
+                                        setAppliedSearch(searchValue);
+                                    }}
+                                    onTypeFilterChange={(value) => {
+                                        setTypeFilter(value);
+                                        setAppliedSearch(searchValue);
+                                    }}
+                                    onSearchChange={setSearchValue}
+                                    onSearchApply={setAppliedSearch}
                                 />
                             )}
-                            <div className="flex-1 overflow-hidden">
+                            <div className={`octane-inventory-content ${isFurnitureTab ? 'is-furniture' : ''}`}>
                                 {isFurnitureTab && (
                                     <InventoryFurnitureView
                                         filteredGroupItems={filteredGroupItems}
@@ -284,18 +378,23 @@ export const InventoryView: FC<{}> = (props) => {
                                 )}
                                 {currentTab === TAB_PETS && <InventoryPetView roomPreviewer={roomPreviewer} roomSession={roomSession} />}
                                 {currentTab === TAB_BADGES && <InventoryBadgeView filteredBadgeCodes={filteredBadgeCodes} />}
-                                {currentTab === TAB_PREFIXES && <InventoryPrefixView />}
                                 {currentTab === TAB_BOTS && <InventoryBotView roomPreviewer={roomPreviewer} roomSession={roomSession} />}
+                                {currentTab === TAB_PREFIXES && <InventoryPrefixView />}
                             </div>
                         </div>
                     </>
                 )}
                 {isTrading && (
-                    <div className="nitro-inventory-body flex flex-col overflow-hidden p-2 h-full">
+                    <div className="octane-inventory-body is-trade">
                         <InventoryTradeView cancelTrade={onClose} />
                     </div>
                 )}
-            </NitroCardView>
+                {!isTrading && isWiredTrading && (
+                    <div className="octane-inventory-body is-trade">
+                        <InventoryWiredTradeView />
+                    </div>
+                )}
+            </OctaneCardView>
             <InventoryFurnitureDeleteView />
         </>
     );

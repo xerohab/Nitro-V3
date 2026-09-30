@@ -2,69 +2,46 @@ import {
     AvatarFigurePartType,
     AvatarScaleType,
     AvatarSetType,
-    GetAssetManager,
     GetAvatarRenderManager,
     IAvatarImage,
     IFigurePart,
     IGraphicAsset,
     IPartColor,
-    NitroAlphaFilter,
-    NitroContainer,
-    NitroSprite,
+    OctaneAlphaFilter,
+    OctaneContainer,
+    OctaneSprite,
     TextureUtils
-} from '@nitrots/nitro-renderer';
+} from '@octane/renderer';
+import { canvasToThumbnailUrl, centerCanvasIntoBox, imageUrlToCanvas, ThumbnailUrlCache, trimCanvasToOpaqueBounds } from './avatarThumbnailUrls';
 import { IAvatarEditorCategoryPartItem } from './IAvatarEditorCategoryPartItem';
 
-const MAX_CACHE_BYTES = 200 * 1024 * 1024;
+const MAX_CACHE_BYTES = 48 * 1024 * 1024;
 
-class LRUImageCache {
-    private _cache: Map<string, string> = new Map();
-    private _currentBytes: number = 0;
+export type AvatarEditorThumbRect = { x: number; y: number; width: number; height: number };
 
-    public get(key: string): string | undefined {
-        const value = this._cache.get(key);
+export const unionAvatarEditorThumbRect = (left: AvatarEditorThumbRect, right: AvatarEditorThumbRect): AvatarEditorThumbRect => {
+    const x = Math.min(left.x, right.x);
+    const y = Math.min(left.y, right.y);
 
-        if (value !== undefined) {
-            this._cache.delete(key);
-            this._cache.set(key, value);
-        }
+    return {
+        x,
+        y,
+        width: Math.max(left.x + left.width, right.x + right.width) - x,
+        height: Math.max(left.y + left.height, right.y + right.height) - y
+    };
+};
 
-        return value;
-    }
-
-    public set(key: string, value: string): void {
-        if (this._cache.has(key)) {
-            const old = this._cache.get(key);
-
-            this._currentBytes -= (key.length + old.length) * 2;
-            this._cache.delete(key);
-        }
-
-        const entryBytes = (key.length + value.length) * 2;
-
-        while (this._currentBytes + entryBytes > MAX_CACHE_BYTES && this._cache.size > 0) {
-            const firstKey = this._cache.keys().next().value;
-            const firstValue = this._cache.get(firstKey);
-
-            this._currentBytes -= (firstKey.length + firstValue.length) * 2;
-            this._cache.delete(firstKey);
-        }
-
-        this._cache.set(key, value);
-        this._currentBytes += entryBytes;
-    }
-
-    public clear(): void {
-        this._cache.clear();
-        this._currentBytes = 0;
-    }
-}
+export const avatarEditorThumbDest = (assetX: number, assetY: number, union: AvatarEditorThumbRect) => ({
+    x: assetX - union.x,
+    y: assetY - union.y
+});
 
 export class AvatarEditorThumbnailsHelper {
-    private static THUMBNAIL_CACHE: LRUImageCache = new LRUImageCache();
+    private static THUMBNAIL_CACHE: ThumbnailUrlCache = new ThumbnailUrlCache(MAX_CACHE_BYTES);
     private static PENDING_THUMBNAILS: Map<string, Promise<string>> = new Map();
     private static THUMB_DIRECTIONS: number[] = [2, 6, 0, 4, 3, 1];
-    private static ALPHA_FILTER: NitroAlphaFilter = new NitroAlphaFilter({ alpha: 0.2 });
+    private static THUMB_BOX: number = 50;
+    private static ALPHA_FILTER: OctaneAlphaFilter = new OctaneAlphaFilter({ alpha: 0.2 });
     private static DRAW_ORDER: string[] = [
         AvatarFigurePartType.LEFT_HAND_ITEM,
         AvatarFigurePartType.LEFT_HAND,
@@ -99,71 +76,14 @@ export class AvatarEditorThumbnailsHelper {
         AvatarFigurePartType.RIGHT_HAND_ITEM
     ];
 
-    private static async trimTransparentPadding(imageUrl: string): Promise<string> {
-        try {
-            const image = new Image();
+    private static async cacheCanvas(key: string, canvas: HTMLCanvasElement): Promise<string> {
+        const entry = await canvasToThumbnailUrl(canvas);
 
-            await new Promise<void>((resolve, reject) => {
-                image.onload = () => resolve();
-                image.onerror = () => reject(new Error('thumbnail load failed'));
-                image.src = imageUrl;
-            });
+        if (!entry) return null;
 
-            const width = image.naturalWidth;
-            const height = image.naturalHeight;
+        this.THUMBNAIL_CACHE.set(key, entry);
 
-            if (!width || !height) return imageUrl;
-
-            const canvas = document.createElement('canvas');
-
-            canvas.width = width;
-            canvas.height = height;
-
-            const context = canvas.getContext('2d', { willReadFrequently: true });
-
-            if (!context) return imageUrl;
-
-            context.drawImage(image, 0, 0);
-
-            const { data } = context.getImageData(0, 0, width, height);
-            let minX = width;
-            let minY = height;
-            let maxX = -1;
-            let maxY = -1;
-
-            for (let y = 0; y < height; y++) {
-                for (let x = 0; x < width; x++) {
-                    if (data[(y * width + x) * 4 + 3] > 0) {
-                        if (x < minX) minX = x;
-                        if (x > maxX) maxX = x;
-                        if (y < minY) minY = y;
-                        if (y > maxY) maxY = y;
-                    }
-                }
-            }
-
-            if (maxX < 0) return imageUrl;
-
-            const trimmedWidth = maxX - minX + 1;
-            const trimmedHeight = maxY - minY + 1;
-
-            if (trimmedWidth === width && trimmedHeight === height) return imageUrl;
-
-            const trimmedCanvas = document.createElement('canvas');
-
-            trimmedCanvas.width = trimmedWidth;
-            trimmedCanvas.height = trimmedHeight;
-
-            const trimmedContext = trimmedCanvas.getContext('2d');
-
-            if (!trimmedContext) return imageUrl;
-
-            trimmedContext.drawImage(canvas, minX, minY, trimmedWidth, trimmedHeight, 0, 0, trimmedWidth, trimmedHeight);
-
-            return trimmedCanvas.toDataURL('image/png');
-        } catch {
-            return imageUrl;
-        }
+        return entry.url;
     }
 
     private static getThumbnailKey(setType: string, part: IAvatarEditorCategoryPartItem, partColors?: IPartColor[], isDisabled?: boolean): string {
@@ -201,7 +121,7 @@ export class AvatarEditorThumbnailsHelper {
         if (pending) return pending;
 
         const buildContainer = (part: IAvatarEditorCategoryPartItem, useColors: boolean, partColors: IPartColor[], isDisabled: boolean = false) => {
-            const container = new NitroContainer();
+            const container = new OctaneContainer();
             const sourceParts = part.partSet.parts;
             const parts = sourceParts.concat().sort(this.sortByDrawOrder);
             let renderedCount = 0;
@@ -213,7 +133,7 @@ export class AvatarEditorThumbnailsHelper {
                 for (let index = 0; index < AvatarEditorThumbnailsHelper.THUMB_DIRECTIONS.length; index++) {
                     const assetName = `${AvatarFigurePartType.SCALE}_${AvatarFigurePartType.STD}_${sourcePart.type}_${sourcePart.id}_${AvatarEditorThumbnailsHelper.THUMB_DIRECTIONS[index]}_${AvatarFigurePartType.DEFAULT_FRAME}`;
 
-                    if (GetAssetManager().getAsset(assetName)?.texture) {
+                    if (GetAvatarRenderManager().getAssetByName(assetName)?.texture) {
                         directionIndex = index;
 
                         break;
@@ -225,32 +145,43 @@ export class AvatarEditorThumbnailsHelper {
 
             if (directionIndex < 0) return { container, renderedCount };
 
-            for (const part of parts) {
-                if (!part) continue;
+            const drawn: { figurePart: IFigurePart; asset: IGraphicAsset }[] = [];
+            let union: AvatarEditorThumbRect = null;
 
-                const assetName = `${AvatarFigurePartType.SCALE}_${AvatarFigurePartType.STD}_${part.type}_${part.id}_${AvatarEditorThumbnailsHelper.THUMB_DIRECTIONS[directionIndex]}_${AvatarFigurePartType.DEFAULT_FRAME}`;
-                const asset: IGraphicAsset = GetAssetManager().getAsset(assetName);
+            for (const figurePart of parts) {
+                if (!figurePart) continue;
+
+                const assetName = `${AvatarFigurePartType.SCALE}_${AvatarFigurePartType.STD}_${figurePart.type}_${figurePart.id}_${AvatarEditorThumbnailsHelper.THUMB_DIRECTIONS[directionIndex]}_${AvatarFigurePartType.DEFAULT_FRAME}`;
+                const asset: IGraphicAsset = GetAvatarRenderManager().getAssetByName(assetName);
 
                 if (!asset?.texture) continue;
 
-                const x = asset.offsetX;
-                const y = asset.offsetY;
+                drawn.push({ figurePart, asset });
 
-                const sprite = new NitroSprite(asset.texture);
+                const rect: AvatarEditorThumbRect = { x: asset.x, y: asset.y, width: asset.width, height: asset.height };
 
-                sprite.position.set(x, y);
+                union = union ? unionAvatarEditorThumbRect(union, rect) : rect;
+            }
 
-                if (useColors && part.colorLayerIndex > 0 && partColors && partColors.length) {
-                    const color = partColors[part.colorLayerIndex - 1];
+            if (!union || union.width <= 0 || union.height <= 0) return { container, renderedCount };
+
+            for (const { figurePart, asset } of drawn) {
+                const sprite = new OctaneSprite(asset.texture);
+                const dest = avatarEditorThumbDest(asset.x, asset.y, union);
+
+                sprite.position.set(dest.x, dest.y);
+
+                if (useColors && figurePart.colorLayerIndex > 0 && partColors && partColors.length) {
+                    const color = partColors[figurePart.colorLayerIndex - 1];
 
                     if (color) sprite.tint = color.rgb;
                 }
 
-                if (isDisabled) container.filters = [AvatarEditorThumbnailsHelper.ALPHA_FILTER];
-
                 container.addChild(sprite);
                 renderedCount++;
             }
+
+            if (isDisabled) container.filters = [AvatarEditorThumbnailsHelper.ALPHA_FILTER];
 
             return { container, renderedCount };
         };
@@ -272,13 +203,17 @@ export class AvatarEditorThumbnailsHelper {
                 }
 
                 try {
-                    const imageUrl = await TextureUtils.generateImageUrl({ target: container, resolution: 1 });
+                    const rendered = TextureUtils.generateCanvas({ target: container, resolution: 1 }) as HTMLCanvasElement;
+                    const imageUrl = rendered
+                        ? await AvatarEditorThumbnailsHelper.cacheCanvas(
+                              thumbnailKey,
+                              centerCanvasIntoBox(rendered, AvatarEditorThumbnailsHelper.THUMB_BOX)
+                          )
+                        : null;
 
                     if (completed) return;
 
                     completed = true;
-
-                    if (imageUrl) AvatarEditorThumbnailsHelper.THUMBNAIL_CACHE.set(thumbnailKey, imageUrl);
 
                     resolve(imageUrl);
                 } catch {
@@ -320,6 +255,10 @@ export class AvatarEditorThumbnailsHelper {
 
         if (cached) return cached;
 
+        const pending = this.PENDING_THUMBNAILS.get(thumbnailKey);
+
+        if (pending) return pending;
+
         const promise = new Promise<string>((resolve) => {
             let completed = false;
 
@@ -351,13 +290,14 @@ export class AvatarEditorThumbnailsHelper {
                         return;
                     }
 
-                    const imageUrl = await AvatarEditorThumbnailsHelper.trimTransparentPadding(croppedImageUrl);
+                    const decoded = await imageUrlToCanvas(croppedImageUrl);
+                    const imageUrl = decoded
+                        ? await AvatarEditorThumbnailsHelper.cacheCanvas(thumbnailKey, trimCanvasToOpaqueBounds(decoded))
+                        : null;
 
                     if (completed) return;
 
                     completed = true;
-
-                    if (imageUrl) AvatarEditorThumbnailsHelper.THUMBNAIL_CACHE.set(thumbnailKey, imageUrl);
 
                     resolve(imageUrl);
                 } catch {
@@ -371,6 +311,11 @@ export class AvatarEditorThumbnailsHelper {
             };
 
             resetFigure(figureString);
+        });
+
+        this.PENDING_THUMBNAILS.set(thumbnailKey, promise);
+        void promise.finally(() => {
+            if (this.PENDING_THUMBNAILS.get(thumbnailKey) === promise) this.PENDING_THUMBNAILS.delete(thumbnailKey);
         });
 
         return promise;

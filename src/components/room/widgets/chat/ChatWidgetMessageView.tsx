@@ -1,4 +1,4 @@
-import { GetRoomEngine, RoomChatSettings, RoomObjectCategory } from '@nitrots/nitro-renderer';
+import { GetRoomEngine, RoomChatSettings, RoomObjectCategory } from '@octane/renderer';
 import { CSSProperties, FC, useEffect, useMemo, useRef, useState } from 'react';
 import { ChatBubbleMessage, GetConfigurationValue } from '../../../../api';
 import { UserIdentityView } from '../../../../common';
@@ -23,7 +23,7 @@ export const ChatWidgetMessageView: FC<ChatWidgetMessageViewProps> = ({
 }) => {
     const [isVisible, setIsVisible] = useState(false);
     const [isReady, setIsReady] = useState(false);
-    const [chatTextSize, setChatTextSize] = useState<ChatTextSize>(() => getStoredChatTextSize());
+    const [chatTextSize, setChatTextSize] = useState<ChatTextSize>(() => chat?.textSize ?? getStoredChatTextSize());
     const elementRef = useRef<HTMLDivElement>(null);
     const makeRoomRef = useRef(makeRoom);
     const { onClickChat } = useOnClickChat();
@@ -110,6 +110,11 @@ export const ChatWidgetMessageView: FC<ChatWidgetMessageViewProps> = ({
     ]);
 
     useEffect(() => {
+        // A message that captured its own size keeps it for life, so changing the
+        // setting never resizes bubbles that are already on screen and the size
+        // survives an unmount/remount.
+        if (chat?.textSize) return;
+
         const onChatTextSizeChange = (event: Event) => {
             setChatTextSize((event as CustomEvent<ChatTextSize>).detail || getStoredChatTextSize());
         };
@@ -117,7 +122,7 @@ export const ChatWidgetMessageView: FC<ChatWidgetMessageViewProps> = ({
         window.addEventListener(CHAT_TEXT_SIZE_EVENT, onChatTextSizeChange);
 
         return () => window.removeEventListener(CHAT_TEXT_SIZE_EVENT, onChatTextSizeChange);
-    }, []);
+    }, [chat?.textSize]);
 
     useEffect(() => {
         makeRoomRef.current = makeRoom;

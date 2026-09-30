@@ -6,7 +6,8 @@ describe('AIR room zoom levels', () => {
         [0, 0.5],
         [1, 1],
         [2, 2],
-        [3, 4]
+        [3, 2.5],
+        [4, 4]
     ])('maps level %i to renderer scale %f', (level, scale) => {
         expect(getRoomZoomScale(level)).toBe(scale);
         expect(getRoomZoomLevel(scale)).toBe(level);
@@ -16,8 +17,10 @@ describe('AIR room zoom levels', () => {
         expect(stepRoomZoom(0.5, -1)).toBe(0.5);
         expect(stepRoomZoom(0.5, 1)).toBe(1);
         expect(stepRoomZoom(1, 1)).toBe(2);
-        expect(stepRoomZoom(2, 1)).toBe(4);
+        expect(stepRoomZoom(2, 1)).toBe(2.5);
+        expect(stepRoomZoom(2.5, 1)).toBe(4);
         expect(stepRoomZoom(4, 1)).toBe(4);
-        expect(stepRoomZoom(4, -1)).toBe(2);
+        expect(stepRoomZoom(4, -1)).toBe(2.5);
+        expect(stepRoomZoom(2.5, -1)).toBe(2);
     });
 });

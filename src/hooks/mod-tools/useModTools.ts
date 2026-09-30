@@ -12,16 +12,19 @@ import {
     ModeratorToolPreferencesEvent,
     SanctionBotProfilesEvent,
     SanctionBotProfilesRequestComposer
-} from '@nitrots/nitro-renderer';
-import { useState } from 'react';
+} from '@octane/renderer';
+import { useCallback, useState } from 'react';
 import { registerSharedHook, useSharedHook } from '@/state/useSharedHook';
 import { NotificationAlertType, PlaySound, SendMessageComposer, SoundNames } from '../../api';
 import { useMessageEvent } from '../events';
 import { useNotification } from '../notification';
 
+export interface ModToolsSanctionEntry {
+    label: string;
+    at: number;
+}
 
-export interface ISanctionBotProfile
-{
+export interface ISanctionBotProfile {
     id: number;
     profileName: string;
     botName: string;
@@ -39,6 +42,9 @@ const useModToolsState = () => {
     const [tickets, setTickets] = useState<IssueMessageData[]>([]);
     const [cfhCategories, setCfhCategories] = useState<CallForHelpCategoryData[]>([]);
     const [sanctionBots, setSanctionBots] = useState<ISanctionBotProfile[]>([]);
+    // What this moderator has already applied to whom, for as long as the client is open.
+    // Two panels on the same person is the easy way to sanction twice for one thing.
+    const [sanctionLog, setSanctionLog] = useState<Record<number, ModToolsSanctionEntry[]>>({});
     const { simpleAlert = null } = useNotification();
 
     const openRoomInfo = (roomId: number) => {
@@ -193,42 +199,41 @@ const useModToolsState = () => {
         setCfhCategories(parser.callForHelpCategories);
     });
 
-
-    useMessageEvent<SanctionBotProfilesEvent>(
-        SanctionBotProfilesEvent,
-        (event) =>
-        {
-            const parser = event.getParser();
-
-            if(!parser) return;
-
-            setSanctionBots(
-                parser.profiles.map((profile) => ({
-                    id: profile.id,
-                    profileName: profile.profileName,
-                    botName: profile.botName,
-                    botId: profile.botId,
-                    speechEnabled: profile.speechEnabled,
-                    speechInterval: profile.speechInterval
-                }))
-            );
-        });
-
-    const refreshSanctionBots = () =>
-    {
-        SendMessageComposer(
-            new SanctionBotProfilesRequestComposer()
-        );
-    };
-
     useMessageEvent<CfhSanctionMessageEvent>(CfhSanctionMessageEvent, (event) => {
         const parser = event.getParser();
 
         // todo: update sanction data
     });
 
+    useMessageEvent<SanctionBotProfilesEvent>(SanctionBotProfilesEvent, (event) => {
+        const parser = event.getParser();
+
+        if (!parser) return;
+
+        setSanctionBots(
+            parser.profiles.map((profile) => ({
+                id: profile.id,
+                profileName: profile.profileName,
+                botName: profile.botName,
+                botId: profile.botId,
+                speechEnabled: profile.speechEnabled,
+                speechInterval: profile.speechInterval
+            }))
+        );
+    });
+
+    const refreshSanctionBots = useCallback(() => {
+        SendMessageComposer(new SanctionBotProfilesRequestComposer());
+    }, []);
+
+    const recordSanction = useCallback((userId: number, label: string) => {
+        setSanctionLog((prev) => ({ ...prev, [userId]: [...(prev[userId] ?? []), { label, at: Date.now() }] }));
+    }, []);
+
     return {
         settings,
+        sanctionLog,
+        recordSanction,
         openRooms,
         openRoomChatlogs,
         openUserChatlogs,

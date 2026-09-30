@@ -1,12 +1,12 @@
 import { InfiniteGrid } from '@layout/InfiniteGrid';
-import { CSSProperties, FC, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { CSSProperties, FC, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { CatalogType, GetFurnitureData, IPurchasableOffer } from '../../../../../api';
 import { AutoGrid, AutoGridProps, ClassicScrollAreaView } from '../../../../../common';
-import { useCatalogActions, useCatalogData, useCatalogUiState } from '../../../../../hooks';
+import { useCatalogActions, useCatalogData, useCatalogUiState, useInventoryFurni, useScrollWindow } from '../../../../../hooks';
 import { replaceCatalogPageOffers } from '../../../../../hooks/catalog/useCatalog.helpers';
 import { useCatalogAdmin } from '../../../CatalogAdminContext';
 import { CatalogGridOfferView } from '../common/CatalogGridOfferView';
-import { getAirCatalogColumnCount, isAirBaseCatalogOffer, layoutAirCatalogOffers } from '../common/catalogAirGrid.helpers';
+import { getAirCatalogColumnCount, getVisibleAirGridEntries, isAirBaseCatalogOffer, layoutAirCatalogOffers } from '../common/catalogAirGrid.helpers';
 import { shouldVirtualizeCatalogOffers } from './catalogGridPerformance.helpers';
 
 interface CatalogItemGridWidgetViewProps extends AutoGridProps {
@@ -35,8 +35,8 @@ export const CatalogItemGridWidgetView: FC<CatalogItemGridWidgetViewProps> = (pr
     const [dragIndex, setDragIndex] = useState<number | null>(null);
     const [dropIndex, setDropIndex] = useState<number | null>(null);
     const [airColumnCount, setAirColumnCount] = useState(columnCount);
-    const baseGridClassName = columnCount > 1 && !className.split(/\s+/).includes('nitro-catalog-grid') ? `${className} nitro-catalog-grid`.trim() : className;
-    const isAirStandardDensity = className.split(/\s+/).includes('nitro-catalog-grid-density-standard');
+    const baseGridClassName = columnCount > 1 && !className.split(/\s+/).includes('octane-catalog-grid') ? `${className} octane-catalog-grid`.trim() : className;
+    const isAirStandardDensity = className.split(/\s+/).includes('octane-catalog-grid-density-standard');
 
     // Search results are virtual offers. Keep those exact objects so clicks and purchases
     // stay tied to the real catalogue offer/page ids added by CatalogSearchView.
@@ -69,16 +69,31 @@ export const CatalogItemGridWidgetView: FC<CatalogItemGridWidgetViewProps> = (pr
     const useVirtualGrid = shouldVirtualizeCatalogOffers(offers.length, adminMode) && !usesAirMixedGridTemplate;
     const airGridStyle = {
         ...style,
-        ...(isAirStandardDensity && { '--nitro-air-column-count': airColumnCount.toString() })
+        ...(isAirStandardDensity && { '--octane-air-column-count': airColumnCount.toString() })
     } as CSSProperties;
     const mixedLayout = useMemo(() => layoutAirCatalogOffers(offers, airColumnCount, currentType), [airColumnCount, currentType, offers]);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (elementRef.current) {
             elementRef.current.scrollLeft = 0;
             elementRef.current.scrollTop = 0;
         }
     }, [currentPage, searchResult]);
+
+    const scrollWindow = useScrollWindow(elementRef, usesAirMixedGridTemplate, currentPage);
+    const clampedScrollTop = Math.min(scrollWindow.scrollTop, Math.max(0, mixedLayout.height - scrollWindow.viewportHeight));
+    const visibleMixedEntries = useMemo(
+        () => getVisibleAirGridEntries(mixedLayout.entries, clampedScrollTop, scrollWindow.viewportHeight),
+        [mixedLayout, clampedScrollTop, scrollWindow.viewportHeight]
+    );
+    const renderedMixedEntries = useMemo(
+        () =>
+            dragIndex === null || visibleMixedEntries.some((entry) => entry.index === dragIndex)
+                ? visibleMixedEntries
+                : [...visibleMixedEntries, ...mixedLayout.entries.filter((entry) => entry.index === dragIndex)],
+        [visibleMixedEntries, mixedLayout, dragIndex]
+    );
+    const { isVisible: inventoryVisible = false } = useInventoryFurni();
 
     useLayoutEffect(() => {
         if (!isAirStandardDensity || !offers.length) {
@@ -199,6 +214,7 @@ export const CatalogItemGridWidgetView: FC<CatalogItemGridWidgetViewProps> = (pr
                     tintColor={tintColor}
                     showTechnicalDetails={adminMode}
                     showPrices={showPrices}
+                    inventoryVisible={inventoryVisible}
                 />
             </div>
         );
@@ -206,14 +222,15 @@ export const CatalogItemGridWidgetView: FC<CatalogItemGridWidgetViewProps> = (pr
 
     if (usesAirMixedGridTemplate) {
         return (
-            <ClassicScrollAreaView className="nitro-catalog-item-grid-scroll-area h-full min-h-0" viewportRef={elementRef}>
+            <ClassicScrollAreaView className="octane-catalog-item-grid-scroll-area h-full min-h-0" viewportRef={elementRef}>
                 <div
                     aria-label="Catalog items"
-                    className={`nitro-catalog-air-mixed-grid ${gridClassName}`}
+                    className={`octane-catalog-air-mixed-grid ${gridClassName}`}
                     role="listbox"
                     style={{ ...airGridStyle, width: mixedLayout.width, minWidth: '100%', height: mixedLayout.height }}
+                    onDragEnd={adminMode ? handleDragEnd : undefined}
                 >
-                    {mixedLayout.entries.map(({ offer, index, ...position }) => renderOfferTile(offer, index, position))}
+                    {renderedMixedEntries.map(({ offer, index, ...position }) => renderOfferTile(offer, index, position))}
                     {children}
                 </div>
             </ClassicScrollAreaView>
@@ -224,12 +241,13 @@ export const CatalogItemGridWidgetView: FC<CatalogItemGridWidgetViewProps> = (pr
         return (
             <div
                 aria-label="Catalog items"
-                className={`nitro-catalog-grid-virtual h-full min-h-0 ${gridClassName}`.trim()}
+                className={`octane-catalog-grid-virtual h-full min-h-0 ${gridClassName}`.trim()}
                 role="listbox"
+                onDragEnd={adminMode ? handleDragEnd : undefined}
                 style={
                     {
-                        '--nitro-grid-column-min-height': `${effectiveColumnMinHeight}px`,
-                        '--nitro-grid-column-min-width': `${effectiveColumnMinWidth}px`,
+                        '--octane-grid-column-min-height': `${effectiveColumnMinHeight}px`,
+                        '--octane-grid-column-min-width': `${effectiveColumnMinWidth}px`,
                         ...airGridStyle
                     } as CSSProperties
                 }
@@ -253,7 +271,7 @@ export const CatalogItemGridWidgetView: FC<CatalogItemGridWidgetViewProps> = (pr
     }
 
     return (
-        <ClassicScrollAreaView className="nitro-catalog-item-grid-scroll-area h-full min-h-0" viewportRef={elementRef}>
+        <ClassicScrollAreaView className="octane-catalog-item-grid-scroll-area h-full min-h-0" viewportRef={elementRef}>
             <AutoGrid
                 aria-label="Catalog items"
                 className={gridClassName}

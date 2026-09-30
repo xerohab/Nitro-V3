@@ -1,10 +1,10 @@
-.nitro-use-product-confirmation {
+.octane-use-product-confirmation {
   width: min(350px, calc(100vw - 16px));
   min-width: 0;
   max-width: calc(100vw - 16px);
   max-height: calc(100vh - 16px);
 
-  .nitro-card-content-shell {
+  .octane-card-content-shell {
     max-height: calc(100vh - 72px);
     overflow: auto;
   }
@@ -31,13 +31,13 @@
 }
 
 @media (max-width: 420px) {
-  .nitro-use-product-confirmation .nitro-card-content-shell > .flex {
+  .octane-use-product-confirmation .octane-card-content-shell > .flex {
     flex-direction: column;
   }
 }
 
 /* AIR user_view: border style-1 black 190px, list x=10 y=10 w=170. */
-.nitro-infostand {
+.octane-infostand {
   position: relative;
   box-sizing: border-box;
   width: 190px;
@@ -58,11 +58,17 @@
   color: #ffffff;
   font-family: Ubuntu, sans-serif;
   font-size: 11px;
-  image-rendering: pixelated;
+  image-rendering: var(--octane-pixel-art, pixelated);
 
   @media (max-width: 576px) {
     top: 0;
     padding: 4px;
+  }
+
+  &:has(.octane-infostand__header) {
+    width: fit-content;
+    min-width: 190px;
+    max-width: 280px;
   }
 
   .form-control-sm {
@@ -81,7 +87,7 @@
     color: inherit;
   }
 
-  .nitro-infostand__close {
+  .octane-infostand__close {
     position: absolute;
     top: 0;
     right: -2px;
@@ -92,19 +98,23 @@
     border: 0;
     background: transparent url('../../assets/images/habbo-skin/slices/close-black.png') left top / 15px 15px no-repeat;
     cursor: pointer;
-    image-rendering: pixelated;
+    image-rendering: var(--octane-pixel-art, pixelated);
   }
 
-  .nitro-infostand__header {
+  .octane-infostand__header {
     position: relative;
-    width: 170px;
-    height: 12px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    box-sizing: border-box;
+    min-width: 170px;
+    height: 24px;
+    padding-right: 14px;
   }
 
-  .nitro-infostand__home {
-    position: absolute;
-    top: 1px;
-    left: -2px;
+  .octane-infostand__home {
+    flex: 0 0 auto;
+    margin-left: -2px;
     width: 16px;
     height: 15px;
     padding: 0;
@@ -116,17 +126,16 @@
       display: block;
       width: 11px;
       height: 10px;
-      image-rendering: pixelated;
+      image-rendering: var(--octane-pixel-art, pixelated);
     }
   }
 
-  .nitro-infostand__profile-link {
-    position: absolute;
-    top: 0;
-    left: 18px;
-    display: block;
-    width: 135px;
-    height: 12px;
+  .octane-infostand__profile-link {
+    display: flex;
+    align-items: center;
+    flex: 0 1 auto;
+    min-width: 0;
+    height: 24px;
     padding: 0;
     overflow: hidden;
     border: 0;
@@ -135,15 +144,13 @@
     text-align: left;
     cursor: pointer;
 
-    &:hover .nitro-infostand__identity,
-    &:hover .nitro-infostand__identity .text-white {
+    &:hover .octane-infostand__identity,
+    &:hover .octane-infostand__identity .text-white {
       color: #91c9ff;
     }
   }
 
-  .nitro-infostand__identity {
-    max-width: 135px;
-    overflow: hidden;
+  .octane-infostand__identity {
     background: #3d3d3d;
     color: #ffffff;
     font-family: Volter, monospace;
@@ -153,26 +160,25 @@
     -webkit-font-smoothing: none;
   }
 
-  .nitro-infostand__rule {
-    width: 170px;
+  .octane-infostand__rule {
     height: 1px;
     margin: 3px 0;
     background: #333333;
   }
 
-  .nitro-infostand__rule--footer {
+  .octane-infostand__rule--footer {
     margin-bottom: 0;
   }
 
-  .nitro-infostand__figure-row {
+  .octane-infostand__figure-row {
     position: relative;
     display: flex;
     gap: 5px;
-    width: 170px;
+    min-width: 170px;
     min-height: 132px;
   }
 
-  .nitro-infostand__avatar-well {
+  .octane-infostand__avatar-well {
     position: relative;
     display: flex;
     flex: 0 0 67px;
@@ -187,7 +193,7 @@
     z-index: 1;
   }
 
-  .nitro-infostand__badges {
+  .octane-infostand__badges {
     position: relative;
     z-index: 1;
     display: grid;
@@ -198,7 +204,7 @@
     margin-top: 1px;
   }
 
-  .nitro-infostand__badge-slot {
+  .octane-infostand__badge-slot {
     box-sizing: border-box;
     transition: opacity 150ms ease, background-color 150ms ease;
 
@@ -217,7 +223,7 @@
     }
   }
 
-  .nitro-infostand__badge-slot-plus {
+  .octane-infostand__badge-slot-plus {
     color: rgba(255, 255, 255, 0.75);
     font-family: Arial, sans-serif;
     font-size: 10px;
@@ -225,11 +231,12 @@
     line-height: 1;
   }
 
-  .nitro-infostand__motto {
+  .octane-infostand__motto {
     box-sizing: border-box;
     position: relative;
     display: flex;
-    width: 170px;
+    contain: inline-size;
+    min-width: 170px;
     min-height: 26px;
     max-height: 53px;
     align-items: flex-start;
@@ -239,7 +246,7 @@
     background: transparent;
   }
 
-  .nitro-infostand__motto-text {
+  .octane-infostand__motto-text {
     box-sizing: border-box;
     max-height: 50px;
     padding-top: 6px;
@@ -253,26 +260,56 @@
     }
   }
 
-  .nitro-infostand__pen {
+  .octane-infostand__pen {
     position: absolute;
     top: 4px;
     left: 3px;
     width: 17px;
     height: 18px;
-    image-rendering: pixelated;
+    image-rendering: var(--octane-pixel-art, pixelated);
   }
 
-  .nitro-infostand__score {
-    display: grid;
-    grid-template-rows: 15px 15px;
-    gap: 3px;
-    width: 170px;
+  /* Achievement score: one Volter line, label and value. */
+  .octane-infostand__score {
+    display: block;
+    min-width: 170px;
+    height: 15px;
     color: #ffffff;
     font-family: Volter, monospace;
     font-size: 9px;
     font-weight: bold;
     line-height: 15px;
     -webkit-font-smoothing: none;
+  }
+
+  .octane-infostand__score-link {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover {
+      color: #91c9ff;
+    }
+  }
+
+  /* Characters left in the motto while it is edited, in the score's Volter. */
+  .octane-infostand__motto-count {
+    flex: 0 0 auto;
+    align-self: center;
+    margin-left: 4px;
+    color: #aaaaaa;
+    font-family: Volter, monospace;
+    font-size: 9px;
+    font-weight: bold;
+    -webkit-font-smoothing: none;
+  }
+
+  /* A user-picked prefix colour can be as dark as the card; the pixel outline
+     keeps it readable. A prefix effect sets its own shadow inline and wins. */
+  .octane-infostand__identity .prefix {
+    text-shadow: 1px 1px 0 #000000;
   }
 
   .body-image {
@@ -364,11 +401,11 @@
   }
 }
 
-.nitro-infostand.profile-card-background {
+.octane-infostand.profile-card-background {
   background-clip: padding-box;
 }
 
-.nitro-rarity-level {
+.octane-rarity-level {
     width: 36px;
     height: 28px;
     background: url('@/assets/images/infostand/rarity-level.png');
@@ -379,4 +416,25 @@
         color: #000;
         font-weight: bold;
     }
+}
+
+/* A chosen card background replaces the flat #3d3d3d the infostand is drawn
+   for: the name loses its grey patch, text gets the one-pixel black shadow the
+   client uses for text over images, and the rules stay visible. The default
+   card is untouched. */
+.octane-infostand.profile-card-background[class*="card-background-"] {
+  .octane-infostand__identity {
+    background: transparent;
+  }
+
+  .octane-infostand__identity,
+  .octane-infostand__motto-text,
+  .octane-infostand__score,
+  .text-white {
+    text-shadow: 1px 1px 0 #000000;
+  }
+
+  .octane-infostand__rule {
+    background: rgba(0, 0, 0, 0.45);
+  }
 }

@@ -1,6 +1,6 @@
-import { GetRoomEngine, RoomPreviewer } from '@nitrots/nitro-renderer';
+import { GetRoomEngine, RoomPreviewer } from '@octane/renderer';
 import { CSSProperties, FC, useEffect, useState } from 'react';
-import { LayoutRoomPreviewerView } from '../../common';
+import { LayoutRoomPreviewerView, PIXEL_ART_RENDERING } from '../../common';
 
 interface AvatarEffectPreviewViewProps {
     figure: string;
@@ -67,7 +67,7 @@ export const AvatarEffectPreviewView: FC<AvatarEffectPreviewViewProps> = (props)
         height: `${100 / zoom}%`,
         transform: `scale(${zoom})`,
         transformOrigin: 'top left',
-        imageRendering: 'pixelated'
+        imageRendering: PIXEL_ART_RENDERING
     };
 
     return (

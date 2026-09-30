@@ -1,8 +1,8 @@
-import { ChatRecordData, GetUserChatlogMessageComposer, UserChatlogEvent } from '@nitrots/nitro-renderer';
+import { ChatRecordData, GetUserChatlogMessageComposer, UserChatlogEvent } from '@octane/renderer';
 import { FC, useEffect, useState } from 'react';
 import { FaSpinner } from 'react-icons/fa';
 import { LocalizeText, SendMessageComposer } from '../../../../api';
-import { DraggableWindowPosition, NitroCardContentView, NitroCardHeaderView, NitroCardView } from '../../../../common';
+import { DraggableWindowPosition, OctaneCardContentView, OctaneCardHeaderView, OctaneCardView } from '../../../../common';
 import { useMessageEvent } from '../../../../hooks';
 import { ChatlogView } from '../chatlog/ChatlogView';
 
@@ -30,25 +30,25 @@ export const ModToolsUserChatlogView: FC<ModToolsUserChatlogViewProps> = (props)
     }, [userId]);
 
     return (
-        <NitroCardView
-            className="nitro-mod-tools-chatlog min-w-0 w-[min(520px,calc(100vw-16px))] max-w-[calc(100vw-16px)] max-h-[calc(100vh-16px)]"
+        <OctaneCardView
+            className="octane-mod-tools-chatlog min-w-0 w-[min(520px,calc(100vw-16px))] max-w-[calc(100vw-16px)] max-h-[calc(100vh-16px)]"
             theme="primary-slim"
             windowPosition={DraggableWindowPosition.TOP_LEFT}
         >
-            <NitroCardHeaderView
+            <OctaneCardHeaderView
                 headerText={username ? LocalizeText('modtools.user.chatlog.title.with', ['username'], [username]) : LocalizeText('modtools.user.chatlog.title')}
                 onCloseClick={onCloseClick}
             />
-            <NitroCardContentView className="text-black h-full" gap={1}>
+            <OctaneCardContentView className="text-black h-full" gap={1}>
                 {userChatlog ? (
-                    <ChatlogView records={userChatlog} />
+                    <ChatlogView key={username ?? ''} initialQuery={username ?? ''} records={userChatlog} />
                 ) : (
                     <div className="flex flex-col items-center justify-center gap-2 py-8 opacity-50 text-sm">
                         <FaSpinner className="animate-spin" size={22} />
                         <span>{LocalizeText('modtools.user.chatlog.loading')}</span>
                     </div>
                 )}
-            </NitroCardContentView>
-        </NitroCardView>
+            </OctaneCardContentView>
+        </OctaneCardView>
     );
 };

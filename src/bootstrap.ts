@@ -1,15 +1,14 @@
-import './pixiPatch';
-
-import { GetConfiguration } from '@nitrots/nitro-renderer';
+import { GetConfiguration } from '@octane/renderer';
+import { derivePetConfig, DerivedPetConfig, PetDefinition } from './api/octane/PetData';
 import { parseJsonDocument, UiJsonMode } from './json/JsonDocumentParser';
 import { configFileUrl, getClientMode, installSecureFetch } from './secure-assets';
 
-declare const __NITRO_JSON_MODE__: UiJsonMode | undefined;
+declare const __OCTANE_JSON_MODE__: UiJsonMode | undefined;
 
 const resolveJsonMode = (): UiJsonMode => {
     try {
-        if (typeof __NITRO_JSON_MODE__ !== 'undefined' && __NITRO_JSON_MODE__) {
-            if (__NITRO_JSON_MODE__ === 'legacy' || __NITRO_JSON_MODE__ === 'jsonc' || __NITRO_JSON_MODE__ === 'auto') return __NITRO_JSON_MODE__;
+        if (typeof __OCTANE_JSON_MODE__ !== 'undefined' && __OCTANE_JSON_MODE__) {
+            if (__OCTANE_JSON_MODE__ === 'legacy' || __OCTANE_JSON_MODE__ === 'jsonc' || __OCTANE_JSON_MODE__ === 'auto') return __OCTANE_JSON_MODE__;
         }
     } catch {}
 
@@ -32,8 +31,8 @@ ensureMobileViewport();
 
 const setBootDebug = (message: string) => {
     try {
-        (window as any).__nitroBootDebug = message;
-        const secureNode = document.getElementById('nitro-secure-debug');
+        (window as any).__octaneBootDebug = message;
+        const secureNode = document.getElementById('octane-secure-debug');
 
         if (secureNode) secureNode.textContent = `${secureNode.textContent}\n${message}`;
     } catch {}
@@ -41,7 +40,7 @@ const setBootDebug = (message: string) => {
 
 const deployBaseUrl = (): string => {
     try {
-        const loaderBase = (window as any).__nitroLoaderBase;
+        const loaderBase = (window as any).__octaneLoaderBase;
         if (typeof loaderBase === 'string' && loaderBase.length) return new URL('..', loaderBase).toString();
     } catch {}
 
@@ -63,7 +62,7 @@ const deployBaseUrl = (): string => {
 
 const loadClientMode = async () => {
     try {
-        if ((window as any).__nitroClientMode) return;
+        if ((window as any).__octaneClientMode) return;
 
         const url = new URL('configuration/client-mode.json', deployBaseUrl());
         url.searchParams.set('v', Date.now().toString(36));
@@ -75,10 +74,32 @@ const loadClientMode = async () => {
         const text = await response.text();
         const mode = resolveJsonMode();
 
-        (window as any).__nitroClientMode = parseJsonDocument(text, mode, url.toString());
+        (window as any).__octaneClientMode = parseJsonDocument(text, mode, url.toString());
         setBootDebug(`boot: client-mode loaded (mode=${mode})`);
     } catch (error) {
         setBootDebug(`boot: client-mode fallback ${error?.message || error}`);
+    }
+};
+
+const loadPetConfig = async (): Promise<DerivedPetConfig | null> => {
+    try {
+        const url = configFileUrl('pets.json', true);
+        const response = await fetch(url);
+
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        const text = await response.text();
+        const parsed = parseJsonDocument(text, resolveJsonMode(), url) as { pets?: unknown } | unknown[];
+        const list = Array.isArray(parsed) ? parsed : (parsed as { pets?: unknown })?.pets;
+        const derived = derivePetConfig(list as PetDefinition[]);
+
+        setBootDebug(derived ? 'boot: pet config loaded' : 'boot: pets.json empty, using config pet.types');
+
+        return derived;
+    } catch (error) {
+        setBootDebug(`boot: pets.json fallback ${error?.message || error}`);
+
+        return null;
     }
 };
 
@@ -89,18 +110,25 @@ setBootDebug('boot: secure fetch installed');
 
 const search = new URLSearchParams(window.location.search);
 const clientMode = getClientMode();
+const petConfig = await loadPetConfig();
 
-(window as any).NitroSecureApiUrl = clientMode.apiBaseUrl || window.location.origin;
-(window as any).NitroClientMode = clientMode;
-(window as any).NitroConfig = {
+(window as any).OctaneSecureApiUrl = clientMode.apiBaseUrl || window.location.origin;
+(window as any).OctaneClientMode = clientMode;
+(window as any).OctaneConfig = {
     'config.urls': [configFileUrl('renderer-config.json', true), configFileUrl('ui-config.json', true)],
+    ...(petConfig ?? {}),
     'sso.ticket': search.get('sso') || null,
     'forward.type': search.get('room') ? 2 : -1,
     'forward.id': search.get('room') || 0,
     'friend.id': search.get('friend') || 0
 };
 
-setBootDebug('boot: NitroConfig assigned');
+// Legacy aliases so external scripts written against the old Nitro globals keep working
+(window as any).NitroConfig = (window as any).OctaneConfig;
+(window as any).NitroClientMode = clientMode;
+(window as any).NitroSecureApiUrl = (window as any).OctaneSecureApiUrl;
+
+setBootDebug('boot: OctaneConfig assigned');
 
 // Load renderer-config.json + ui-config.json BEFORE rendering React. Otherwise
 // the first paint triggers a flood of "Missing configuration key" warnings for

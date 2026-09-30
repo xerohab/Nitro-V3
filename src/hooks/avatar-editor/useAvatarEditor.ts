@@ -12,7 +12,7 @@ import {
     IPartColor,
     SetType,
     UserWardrobePageEvent
-} from '@nitrots/nitro-renderer';
+} from '@octane/renderer';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { registerSharedHook, useSharedHook } from '@/state/useSharedHook';
 import {
@@ -351,6 +351,8 @@ const useAvatarEditorState = () => {
                 const isOwnedSellable = partSet.isSellable && figureSetIds.indexOf(partSet.id) !== -1;
                 const isSellableNotOwned = partSet.isSellable && figureSetIds.indexOf(partSet.id) === -1;
 
+                const showUnownedSellables = GetConfigurationValue<boolean>('avatareditor.show.unowned.sellables', false);
+
                 // Purchased clothing is shown exclusively in the Purchased tab.
                 // Keep pets/NFT behaviour separate from normal purchasable clothing.
                 if (
@@ -362,7 +364,7 @@ const useAvatarEditorState = () => {
 
                 if (buildMode === buildModePurchased && !isOwnedSellable) continue;
 
-                if (isSellableNotOwned && buildMode !== buildModeNft && setType !== AvatarFigurePartType.PET) continue;
+                if (isSellableNotOwned && !showUnownedSellables && buildMode !== buildModeNft && setType !== AvatarFigurePartType.PET) continue;
 
                 let maxPaletteCount = 0;
 

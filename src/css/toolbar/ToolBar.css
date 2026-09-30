@@ -2,7 +2,7 @@
     transition: bottom 140ms ease-out, background-color 220ms ease, border-color 220ms ease, box-shadow 220ms ease, border-radius 220ms ease;
 }
 
-.nitro-toolbar-hobba {
+.octane-toolbar-hobba {
     position: absolute;
     bottom: 0;
     left: 0;
@@ -13,7 +13,7 @@
     background: #55534e;
 }
 
-.nitro-toolbar-mobile-hobba {
+.octane-toolbar-mobile-hobba {
     min-height: 44px;
     border: 1px solid rgba(0, 0, 0, 0.50);
     border-radius: 7px;
@@ -31,18 +31,16 @@
 .tb-icon {
     opacity: 1;
     cursor: pointer;
-    image-rendering: pixelated;
-    /* BitmapDataController draws AIR's 0x48000000 etching at (0,-1). */
+    image-rendering: var(--octane-pixel-art, pixelated);
     filter: drop-shadow(0 -1px 0 rgba(0, 0, 0, 0.28));
 }
 
-.tb-nav-clip .nitro-icon:hover,
-.tb-nav-clip .nitro-icon:active {
+.tb-nav-clip .octane-icon:hover,
+.tb-nav-clip .octane-icon:active {
     transform: none;
     filter: drop-shadow(0 -1px 0 rgba(0, 0, 0, 0.28));
 }
 
-/* lifted_hover on the 45px region so me-menu bg/circle move with the head. */
 .tb-nav-clip .tb-slot:hover {
     transform: translate(-1px, -1px);
 }
@@ -55,12 +53,24 @@
     filter: brightness(0.7) drop-shadow(0 -1px 0 rgba(0, 0, 0, 0.28));
 }
 
-.tb-avatar-head {
+.tb-avatar-head,
+.tb-memenu-face,
+.tb-memenu-face-img {
     width: 50px !important;
     height: 50px !important;
-    background-size: 50px 50px !important;
-    background-position: 0 0 !important;
-    image-rendering: pixelated !important;
+    image-rendering: var(--octane-pixel-art, pixelated) !important;
+}
+
+.tb-memenu-face {
+    position: relative !important;
+    display: block;
+    overflow: hidden;
+    background: none !important;
+}
+
+.tb-memenu-face-img {
+    display: block;
+    pointer-events: none;
 }
 
 .tb-slot {
@@ -87,13 +97,6 @@
     margin-left: -6px;
 }
 
-/*
- * AIR positions the static-bitmap windows at these x/y coordinates, then
- * centers each source bitmap inside the declared window (pivot_point=center),
- * truncating half-pixel offsets toward zero as BitmapDataRenderer does.
- * Keep the XML window dimensions here: using the PNG dimensions directly
- * shifts progression, games, builder and wired and fails to clip stories.
- */
 .tb-nav-clip .tb-slot .icon-habbo { position: absolute; left: 8px; top: 5px; width: 28px; height: 28px; }
 .tb-nav-clip .tb-slot .icon-house { position: absolute; left: 6px; top: 5px; width: 32px; height: 30px; }
 .tb-nav-clip .tb-slot .icon-rooms { position: absolute; left: 0; top: 5px; width: 44px; height: 30px; }
@@ -117,40 +120,33 @@
     width: 45px;
     height: 45px;
     pointer-events: none;
-    image-rendering: pixelated;
+    image-rendering: var(--octane-pixel-art, pixelated);
 }
 
 .tb-memenu-bg {
     z-index: 0;
 }
 
-/* bottom_bar_left_xml icon_me_menu: x=1 y=-1 44x41 pivot_point=center */
 .tb-memenu-avatar {
     position: absolute;
     left: 1px;
     top: -1px;
     z-index: 1;
-    display: flex;
+    display: block;
     width: 44px;
     height: 41px;
-    align-items: center;
-    justify-content: center;
     overflow: hidden;
     cursor: pointer;
 }
 
-.tb-memenu-avatar .tb-avatar-head {
-    position: relative !important;
+.tb-memenu-avatar .tb-avatar-head,
+.tb-memenu-avatar .tb-memenu-face {
+    position: absolute !important;
     inset: auto !important;
-    top: auto !important;
+    top: -4px !important;
     right: auto !important;
     bottom: auto !important;
-    left: auto !important;
-    flex: 0 0 50px;
-    width: 50px !important;
-    height: 50px !important;
-    background-size: 50px 50px !important;
-    background-position: 0 0 !important;
+    left: -3px !important;
 }
 
 .tb-memenu-circle {
@@ -163,7 +159,7 @@
     height: 40px;
     flex-shrink: 0;
     align-self: flex-start;
-    image-rendering: pixelated;
+    image-rendering: var(--octane-pixel-art, pixelated);
 }
 
 .tb-collapse {
@@ -185,7 +181,7 @@
     display: block;
     width: 13px;
     height: 45px;
-    image-rendering: pixelated;
+    image-rendering: var(--octane-pixel-art, pixelated);
 }
 
 .tb-toggle {

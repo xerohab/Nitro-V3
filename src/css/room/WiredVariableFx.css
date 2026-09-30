@@ -1,0 +1,258 @@
+/* Wired variable fx: bars, hearts, levels, boss bars and numbers drawn over the room. */
+
+.octane-wired-fx-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+    overflow: hidden;
+}
+
+.octane-wired-fx-overlay__entity {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    transform: translateX(-50%);
+    will-change: left, top;
+}
+
+.octane-wired-fx-overlay__bosses {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.octane-wired-fx {
+    --fx-color: #5fd35f;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-family: 'Ubuntu', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5));
+}
+
+.octane-wired-fx--changed .octane-wired-fx__fill,
+.octane-wired-fx--changed .octane-wired-fx__segment::before {
+    animation: octane-wired-fx-pulse 0.5s ease-out;
+}
+
+@keyframes octane-wired-fx-pulse {
+    0% {
+        filter: brightness(1.8);
+    }
+    100% {
+        filter: brightness(1);
+    }
+}
+
+.octane-wired-fx__bar {
+    position: relative;
+    height: 8px;
+    border-radius: 3px;
+    background: rgba(0, 0, 0, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    overflow: hidden;
+    display: flex;
+    gap: 1px;
+    padding: 1px;
+    box-sizing: content-box;
+}
+
+.octane-wired-fx__fill {
+    display: block;
+    height: 100%;
+    border-radius: 2px;
+    background: var(--fx-color);
+    transition: width 0.35s ease-out;
+}
+
+.octane-wired-fx__bar--mini {
+    height: 4px;
+}
+
+.octane-wired-fx__bar--health .octane-wired-fx__fill {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--fx-color) 70%, white) 0%, var(--fx-color) 55%, color-mix(in srgb, var(--fx-color) 75%, black) 100%);
+}
+
+.octane-wired-fx__bar--striped .octane-wired-fx__fill {
+    background-image: repeating-linear-gradient(45deg, var(--fx-color) 0 4px, color-mix(in srgb, var(--fx-color) 70%, black) 4px 8px);
+}
+
+.octane-wired-fx__bar--metallic .octane-wired-fx__fill {
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, var(--fx-color) 45%, color-mix(in srgb, var(--fx-color) 60%, black) 100%);
+}
+
+.octane-wired-fx__bar--thermometer {
+    flex-direction: column-reverse;
+    width: 8px !important;
+    height: 36px;
+}
+
+.octane-wired-fx__bar--thermometer .octane-wired-fx__fill {
+    width: 100% !important;
+    transition: height 0.35s ease-out;
+}
+
+.octane-wired-fx__segment {
+    position: relative;
+    flex: 1 1 0;
+    height: 100%;
+    border-radius: 1px;
+    background: rgba(255, 255, 255, 0.12);
+    overflow: hidden;
+}
+
+.octane-wired-fx__segment::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    width: calc(var(--fx-fill, 0) * 100%);
+    background: var(--fx-color);
+}
+
+.octane-wired-fx__bar--arrow .octane-wired-fx__segment {
+    clip-path: polygon(0 0, 75% 0, 100% 50%, 75% 100%, 0 100%, 25% 50%);
+    border-radius: 0;
+}
+
+.octane-wired-fx__bar--thermometer .octane-wired-fx__segment::before {
+    width: 100%;
+    height: calc(var(--fx-fill, 0) * 100%);
+    top: auto;
+}
+
+.octane-wired-fx__heart {
+    position: relative;
+    font-size: 13px;
+    line-height: 1;
+    color: rgba(0, 0, 0, 0.55);
+    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.5);
+}
+
+.octane-wired-fx__heart::before {
+    content: '♥';
+    position: absolute;
+    inset: 0;
+    width: calc(var(--fx-fill, 0) * 100%);
+    overflow: hidden;
+    color: var(--fx-color, #e04b4b);
+    -webkit-text-stroke: 0;
+}
+
+.octane-wired-fx__cross {
+    color: #e04b4b;
+    font-size: 13px;
+    line-height: 1;
+}
+
+.octane-wired-fx__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 14px;
+    height: 14px;
+    font-size: 11px;
+    line-height: 1;
+}
+
+.octane-wired-fx__level {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 3px;
+    border-radius: 50%;
+    background: var(--fx-color, #3b7de3);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    font-size: 10px;
+}
+
+.octane-wired-fx__level--maxed {
+    box-shadow: 0 0 6px 1px rgba(255, 216, 61, 0.9);
+}
+
+.octane-wired-fx--details {
+    flex-direction: column;
+    gap: 0;
+    padding: 1px 6px;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.octane-wired-fx__level-text {
+    font-size: 11px;
+}
+
+.octane-wired-fx__value {
+    font-size: 9px;
+    font-weight: 400;
+    opacity: 0.9;
+}
+
+.octane-wired-fx--boss {
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.octane-wired-fx--boss .octane-wired-fx__icon {
+    font-size: 16px;
+    min-width: 18px;
+    height: 18px;
+}
+
+.octane-wired-fx__boss-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.octane-wired-fx--boss .octane-wired-fx__bar {
+    height: 10px;
+}
+
+.octane-wired-fx__boss-text {
+    font-size: 10px;
+}
+
+.octane-wired-fx--number {
+    font-size: 16px;
+    letter-spacing: 0.5px;
+}
+
+.octane-wired-fx--design-freeze_style .octane-wired-fx__number {
+    color: #8fe3ff;
+    -webkit-text-stroke: 1px #1c4f7a;
+}
+
+.octane-wired-fx--design-shalimar .octane-wired-fx__number {
+    font-family: 'Cherry Bomb One', 'Ubuntu', sans-serif;
+    color: #ffd83d;
+    -webkit-text-stroke: 1px #7a4b00;
+}
+
+.octane-wired-fx--design-blocky .octane-wired-fx__number {
+    font-family: 'Pixelify Sans', 'Ubuntu', monospace;
+    color: #fff;
+    -webkit-text-stroke: 1px #000;
+}
+
+/* Editor */
+.octane-wired-fx-editor__override .form-select {
+    max-width: 100%;
+}

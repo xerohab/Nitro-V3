@@ -6,7 +6,7 @@ import globalVariableIcon from '../../../../assets/images/wired/var/icon_source_
 import userVariableIcon from '../../../../assets/images/wired/var/icon_source_user.png';
 import { Slider, Text } from '../../../../common';
 import { useWired, useWiredTools } from '../../../../hooks';
-import { NitroInput } from '../../../../layout';
+import { OctaneInput } from '../../../../layout';
 import { WiredFurniSelectionSourceRow } from '../WiredFurniSelectionSourceRow';
 import { CLICKED_USER_SOURCE, FURNI_SOURCES, sortWiredSourceOptions, USER_SOURCES, useAvailableUserSources, WiredSourceOption } from '../WiredSourcesSelector';
 import { WiredVariablePicker } from '../WiredVariablePicker';
@@ -17,6 +17,7 @@ import {
     normalizeVariableTokenFromWire
 } from '../WiredVariablePickerData';
 import { WiredActionBaseView } from './WiredActionBaseView';
+import { localizeWiredVariableOperation, WIRED_VARIABLE_OPERATIONS, WIRED_VARIABLE_UNARY_OPERATIONS } from './WiredVariableOperations';
 
 type VariableTargetType = 'user' | 'furni' | 'global' | 'context';
 type ReferenceMode = 'constant' | 'variable';
@@ -47,8 +48,6 @@ const TARGET_BUTTONS: Array<{ key: VariableTargetType; icon: string; disabled?: 
     { key: 'context', icon: contextVariableIcon }
 ];
 
-const OPERATION_OPTIONS = [0, 1, 2, 3, 4, 5, 6, 40, 41, 50, 60, 100, 101, 102, 103, 104, 105];
-
 const SECONDARY_FURNI_SOURCES: WiredSourceOption[] = sortWiredSourceOptions(
     [
         { value: SOURCE_TRIGGER, label: 'wiredfurni.params.sources.furni.0' },
@@ -60,7 +59,7 @@ const SECONDARY_FURNI_SOURCES: WiredSourceOption[] = sortWiredSourceOptions(
 );
 
 const GLOBAL_SOURCE_OPTIONS: WiredSourceOption[] = [{ value: SOURCE_TRIGGER, label: 'wiredfurni.params.sources.global' }];
-const CONTEXT_SOURCE_OPTIONS: WiredSourceOption[] = [{ value: SOURCE_TRIGGER, label: 'Current execution' }];
+const CONTEXT_SOURCE_OPTIONS: WiredSourceOption[] = [{ value: SOURCE_TRIGGER, label: 'wiredfurni.params.sources.context.current' }];
 
 const parseIds = (value: string): number[] => {
     if (!value?.length) return [];
@@ -211,6 +210,8 @@ export const WiredActionChangeVariableValueView: FC<{}> = () => {
 
     const destinationSelectionEnabled = isFurniTarget(destinationTargetType) && destinationFurniSource === SOURCE_SELECTED;
     const referenceSelectionEnabled = referenceMode === 'variable' && isFurniTarget(referenceTargetType) && referenceFurniSource === SOURCE_SECONDARY_SELECTED;
+    // The server reads only the destination for these, so the reference controls would be a lie.
+    const isUnaryOperation = WIRED_VARIABLE_UNARY_OPERATIONS.includes(operation);
     const destinationSelectedSourceValue = isFurniTarget(destinationTargetType)
         ? destinationFurniSource
         : isGlobalTarget(destinationTargetType)
@@ -382,16 +383,16 @@ export const WiredActionChangeVariableValueView: FC<{}> = () => {
             cardStyle={{ width: 244 }}
             hideDelay={true}
         >
-            <div className="nitro-wired__give-var">
-                <div className="nitro-wired__give-var-heading">
+            <div className="octane-wired__give-var">
+                <div className="octane-wired__give-var-heading">
                     <Text>{LocalizeText('wiredfurni.params.variables.variable_selection')}</Text>
-                    <div className="nitro-wired__give-var-targets">
+                    <div className="octane-wired__give-var-targets">
                         {TARGET_BUTTONS.map((button) => (
                             <button
                                 key={button.key}
                                 type="button"
                                 disabled={button.disabled}
-                                className={`nitro-wired__give-var-target nitro-wired__give-var-target--${button.key} ${destinationTargetType === button.key ? 'is-active' : ''}`}
+                                className={`octane-wired__give-var-target octane-wired__give-var-target--${button.key} ${destinationTargetType === button.key ? 'is-active' : ''}`}
                                 onClick={() => handleDestinationTargetChange(button.key)}
                             >
                                 <img src={button.icon} alt={button.key} />
@@ -407,49 +408,55 @@ export const WiredActionChangeVariableValueView: FC<{}> = () => {
                     onSelect={(entry) => setDestinationVariableToken(entry.token)}
                 />
 
-                <div className="nitro-wired__divider" />
+                <div className="octane-wired__divider" />
 
-                <div className="nitro-wired__give-var-section">
-                    <div className="nitro-wired__give-var-section-title">{LocalizeText('wiredfurni.params.variables.operation')}</div>
+                <div className="octane-wired__give-var-section">
+                    <div className="octane-wired__give-var-section-title">{LocalizeText('wiredfurni.params.variables.operation')}</div>
                     <select
-                        className="form-select form-select-sm nitro-wired__give-var-select"
+                        className="form-select form-select-sm octane-wired__give-var-select"
                         value={operation}
                         onChange={(event) => setOperation(parseInt(event.target.value, 10))}
                     >
-                        {OPERATION_OPTIONS.map((value) => (
+                        {WIRED_VARIABLE_OPERATIONS.map((value) => (
                             <option key={value} value={value}>
-                                {LocalizeText(`wiredfurni.params.variables.operation.${value}`)}
+                                {localizeWiredVariableOperation(value)}
                             </option>
                         ))}
                     </select>
                 </div>
 
-                <div className="nitro-wired__divider" />
+                <div className="octane-wired__divider" />
 
-                <div className="nitro-wired__give-var-section">
-                    <div className="nitro-wired__give-var-section-title">{LocalizeText('wiredfurni.params.variables.reference_value')}</div>
-                    <label className="nitro-wired__change-var-radio">
-                        <input checked={referenceMode === 'constant'} type="radio" onChange={() => setReferenceMode('constant')} />
+                <div className="octane-wired__give-var-section">
+                    <div className="octane-wired__give-var-section-title">{LocalizeText('wiredfurni.params.variables.reference_value')}</div>
+                    <label className="octane-wired__change-var-radio">
+                        <input checked={referenceMode === 'constant'} disabled={isUnaryOperation} type="radio" onChange={() => setReferenceMode('constant')} />
                         <Text>{LocalizeText('wiredfurni.params.operator.2')}</Text>
-                        <NitroInput
-                            className="nitro-wired__give-var-number"
+                        <OctaneInput
+                            className="octane-wired__give-var-number"
+                            disabled={isUnaryOperation}
                             type="number"
                             value={referenceConstantValueInput}
                             onChange={(event) => setReferenceConstantValueInput(event.target.value)}
                         />
                     </label>
 
-                    <div className="nitro-wired__change-var-reference-block">
-                        <label className="nitro-wired__change-var-radio">
-                            <input checked={referenceMode === 'variable'} type="radio" onChange={() => setReferenceMode('variable')} />
+                    <div className="octane-wired__change-var-reference-block">
+                        <label className="octane-wired__change-var-radio">
+                            <input
+                                checked={referenceMode === 'variable'}
+                                disabled={isUnaryOperation}
+                                type="radio"
+                                onChange={() => setReferenceMode('variable')}
+                            />
                             <Text>{LocalizeText('wiredfurni.params.variables.reference_value.from_variable')}</Text>
-                            <div className="nitro-wired__give-var-targets">
+                            <div className="octane-wired__give-var-targets">
                                 {TARGET_BUTTONS.map((button) => (
                                     <button
                                         key={`reference-${button.key}`}
                                         type="button"
                                         disabled={button.disabled || referenceMode !== 'variable'}
-                                        className={`nitro-wired__give-var-target nitro-wired__give-var-target--${button.key} ${referenceTargetType === button.key ? 'is-active' : ''}`}
+                                        className={`octane-wired__give-var-target octane-wired__give-var-target--${button.key} ${referenceTargetType === button.key ? 'is-active' : ''}`}
                                         onClick={() => handleReferenceTargetChange(button.key)}
                                     >
                                         <img src={button.icon} alt={button.key} />
@@ -469,18 +476,18 @@ export const WiredActionChangeVariableValueView: FC<{}> = () => {
                     </div>
                 </div>
 
-                <div className="nitro-wired__divider" />
+                <div className="octane-wired__divider" />
 
-                <div className="nitro-wired__give-var-section">
-                    <div className="nitro-wired__give-var-section-title">
+                <div className="octane-wired__give-var-section">
+                    <div className="octane-wired__give-var-section-title">
                         {LocalizeText('wiredfurni.params.delay', ['seconds'], [GetWiredTimeLocale(actionDelay)])}
                     </div>
                     <Slider max={20} min={0} value={actionDelay} onChange={(event) => setActionDelay(event)} />
                 </div>
 
-                <div className="nitro-wired__divider" />
+                <div className="octane-wired__divider" />
 
-                <div className="nitro-wired__give-var-section">
+                <div className="octane-wired__give-var-section">
                     <WiredFurniSelectionSourceRow
                         title="wiredfurni.params.sources.merged.title.variables_destination"
                         options={destinationSourceOptions}
@@ -505,8 +512,8 @@ export const WiredActionChangeVariableValueView: FC<{}> = () => {
 
                 {referenceMode === 'variable' && (
                     <>
-                        <div className="nitro-wired__divider" />
-                        <div className="nitro-wired__give-var-section">
+                        <div className="octane-wired__divider" />
+                        <div className="octane-wired__give-var-section">
                             <WiredFurniSelectionSourceRow
                                 title="wiredfurni.params.sources.merged.title.variables_reference"
                                 options={referenceSourceOptions}

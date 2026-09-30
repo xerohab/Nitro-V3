@@ -1,7 +1,8 @@
-import { RoomControllerLevel, RoomObjectOperationType } from '@nitrots/nitro-renderer';
+import { RoomControllerLevel, RoomObjectOperationType } from '@octane/renderer';
 import { FC } from 'react';
 import { FaArrowsAlt, FaSyncAlt, FaTrashRestore } from 'react-icons/fa';
 import { AvatarInfoFurni, ProcessRoomObjectOperation } from '../../../../../api';
+import { useFurniPickupGuard } from '../../../../../hooks';
 import { ContextMenuHeaderView } from '../../context-menu/ContextMenuHeaderView';
 import { ContextMenuListItemView } from '../../context-menu/ContextMenuListItemView';
 import { ContextMenuView } from '../../context-menu/ContextMenuView';
@@ -13,6 +14,7 @@ interface AvatarInfoWidgetFurniViewProps {
 
 export const AvatarInfoWidgetFurniView: FC<AvatarInfoWidgetFurniViewProps> = (props) => {
     const { avatarInfo = null, onClose = null } = props;
+    const { pickupRoomObject } = useFurniPickupGuard();
 
     const processAction = (name: string) => {
         let hideMenu = true;
@@ -26,10 +28,10 @@ export const AvatarInfoWidgetFurniView: FC<AvatarInfoWidgetFurniViewProps> = (pr
                     ProcessRoomObjectOperation(avatarInfo.id, avatarInfo.category, RoomObjectOperationType.OBJECT_ROTATE_POSITIVE);
                     break;
                 case 'pickup':
-                    ProcessRoomObjectOperation(avatarInfo.id, avatarInfo.category, RoomObjectOperationType.OBJECT_PICKUP);
+                    pickupRoomObject(avatarInfo.id, avatarInfo.category, RoomObjectOperationType.OBJECT_PICKUP);
                     break;
                 case 'eject':
-                    ProcessRoomObjectOperation(avatarInfo.id, avatarInfo.category, RoomObjectOperationType.OBJECT_EJECT);
+                    pickupRoomObject(avatarInfo.id, avatarInfo.category, RoomObjectOperationType.OBJECT_EJECT);
                     break;
             }
         }

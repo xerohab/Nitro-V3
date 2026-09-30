@@ -1,4 +1,4 @@
-import { createNitroStore } from '../../state/createNitroStore';
+import { createOctaneStore } from '../../state/createOctaneStore';
 import { createEmptyMonitorSnapshot } from './WiredCreatorTools.helpers';
 import {
     InspectionElementType,
@@ -28,14 +28,13 @@ interface WiredCreatorToolsUiState {
     isMonitorInfoOpen: boolean;
     isInspectionGiveOpen: boolean;
     isVariableManageOpen: boolean;
+    isArrayInspectorOpen: boolean;
     isManagedGiveOpen: boolean;
+    isRoomLogsOpen: boolean;
+    isSelfDonationOpen: boolean;
 
     monitorHistorySeverityFilter: MonitorSeverityFilter;
     monitorHistoryTypeFilter: string;
-
-    variableManageTypeFilter: string;
-    variableManageSort: string;
-    variableManagePage: number;
 
     /**
      * Latest snapshot pushed by the server through `WiredMonitorDataEvent`.
@@ -131,14 +130,14 @@ interface WiredCreatorToolsUiState {
     setIsMonitorInfoOpen: (next: boolean) => void;
     setIsInspectionGiveOpen: (next: Updater<boolean>) => void;
     setIsVariableManageOpen: (next: boolean) => void;
+    setIsArrayInspectorOpen: (next: boolean) => void;
     setIsManagedGiveOpen: (next: Updater<boolean>) => void;
+    setIsRoomLogsOpen: (next: boolean) => void;
+    setIsSelfDonationOpen: (next: boolean) => void;
 
     setMonitorHistorySeverityFilter: (next: MonitorSeverityFilter) => void;
     setMonitorHistoryTypeFilter: (next: string) => void;
 
-    setVariableManageTypeFilter: (next: string) => void;
-    setVariableManageSort: (next: string) => void;
-    setVariableManagePage: (next: Updater<number>) => void;
 
     setMonitorSnapshot: (next: MonitorSnapshot) => void;
     resetMonitorSnapshot: () => void;
@@ -169,7 +168,7 @@ interface WiredCreatorToolsUiState {
     setManagedGiveValue: (next: string) => void;
 }
 
-export const useWiredCreatorToolsUiStore = createNitroStore<WiredCreatorToolsUiState>()((set) => ({
+export const useWiredCreatorToolsUiStore = createOctaneStore<WiredCreatorToolsUiState>()((set) => ({
     isVisible: false,
     activeTab: 'monitor',
     inspectionType: 'furni',
@@ -179,14 +178,13 @@ export const useWiredCreatorToolsUiStore = createNitroStore<WiredCreatorToolsUiS
     isMonitorInfoOpen: false,
     isInspectionGiveOpen: false,
     isVariableManageOpen: false,
+    isArrayInspectorOpen: false,
     isManagedGiveOpen: false,
+    isRoomLogsOpen: false,
+    isSelfDonationOpen: false,
 
     monitorHistorySeverityFilter: 'ALL',
     monitorHistoryTypeFilter: 'ALL',
-
-    variableManageTypeFilter: 'ALL',
-    variableManageSort: 'highest_value',
-    variableManagePage: 1,
 
     monitorSnapshot: createEmptyMonitorSnapshot(),
 
@@ -224,14 +222,14 @@ export const useWiredCreatorToolsUiStore = createNitroStore<WiredCreatorToolsUiS
     setIsMonitorInfoOpen: (next) => set({ isMonitorInfoOpen: next }),
     setIsInspectionGiveOpen: (next) => set((state) => ({ isInspectionGiveOpen: apply(state.isInspectionGiveOpen, next) })),
     setIsVariableManageOpen: (next) => set({ isVariableManageOpen: next }),
+    setIsArrayInspectorOpen: (next) => set({ isArrayInspectorOpen: next }),
+    setIsRoomLogsOpen: (next) => set({ isRoomLogsOpen: next }),
+    setIsSelfDonationOpen: (next) => set({ isSelfDonationOpen: next }),
     setIsManagedGiveOpen: (next) => set((state) => ({ isManagedGiveOpen: apply(state.isManagedGiveOpen, next) })),
 
     setMonitorHistorySeverityFilter: (next) => set({ monitorHistorySeverityFilter: next }),
     setMonitorHistoryTypeFilter: (next) => set({ monitorHistoryTypeFilter: next }),
 
-    setVariableManageTypeFilter: (next) => set({ variableManageTypeFilter: next }),
-    setVariableManageSort: (next) => set({ variableManageSort: next }),
-    setVariableManagePage: (next) => set((state) => ({ variableManagePage: apply(state.variableManagePage, next) })),
 
     setMonitorSnapshot: (next) => set({ monitorSnapshot: next }),
     resetMonitorSnapshot: () => set({ monitorSnapshot: createEmptyMonitorSnapshot() }),

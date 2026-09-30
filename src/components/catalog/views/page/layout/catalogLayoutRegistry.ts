@@ -66,7 +66,7 @@ export const CATALOG_LAYOUT_REGISTRY = [
     { studioCode: 'info_duckets', runtimeCodes: ['info_duckets'], renderer: 'info', availability: 'ready' },
     { studioCode: 'info_rentables', runtimeCodes: ['info_rentables'], renderer: 'info', availability: 'ready' },
     { studioCode: 'info_pets', runtimeCodes: ['info_pets'], renderer: 'info', availability: 'ready' },
-    { studioCode: 'loyalty_vip_buy', runtimeCodes: ['loyalty_vip_buy'], renderer: 'info', availability: 'ready' },
+    { studioCode: 'loyalty_vip_buy', runtimeCodes: ['loyalty_vip_buy'], renderer: 'vipBuy', availability: 'ready' },
     { studioCode: 'badge_display', runtimeCodes: ['badge_display'], renderer: 'badgeDisplay', availability: 'ready' },
     { studioCode: 'bots', runtimeCodes: ['bots'], renderer: 'default', availability: 'ready' },
     { studioCode: 'single_bundle', runtimeCodes: ['single_bundle'], renderer: 'singleBundle', availability: 'ready' },
@@ -121,3 +121,8 @@ const studioCodes = new Set<string>(CATALOG_STUDIO_LAYOUT_CODES);
 export const getCatalogLayoutDefinition = (runtimeCode: string): CatalogLayoutDefinition | null => runtimeDefinitions.get(runtimeCode) ?? null;
 
 export const isCatalogStudioLayoutCode = (value: string): value is CatalogStudioLayoutCode => studioCodes.has(value);
+
+const READ_ONLY_ADMIN_LAYOUTS = new Set<string>(['recent_purchases']);
+
+export const isReadOnlyCatalogAdminLayout = (layout: string | null | undefined): boolean =>
+    typeof layout === 'string' && READ_ONLY_ADMIN_LAYOUTS.has(layout);

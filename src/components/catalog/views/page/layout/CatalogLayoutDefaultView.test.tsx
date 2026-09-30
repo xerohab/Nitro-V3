@@ -53,11 +53,11 @@ beforeEach(() => {
 describe('default catalog layout', () => {
     it('lets the product preview fill the exact 360px AIR region', () => {
         const view = render(<CatalogLayoutDefaultView hideNavigation={() => undefined} page={page as any} />);
-        const preview = view.container.querySelector<HTMLElement>('.nitro-catalog-offer-preview');
+        const preview = view.container.querySelector<HTMLElement>('.octane-catalog-offer-preview');
 
         expect(preview).not.toBeNull();
-        expect(preview.style.width).toBe('100%');
-        expect(preview.style.minWidth).toBe('0px');
-        expect(preview.style.flexGrow).toBe('1');
+        expect(preview).toHaveClass('w-[68%]');
+        expect(preview).toHaveClass('h-full');
+        expect(preview).toHaveClass('overflow-hidden');
     });
 });

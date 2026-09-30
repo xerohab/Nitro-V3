@@ -39,7 +39,7 @@ input[type=number] {
   background: transparent;
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
   box-shadow: none !important;
-  image-rendering: pixelated;
+  image-rendering: var(--octane-pixel-art, pixelated);
 }
 
 .btn-primary:hover,
@@ -65,7 +65,7 @@ input[type=number] {
   background: transparent;
   text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.35);
   box-shadow: none !important;
-  image-rendering: pixelated;
+  image-rendering: var(--octane-pixel-art, pixelated);
 }
 
 .btn-danger:hover{
@@ -88,7 +88,7 @@ input[type=number] {
   font-weight: 700;
   text-shadow: none;
   box-shadow: none !important;
-  image-rendering: pixelated;
+  image-rendering: var(--octane-pixel-art, pixelated);
 }
 
 .btn-warning:hover{
