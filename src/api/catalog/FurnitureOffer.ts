@@ -24,7 +24,11 @@ export class FurnitureOffer implements IPurchasableOffer {
     }
 
     public activate(): void {
-        SendMessageComposer(new GetProductOfferComposer(this._furniData.rentOfferId > -1 ? this._furniData.rentOfferId : this._furniData.purchaseOfferId));
+        // Catalogue search may override offerId with the exact real catalogue
+        // offer resolved by catalogSearchOfferMap.generated.ts.
+        // Use that value so ProductOfferEvent returns the real Offer including
+        // price, bundlePurchaseAllowed and haveOffer.
+        SendMessageComposer(new GetProductOfferComposer(this.offerId));
     }
 
     public get offerId(): number {

@@ -93,7 +93,22 @@ export const CatalogSearchView: FC<{}> = () => {
             );
 
             // Select once for a new search. Subsequent clicks must not be overwritten.
-            setCurrentOffer?.(offers.length > 0 ? offers[0] : null);
+            //
+            // Search offers begin as lazy FurnitureOffer instances. Selecting one
+            // directly is not enough because FurnitureOffer reports
+            // bundlePurchaseAllowed=false until ProductOfferEvent returns the
+            // real catalogue Offer.
+            //
+            // Activate the first result immediately so its real price,
+            // giftability, haveOffer and bundlePurchaseAllowed values replace
+            // the temporary search offer.
+            const firstOffer = offers.length > 0 ? offers[0] : null;
+
+            setCurrentOffer?.(firstOffer);
+
+            if (firstOffer?.isLazy && firstOffer.offerId > -1) {
+                firstOffer.activate();
+            }
         },
         [currentType, rootNode, setCurrentPage, setSearchResult, setCurrentOffer]
     );

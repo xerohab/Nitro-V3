@@ -3939,6 +3939,289 @@
 }
 
 
+
+/* XERO RED PHONE THEME */
+
+.phone-messenger-window.phone-theme-red {
+    --phone-bg: #210a0d;
+    --phone-panel: #321014;
+    --phone-panel-2: #43151a;
+    --phone-accent: #b8262f;
+    --phone-accent-strong: #d43b45;
+    --phone-text: #fff3f4;
+    --phone-muted: #d4a6aa;
+    --phone-border: rgba(221, 73, 83, 0.34);
+}
+
+/* Main app surface */
+.phone-messenger-window.phone-theme-red .phone-app-overlay,
+.phone-messenger-window.phone-theme-red .phone-lock-screen {
+    background-color: rgba(31, 7, 10, 0.84);
+    color: #fff3f4;
+}
+
+/* Panels / cards */
+.phone-messenger-window.phone-theme-red .phone-home-profile,
+.phone-messenger-window.phone-theme-red .phone-home-status,
+.phone-messenger-window.phone-theme-red .phone-store-card,
+.phone-messenger-window.phone-theme-red .phone-contact-row,
+.phone-messenger-window.phone-theme-red .phone-notification-card,
+.phone-messenger-window.phone-theme-red .phone-profile-card,
+.phone-messenger-window.phone-theme-red .phone-purchase-row,
+.phone-messenger-window.phone-theme-red .phone-equipped-summary,
+.phone-messenger-window.phone-theme-red .phone-sound-settings,
+.phone-messenger-window.phone-theme-red .phone-custom-upload-settings {
+    background: rgba(55, 15, 20, 0.92) !important;
+    border-color: rgba(190, 45, 55, 0.32) !important;
+}
+
+/* Buttons */
+.phone-messenger-window.phone-theme-red button {
+    border-color: rgba(207, 57, 66, 0.40);
+}
+
+.phone-messenger-window.phone-theme-red
+    .phone-app-page button:not(.messenger-minimize) {
+    background: linear-gradient(
+        180deg,
+        #b92a34,
+        #81161e
+    );
+    color: #fff !important;
+}
+
+/* Active / selected controls */
+.phone-messenger-window.phone-theme-red button.active,
+.phone-messenger-window.phone-theme-red .equipped,
+.phone-messenger-window.phone-theme-red .phone-owned-label {
+    border-color: #d9434c !important;
+}
+
+/* Headings / highlights */
+.phone-messenger-window.phone-theme-red .phone-section-heading strong,
+.phone-messenger-window.phone-theme-red .phone-price,
+.phone-messenger-window.phone-theme-red .phone-store-card strong {
+    color: #ffb3b8;
+}
+
+/* Reply composer */
+.phone-messenger-window.phone-theme-red .phone-reply-composer {
+    background: rgba(42, 9, 13, 0.96);
+    border-color: rgba(200, 48, 58, 0.38);
+}
+
+/* Inputs */
+.phone-messenger-window.phone-theme-red input,
+.phone-messenger-window.phone-theme-red select,
+.phone-messenger-window.phone-theme-red textarea {
+    background: #260b0f;
+    color: #fff3f4;
+    border-color: rgba(196, 48, 58, 0.35);
+}
+
+
+
+/* XERO SEASONAL PHONE PACKS */
+
+/* CHRISTMAS */
+.phone-messenger-window.phone-theme-christmas {
+    --phone-bg: #140808;
+    --phone-panel: #281010;
+    --phone-panel-2: #17321f;
+    --phone-accent: #b82830;
+    --phone-accent-strong: #d5ad38;
+    --phone-text: #fff8ed;
+    --phone-muted: #d4c7b5;
+    --phone-border: rgba(218, 181, 70, .35);
+}
+.phone-messenger-window.phone-case-christmas {
+    border-color: #b82830 !important;
+    box-shadow: 0 18px 48px rgba(0,0,0,.50), 0 0 14px rgba(41,125,64,.28);
+}
+
+/* HALLOWEEN */
+.phone-messenger-window.phone-theme-halloween {
+    --phone-bg: #120d17;
+    --phone-panel: #21142b;
+    --phone-panel-2: #30173b;
+    --phone-accent: #e57416;
+    --phone-accent-strong: #9f53d6;
+    --phone-text: #fff2de;
+    --phone-muted: #cbb5d5;
+    --phone-border: rgba(229,116,22,.36);
+}
+.phone-messenger-window.phone-case-halloween {
+    border-color: #e57416 !important;
+    box-shadow: 0 18px 48px rgba(0,0,0,.55), 0 0 16px rgba(140,55,187,.28);
+}
+
+/* VALENTINES */
+.phone-messenger-window.phone-theme-valentines {
+    --phone-bg: #25090f;
+    --phone-panel: #3b111b;
+    --phone-panel-2: #561829;
+    --phone-accent: #d93659;
+    --phone-accent-strong: #ff86aa;
+    --phone-text: #fff2f5;
+    --phone-muted: #e0aab9;
+    --phone-border: rgba(224,74,108,.36);
+}
+.phone-messenger-window.phone-case-valentines {
+    border-color: #d93659 !important;
+    box-shadow: 0 18px 48px rgba(67,8,22,.52), 0 0 14px rgba(255,105,150,.22);
+}
+
+/* EASTER */
+.phone-messenger-window.phone-theme-easter {
+    --phone-bg: #242133;
+    --phone-panel: #35304a;
+    --phone-panel-2: #3d4d43;
+    --phone-accent: #c99de9;
+    --phone-accent-strong: #f2d266;
+    --phone-text: #fffdf7;
+    --phone-muted: #ddd6ea;
+    --phone-border: rgba(211,179,237,.38);
+}
+.phone-messenger-window.phone-case-easter {
+    border-color: #c99de9 !important;
+    box-shadow: 0 18px 48px rgba(33,27,50,.45), 0 0 14px rgba(152,226,184,.22);
+}
+
+/* SUMMER */
+.phone-messenger-window.phone-theme-summer {
+    --phone-bg: #07232a;
+    --phone-panel: #0b3943;
+    --phone-panel-2: #134b51;
+    --phone-accent: #20b6c7;
+    --phone-accent-strong: #ff9f2e;
+    --phone-text: #fffbea;
+    --phone-muted: #a8dce0;
+    --phone-border: rgba(43,189,203,.38);
+}
+.phone-messenger-window.phone-case-summer {
+    border-color: #20b6c7 !important;
+    box-shadow: 0 18px 48px rgba(5,55,62,.45), 0 0 14px rgba(255,159,46,.22);
+}
+
+/* WINTER */
+.phone-messenger-window.phone-theme-winter {
+    --phone-bg: #101c2a;
+    --phone-panel: #182a3d;
+    --phone-panel-2: #213b53;
+    --phone-accent: #71c5ed;
+    --phone-accent-strong: #d8f2ff;
+    --phone-text: #f5fbff;
+    --phone-muted: #b5cede;
+    --phone-border: rgba(117,201,239,.38);
+}
+.phone-messenger-window.phone-case-winter {
+    border-color: #a8daf0 !important;
+    box-shadow: 0 18px 48px rgba(6,28,48,.50), 0 0 15px rgba(144,218,250,.22);
+}
+
+/* AUTUMN */
+.phone-messenger-window.phone-theme-autumn {
+    --phone-bg: #211108;
+    --phone-panel: #382012;
+    --phone-panel-2: #4c2c18;
+    --phone-accent: #c65f1b;
+    --phone-accent-strong: #d7a541;
+    --phone-text: #fff6e7;
+    --phone-muted: #d8b99a;
+    --phone-border: rgba(203,103,32,.38);
+}
+.phone-messenger-window.phone-case-autumn {
+    border-color: #a95422 !important;
+    box-shadow: 0 18px 48px rgba(53,24,7,.50), 0 0 14px rgba(210,151,55,.20);
+}
+
+/* NEW YEAR */
+.phone-messenger-window.phone-theme-newyear {
+    --phone-bg: #0c0c0e;
+    --phone-panel: #171719;
+    --phone-panel-2: #242427;
+    --phone-accent: #d3ad3e;
+    --phone-accent-strong: #f1d76c;
+    --phone-text: #ffffff;
+    --phone-muted: #c6c6ca;
+    --phone-border: rgba(223,187,76,.38);
+}
+.phone-messenger-window.phone-case-newyear {
+    border-color: #d3ad3e !important;
+    box-shadow: 0 18px 48px rgba(0,0,0,.58), 0 0 17px rgba(218,184,76,.26);
+}
+
+/* PRIDE */
+.phone-messenger-window.phone-theme-pride {
+    --phone-bg: #15151d;
+    --phone-panel: #23232e;
+    --phone-panel-2: #30303d;
+    --phone-accent: #e83d5c;
+    --phone-accent-strong: #6ec6ff;
+    --phone-text: #ffffff;
+    --phone-muted: #d6d6df;
+    --phone-border: rgba(255,255,255,.22);
+}
+.phone-messenger-window.phone-case-pride {
+    border-color: #e83d5c !important;
+    box-shadow:
+        0 18px 48px rgba(0,0,0,.50),
+        0 0 9px rgba(244,150,40,.22),
+        0 0 16px rgba(53,171,96,.18),
+        0 0 23px rgba(72,108,216,.16);
+}
+
+/* RETRO HOTEL */
+.phone-messenger-window.phone-theme-retro_hotel,
+.phone-messenger-window.phone-theme-retro-hotel {
+    --phone-bg: #3d2a16;
+    --phone-panel: #65441f;
+    --phone-panel-2: #83612e;
+    --phone-accent: #e2a928;
+    --phone-accent-strong: #f5cd54;
+    --phone-text: #fff4cf;
+    --phone-muted: #d5c29d;
+    --phone-border: rgba(231,184,70,.36);
+}
+.phone-messenger-window.phone-case-retro_hotel,
+.phone-messenger-window.phone-case-retro-hotel {
+    border-color: #d2b37a !important;
+    box-shadow: 0 18px 48px rgba(0,0,0,.45), inset 0 0 0 2px rgba(90,59,25,.25);
+}
+
+/* SPRING */
+.phone-messenger-window.phone-theme-spring {
+    --phone-bg: #14261c;
+    --phone-panel: #20382a;
+    --phone-panel-2: #2d4b38;
+    --phone-accent: #63c68a;
+    --phone-accent-strong: #ef9fbd;
+    --phone-text: #f5fff8;
+    --phone-muted: #bcd7c5;
+    --phone-border: rgba(106,202,142,.35);
+}
+.phone-messenger-window.phone-case-spring {
+    border-color: #63c68a !important;
+    box-shadow: 0 18px 48px rgba(12,53,28,.45), 0 0 14px rgba(239,159,189,.20);
+}
+
+/* ST PATRICKS */
+.phone-messenger-window.phone-theme-stpatricks {
+    --phone-bg: #071b10;
+    --phone-panel: #0d2b19;
+    --phone-panel-2: #154025;
+    --phone-accent: #229b4c;
+    --phone-accent-strong: #d4ad36;
+    --phone-text: #f3fff5;
+    --phone-muted: #a8d2b3;
+    --phone-border: rgba(47,166,82,.38);
+}
+.phone-messenger-window.phone-case-stpatricks {
+    border-color: #229b4c !important;
+    box-shadow: 0 18px 48px rgba(3,39,15,.52), 0 0 15px rgba(212,173,54,.22);
+}
+
+
 /* -------------------- WALLPAPERS -------------------- */
 
 .phone-messenger-window.phone-wallpaper-default {
@@ -4033,6 +4316,174 @@
 }
 
 
+
+/* XERO SEASONAL MEDIA WIRING */
+
+
+/* =========================================================
+   SEASONAL WALLPAPERS
+   ========================================================= */
+
+.phone-messenger-window.phone-wallpaper-christmas {
+    --phone-wallpaper:
+        url("/client/phone/wallpapers/christmas.png");
+}
+
+.phone-messenger-window.phone-wallpaper-halloween {
+    --phone-wallpaper:
+        url("/client/phone/wallpapers/halloween.png");
+}
+
+.phone-messenger-window.phone-wallpaper-valentines {
+    --phone-wallpaper:
+        url("/client/phone/wallpapers/valentines.png");
+}
+
+.phone-messenger-window.phone-wallpaper-easter {
+    --phone-wallpaper:
+        url("/client/phone/wallpapers/easter.png");
+}
+
+.phone-messenger-window.phone-wallpaper-summer {
+    --phone-wallpaper:
+        url("/client/phone/wallpapers/summer.png");
+}
+
+.phone-messenger-window.phone-wallpaper-winter {
+    --phone-wallpaper:
+        url("/client/phone/wallpapers/winter.png");
+}
+
+.phone-messenger-window.phone-wallpaper-autumn {
+    --phone-wallpaper:
+        url("/client/phone/wallpapers/autumn.png");
+}
+
+.phone-messenger-window.phone-wallpaper-newyear {
+    --phone-wallpaper:
+        url("/client/phone/wallpapers/newyear.png");
+}
+
+.phone-messenger-window.phone-wallpaper-pride {
+    --phone-wallpaper:
+        url("/client/phone/wallpapers/pride.png");
+}
+
+/*
+ * wallpaper_retro_hotel becomes:
+ * phone-wallpaper-retro_hotel
+ */
+.phone-messenger-window.phone-wallpaper-retro_hotel,
+.phone-messenger-window.phone-wallpaper-retro-hotel {
+    --phone-wallpaper:
+        url("/client/phone/wallpapers/retro_hotel.png");
+}
+
+.phone-messenger-window.phone-wallpaper-spring {
+    --phone-wallpaper:
+        url("/client/phone/wallpapers/spring.png");
+}
+
+.phone-messenger-window.phone-wallpaper-stpatricks {
+    --phone-wallpaper:
+        url("/client/phone/wallpapers/stpatricks.png");
+}
+
+
+/* =========================================================
+   SEASONAL STORE PREVIEWS
+   Themes and cases both use these asset names.
+   ========================================================= */
+
+.phone-preview-christmas {
+    background:
+        linear-gradient(145deg, #b51f29, #145d31 60%, #d7ae3a)
+        !important;
+}
+
+.phone-preview-halloween {
+    background:
+        linear-gradient(145deg, #17101d, #e36e13 58%, #71389d)
+        !important;
+}
+
+.phone-preview-valentines {
+    background:
+        linear-gradient(145deg, #8f1636, #df416c 55%, #ffa3bf)
+        !important;
+}
+
+.phone-preview-easter {
+    background:
+        linear-gradient(145deg, #b69bd1, #f0d46a 52%, #8ed1aa)
+        !important;
+}
+
+.phone-preview-summer {
+    background:
+        linear-gradient(145deg, #16a9ba, #ff9b32 55%, #f3d94c)
+        !important;
+}
+
+.phone-preview-winter {
+    background:
+        linear-gradient(145deg, #315f88, #78c7eb 55%, #e3f5ff)
+        !important;
+}
+
+.phone-preview-autumn {
+    background:
+        linear-gradient(145deg, #703616, #c56620 55%, #d3a23c)
+        !important;
+}
+
+.phone-preview-newyear {
+    background:
+        linear-gradient(145deg, #111114, #d3ae3f 58%, #dadce1)
+        !important;
+}
+
+.phone-preview-pride {
+    background:
+        linear-gradient(
+            135deg,
+            #e5394f 0 16%,
+            #ef8c2d 16% 32%,
+            #e0c83f 32% 48%,
+            #3aa85e 48% 64%,
+            #4389d0 64% 80%,
+            #8050ae 80% 100%
+        ) !important;
+}
+
+.phone-preview-retro-hotel {
+    background:
+        linear-gradient(145deg, #765226, #d3a033 55%, #dfc085)
+        !important;
+}
+
+.phone-preview-spring {
+    background:
+        linear-gradient(145deg, #54ad72, #eb95b5 52%, #70bfdf)
+        !important;
+}
+
+.phone-preview-stpatricks {
+    background:
+        linear-gradient(145deg, #0d702f, #2ea354 58%, #d5ad35)
+        !important;
+}
+
+
+/* Wallpaper cards whose asset is a URL use the normal preview shell.
+   Keep them visually readable even before selection. */
+.phone-store-wallpaper .phone-store-preview {
+    background-position: center;
+    background-size: cover;
+}
+
+
+
 /* -------------------- CASES -------------------- */
 
 .phone-messenger-window.phone-case-black {
@@ -4078,6 +4529,303 @@
         0 18px 48px rgba(0, 0, 0, 0.42),
         inset 0 0 0 2px rgba(90, 59, 25, 0.28);
 }
+
+
+
+/* XERO PHONE STORE CASE PREVIEW COLOURS */
+
+.phone-preview-black {
+    background: linear-gradient(145deg, #25282b, #0f1113) !important;
+}
+
+.phone-preview-white {
+    background: linear-gradient(145deg, #ffffff, #d9dde1) !important;
+}
+
+.phone-preview-pink {
+    background: linear-gradient(145deg, #f6bfd3, #dc7fa3) !important;
+}
+
+.phone-preview-transparent {
+    background:
+        linear-gradient(145deg, rgba(240,248,255,.7), rgba(170,190,205,.35)),
+        repeating-linear-gradient(
+            45deg,
+            rgba(255,255,255,.35) 0 8px,
+            rgba(180,195,205,.25) 8px 16px
+        ) !important;
+}
+
+.phone-preview-gold {
+    background: linear-gradient(145deg, #f1d47d, #a87818) !important;
+}
+
+.phone-preview-retro {
+    background: linear-gradient(145deg, #d8b47a, #79542d) !important;
+}
+
+.phone-preview-grey {
+    background: linear-gradient(145deg, #858b90, #4c5155) !important;
+}
+
+.phone-preview-silver {
+    background: linear-gradient(145deg, #e0e4e7, #969da3) !important;
+}
+
+.phone-preview-rose-gold {
+    background: linear-gradient(145deg, #e5b3a9, #ad7165) !important;
+}
+
+.phone-preview-hot-pink {
+    background: linear-gradient(145deg, #ff4d9a, #bc175d) !important;
+}
+
+.phone-preview-purple {
+    background: linear-gradient(145deg, #9569d6, #593396) !important;
+}
+
+.phone-preview-dark-purple {
+    background: linear-gradient(145deg, #56398b, #2b194e) !important;
+}
+
+.phone-preview-light-blue {
+    background: linear-gradient(145deg, #7fd8f7, #3b98c1) !important;
+}
+
+.phone-preview-blue {
+    background: linear-gradient(145deg, #378ce2, #12549b) !important;
+}
+
+.phone-preview-navy {
+    background: linear-gradient(145deg, #274a73, #102844) !important;
+}
+
+.phone-preview-mint {
+    background: linear-gradient(145deg, #91efd0, #49b58f) !important;
+}
+
+.phone-preview-green {
+    background: linear-gradient(145deg, #56bd71, #21763d) !important;
+}
+
+.phone-preview-dark-green {
+    background: linear-gradient(145deg, #287658, #103d2b) !important;
+}
+
+.phone-preview-yellow {
+    background: linear-gradient(145deg, #ffe666, #d6a900) !important;
+}
+
+.phone-preview-orange {
+    background: linear-gradient(145deg, #ff9a3e, #c64e05) !important;
+}
+
+.phone-preview-red {
+    background: linear-gradient(145deg, #e33a3e, #9f1015) !important;
+}
+
+.phone-preview-dark-red {
+    background: linear-gradient(145deg, #9b3036, #571018) !important;
+}
+
+.phone-preview-brown {
+    background: linear-gradient(145deg, #9b7156, #583a29) !important;
+}
+
+.phone-preview-cream {
+    background: linear-gradient(145deg, #f2e7ce, #c9b991) !important;
+}
+
+.phone-preview-teal {
+    background: linear-gradient(145deg, #31a4a5, #116465) !important;
+}
+
+.phone-preview-matte-black {
+    background: linear-gradient(145deg, #35383a, #17191a) !important;
+}
+
+
+/* XERO EXTRA PHONE CASE COLOURS */
+
+/* Graphite Grey */
+.phone-messenger-window.phone-case-grey {
+    border-color: #656b70 !important;
+    box-shadow:
+        0 18px 48px rgba(0, 0, 0, 0.44),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.10);
+}
+
+/* Silver */
+.phone-messenger-window.phone-case-silver {
+    border-color: #b9c0c5 !important;
+    box-shadow:
+        0 18px 48px rgba(0, 0, 0, 0.36),
+        0 0 12px rgba(207, 215, 220, 0.18),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+}
+
+/* Rose Gold */
+.phone-messenger-window.phone-case-rose-gold,
+.phone-messenger-window.phone-case-rose_gold {
+    border-color: #c98f82 !important;
+    box-shadow:
+        0 18px 48px rgba(67, 32, 26, 0.40),
+        0 0 12px rgba(218, 157, 143, 0.18),
+        inset 0 0 0 1px rgba(255, 226, 216, 0.20);
+}
+
+/* Hot Pink */
+.phone-messenger-window.phone-case-hot-pink,
+.phone-messenger-window.phone-case-hot_pink {
+    border-color: #e52978 !important;
+    box-shadow:
+        0 18px 48px rgba(89, 11, 48, 0.45),
+        0 0 13px rgba(229, 41, 120, 0.20),
+        inset 0 0 0 1px rgba(255, 201, 226, 0.18);
+}
+
+/* Purple */
+.phone-messenger-window.phone-case-purple {
+    border-color: #7548b8 !important;
+    box-shadow:
+        0 18px 48px rgba(40, 19, 70, 0.48),
+        0 0 13px rgba(117, 72, 184, 0.18),
+        inset 0 0 0 1px rgba(223, 204, 255, 0.16);
+}
+
+/* Dark Purple */
+.phone-messenger-window.phone-case-dark-purple,
+.phone-messenger-window.phone-case-dark_purple {
+    border-color: #3f2a73 !important;
+    box-shadow:
+        0 18px 48px rgba(23, 12, 47, 0.52),
+        inset 0 0 0 1px rgba(194, 174, 236, 0.13);
+}
+
+/* Light Blue */
+.phone-messenger-window.phone-case-light-blue,
+.phone-messenger-window.phone-case-light_blue {
+    border-color: #4ab2dc !important;
+    box-shadow:
+        0 18px 48px rgba(12, 58, 78, 0.42),
+        0 0 13px rgba(74, 178, 220, 0.18),
+        inset 0 0 0 1px rgba(213, 244, 255, 0.18);
+}
+
+/* Blue */
+.phone-messenger-window.phone-case-blue {
+    border-color: #1768c4 !important;
+    box-shadow:
+        0 18px 48px rgba(5, 35, 76, 0.50),
+        0 0 13px rgba(23, 104, 196, 0.18),
+        inset 0 0 0 1px rgba(190, 221, 255, 0.16);
+}
+
+/* Navy */
+.phone-messenger-window.phone-case-navy {
+    border-color: #183557 !important;
+    box-shadow:
+        0 18px 48px rgba(4, 18, 38, 0.55),
+        inset 0 0 0 1px rgba(156, 191, 224, 0.12);
+}
+
+/* Mint */
+.phone-messenger-window.phone-case-mint {
+    border-color: #64d5b0 !important;
+    box-shadow:
+        0 18px 48px rgba(14, 68, 53, 0.40),
+        0 0 13px rgba(100, 213, 176, 0.16),
+        inset 0 0 0 1px rgba(220, 255, 243, 0.20);
+}
+
+/* Green */
+.phone-messenger-window.phone-case-green {
+    border-color: #2e9c50 !important;
+    box-shadow:
+        0 18px 48px rgba(10, 58, 27, 0.46),
+        inset 0 0 0 1px rgba(196, 244, 207, 0.15);
+}
+
+/* Dark Green */
+.phone-messenger-window.phone-case-dark-green,
+.phone-messenger-window.phone-case-dark_green {
+    border-color: #14563b !important;
+    box-shadow:
+        0 18px 48px rgba(4, 39, 25, 0.54),
+        inset 0 0 0 1px rgba(154, 222, 185, 0.12);
+}
+
+/* Yellow */
+.phone-messenger-window.phone-case-yellow {
+    border-color: #e7bd20 !important;
+    box-shadow:
+        0 18px 48px rgba(81, 62, 3, 0.42),
+        0 0 13px rgba(231, 189, 32, 0.17),
+        inset 0 0 0 1px rgba(255, 245, 177, 0.22);
+}
+
+/* Orange */
+.phone-messenger-window.phone-case-orange {
+    border-color: #df6b12 !important;
+    box-shadow:
+        0 18px 48px rgba(78, 30, 3, 0.46),
+        0 0 13px rgba(223, 107, 18, 0.16),
+        inset 0 0 0 1px rgba(255, 211, 166, 0.17);
+}
+
+/* Red */
+.phone-messenger-window.phone-case-red {
+    border-color: #c51d22 !important;
+    box-shadow:
+        0 18px 48px rgba(72, 6, 9, 0.50),
+        0 0 13px rgba(197, 29, 34, 0.18),
+        inset 0 0 0 1px rgba(255, 184, 187, 0.15);
+}
+
+/* Dark Red / Burgundy */
+.phone-messenger-window.phone-case-dark-red,
+.phone-messenger-window.phone-case-dark_red {
+    border-color: #741a20 !important;
+    box-shadow:
+        0 18px 48px rgba(45, 4, 8, 0.58),
+        0 0 14px rgba(116, 26, 32, 0.19),
+        inset 0 0 0 1px rgba(224, 144, 148, 0.13);
+}
+
+/* Brown */
+.phone-messenger-window.phone-case-brown {
+    border-color: #76503a !important;
+    box-shadow:
+        0 18px 48px rgba(48, 27, 16, 0.50),
+        inset 0 0 0 1px rgba(223, 190, 164, 0.13);
+}
+
+/* Cream */
+.phone-messenger-window.phone-case-cream {
+    border-color: #ded1b5 !important;
+    box-shadow:
+        0 18px 48px rgba(50, 43, 29, 0.36),
+        inset 0 0 0 1px rgba(255, 255, 244, 0.30);
+}
+
+/* Teal */
+.phone-messenger-window.phone-case-teal {
+    border-color: #147f80 !important;
+    box-shadow:
+        0 18px 48px rgba(4, 50, 51, 0.48),
+        0 0 13px rgba(20, 127, 128, 0.16),
+        inset 0 0 0 1px rgba(183, 235, 235, 0.14);
+}
+
+/* Matte Black */
+.phone-messenger-window.phone-case-matte-black,
+.phone-messenger-window.phone-case-matte_black {
+    border-color: #252729 !important;
+    box-shadow:
+        0 18px 52px rgba(0, 0, 0, 0.58),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.025);
+}
+
 
 
 /* -------------------- APPLY SURFACE -------------------- */
@@ -4861,3 +5609,423 @@ small {
         grid-template-columns: 1fr;
     }
 }
+
+
+/* XERO SEASONAL FULL UI THEMES */
+
+/*
+ * The seasonal theme definitions already set:
+ *
+ * --phone-bg
+ * --phone-panel
+ * --phone-panel-2
+ * --phone-accent
+ * --phone-accent-strong
+ * --phone-text
+ * --phone-muted
+ * --phone-border
+ *
+ * This section forces the actual phone controls to use those variables
+ * instead of retaining the original blue/grey hard-coded appearance.
+ */
+
+.phone-messenger-window:is(
+    .phone-theme-christmas,
+    .phone-theme-halloween,
+    .phone-theme-valentines,
+    .phone-theme-easter,
+    .phone-theme-summer,
+    .phone-theme-winter,
+    .phone-theme-autumn,
+    .phone-theme-newyear,
+    .phone-theme-pride,
+    .phone-theme-retro_hotel,
+    .phone-theme-retro-hotel,
+    .phone-theme-spring,
+    .phone-theme-stpatricks
+) {
+    color: var(--phone-text) !important;
+}
+
+/* App page overlay */
+
+.phone-messenger-window:is(
+    .phone-theme-christmas,
+    .phone-theme-halloween,
+    .phone-theme-valentines,
+    .phone-theme-easter,
+    .phone-theme-summer,
+    .phone-theme-winter,
+    .phone-theme-autumn,
+    .phone-theme-newyear,
+    .phone-theme-pride,
+    .phone-theme-retro_hotel,
+    .phone-theme-retro-hotel,
+    .phone-theme-spring,
+    .phone-theme-stpatricks
+) .phone-app-overlay {
+    background:
+        linear-gradient(
+            180deg,
+            color-mix(in srgb, var(--phone-bg) 90%, transparent),
+            color-mix(in srgb, var(--phone-bg) 82%, transparent)
+        ) !important;
+
+    color: var(--phone-text) !important;
+}
+
+/* Top bar */
+
+.phone-messenger-window:is(
+    .phone-theme-christmas,
+    .phone-theme-halloween,
+    .phone-theme-valentines,
+    .phone-theme-easter,
+    .phone-theme-summer,
+    .phone-theme-winter,
+    .phone-theme-autumn,
+    .phone-theme-newyear,
+    .phone-theme-pride,
+    .phone-theme-retro_hotel,
+    .phone-theme-retro-hotel,
+    .phone-theme-spring,
+    .phone-theme-stpatricks
+) .phone-app-topbar {
+    background:
+        linear-gradient(
+            180deg,
+            var(--phone-panel-2),
+            var(--phone-panel)
+        ) !important;
+
+    border-color: var(--phone-border) !important;
+    color: var(--phone-text) !important;
+}
+
+/* Main cards and panels */
+
+.phone-messenger-window:is(
+    .phone-theme-christmas,
+    .phone-theme-halloween,
+    .phone-theme-valentines,
+    .phone-theme-easter,
+    .phone-theme-summer,
+    .phone-theme-winter,
+    .phone-theme-autumn,
+    .phone-theme-newyear,
+    .phone-theme-pride,
+    .phone-theme-retro_hotel,
+    .phone-theme-retro-hotel,
+    .phone-theme-spring,
+    .phone-theme-stpatricks
+) :is(
+    .phone-home-profile,
+    .phone-home-status,
+    .phone-store-card,
+    .phone-contact-row,
+    .phone-notification-card,
+    .phone-profile-card,
+    .phone-purchase-row,
+    .phone-equipped-summary,
+    .phone-sound-settings,
+    .phone-custom-upload-settings,
+    .phone-upload-store-card,
+    .phone-wallet-balances > div
+) {
+    background:
+        linear-gradient(
+            180deg,
+            var(--phone-panel-2),
+            var(--phone-panel)
+        ) !important;
+
+    border-color: var(--phone-border) !important;
+    color: var(--phone-text) !important;
+
+    box-shadow:
+        0 8px 22px rgba(0, 0, 0, .24),
+        inset 0 0 0 1px rgba(255, 255, 255, .025);
+}
+
+/* Home app buttons */
+
+.phone-messenger-window:is(
+    .phone-theme-christmas,
+    .phone-theme-halloween,
+    .phone-theme-valentines,
+    .phone-theme-easter,
+    .phone-theme-summer,
+    .phone-theme-winter,
+    .phone-theme-autumn,
+    .phone-theme-newyear,
+    .phone-theme-pride,
+    .phone-theme-retro_hotel,
+    .phone-theme-retro-hotel,
+    .phone-theme-spring,
+    .phone-theme-stpatricks
+) .phone-home-grid button {
+    background:
+        linear-gradient(
+            180deg,
+            var(--phone-panel-2),
+            var(--phone-panel)
+        ) !important;
+
+    border-color: var(--phone-border) !important;
+    color: var(--phone-text) !important;
+}
+
+/* General buttons */
+
+.phone-messenger-window:is(
+    .phone-theme-christmas,
+    .phone-theme-halloween,
+    .phone-theme-valentines,
+    .phone-theme-easter,
+    .phone-theme-summer,
+    .phone-theme-winter,
+    .phone-theme-autumn,
+    .phone-theme-newyear,
+    .phone-theme-pride,
+    .phone-theme-retro_hotel,
+    .phone-theme-retro-hotel,
+    .phone-theme-spring,
+    .phone-theme-stpatricks
+) :is(
+    .phone-store-card button,
+    .phone-section-heading > button,
+    .phone-equipped-summary button,
+    .phone-sound-row button,
+    .phone-contact-edit,
+    .phone-contact-tone,
+    .phone-custom-upload-button
+) {
+    background:
+        linear-gradient(
+            180deg,
+            var(--phone-accent-strong),
+            var(--phone-accent)
+        ) !important;
+
+    border-color:
+        color-mix(
+            in srgb,
+            var(--phone-accent-strong) 75%,
+            white
+        ) !important;
+
+    color: #fff !important;
+
+    box-shadow:
+        0 3px 9px rgba(0, 0, 0, .24);
+}
+
+/* Hover */
+
+.phone-messenger-window:is(
+    .phone-theme-christmas,
+    .phone-theme-halloween,
+    .phone-theme-valentines,
+    .phone-theme-easter,
+    .phone-theme-summer,
+    .phone-theme-winter,
+    .phone-theme-autumn,
+    .phone-theme-newyear,
+    .phone-theme-pride,
+    .phone-theme-retro_hotel,
+    .phone-theme-retro-hotel,
+    .phone-theme-spring,
+    .phone-theme-stpatricks
+) button:hover {
+    border-color: var(--phone-accent-strong) !important;
+
+    filter: brightness(1.08);
+}
+
+/* Selected / equipped */
+
+.phone-messenger-window:is(
+    .phone-theme-christmas,
+    .phone-theme-halloween,
+    .phone-theme-valentines,
+    .phone-theme-easter,
+    .phone-theme-summer,
+    .phone-theme-winter,
+    .phone-theme-autumn,
+    .phone-theme-newyear,
+    .phone-theme-pride,
+    .phone-theme-retro_hotel,
+    .phone-theme-retro-hotel,
+    .phone-theme-spring,
+    .phone-theme-stpatricks
+) :is(
+    .equipped,
+    button.active,
+    .phone-store-card.equipped,
+    .phone-notification-card.unread
+) {
+    border-color: var(--phone-accent-strong) !important;
+
+    box-shadow:
+        0 0 0 1px var(--phone-accent),
+        0 8px 22px rgba(0, 0, 0, .24) !important;
+}
+
+/* Settings rows */
+
+.phone-messenger-window:is(
+    .phone-theme-christmas,
+    .phone-theme-halloween,
+    .phone-theme-valentines,
+    .phone-theme-easter,
+    .phone-theme-summer,
+    .phone-theme-winter,
+    .phone-theme-autumn,
+    .phone-theme-newyear,
+    .phone-theme-pride,
+    .phone-theme-retro_hotel,
+    .phone-theme-retro-hotel,
+    .phone-theme-spring,
+    .phone-theme-stpatricks
+) .phone-settings-list {
+    background: var(--phone-panel) !important;
+    border-color: var(--phone-border) !important;
+}
+
+.phone-messenger-window:is(
+    .phone-theme-christmas,
+    .phone-theme-halloween,
+    .phone-theme-valentines,
+    .phone-theme-easter,
+    .phone-theme-summer,
+    .phone-theme-winter,
+    .phone-theme-autumn,
+    .phone-theme-newyear,
+    .phone-theme-pride,
+    .phone-theme-retro_hotel,
+    .phone-theme-retro-hotel,
+    .phone-theme-spring,
+    .phone-theme-stpatricks
+) .phone-settings-list > label {
+    background: var(--phone-panel-2) !important;
+    border-color: var(--phone-border) !important;
+    color: var(--phone-text) !important;
+}
+
+/* Inputs */
+
+.phone-messenger-window:is(
+    .phone-theme-christmas,
+    .phone-theme-halloween,
+    .phone-theme-valentines,
+    .phone-theme-easter,
+    .phone-theme-summer,
+    .phone-theme-winter,
+    .phone-theme-autumn,
+    .phone-theme-newyear,
+    .phone-theme-pride,
+    .phone-theme-retro_hotel,
+    .phone-theme-retro-hotel,
+    .phone-theme-spring,
+    .phone-theme-stpatricks
+) :is(
+    input,
+    select,
+    textarea
+) {
+    background: var(--phone-bg) !important;
+    border-color: var(--phone-border) !important;
+    color: var(--phone-text) !important;
+}
+
+/* Muted/sub text */
+
+.phone-messenger-window:is(
+    .phone-theme-christmas,
+    .phone-theme-halloween,
+    .phone-theme-valentines,
+    .phone-theme-easter,
+    .phone-theme-summer,
+    .phone-theme-winter,
+    .phone-theme-autumn,
+    .phone-theme-newyear,
+    .phone-theme-pride,
+    .phone-theme-retro_hotel,
+    .phone-theme-retro-hotel,
+    .phone-theme-spring,
+    .phone-theme-stpatricks
+) :is(
+    small,
+    p,
+    .phone-settings-list span,
+    .phone-custom-upload-row span,
+    .phone-section-heading span
+) {
+    color: var(--phone-muted) !important;
+}
+
+/* Prices and section highlights */
+
+.phone-messenger-window:is(
+    .phone-theme-christmas,
+    .phone-theme-halloween,
+    .phone-theme-valentines,
+    .phone-theme-easter,
+    .phone-theme-summer,
+    .phone-theme-winter,
+    .phone-theme-autumn,
+    .phone-theme-newyear,
+    .phone-theme-pride,
+    .phone-theme-retro_hotel,
+    .phone-theme-retro-hotel,
+    .phone-theme-spring,
+    .phone-theme-stpatricks
+) :is(
+    .phone-price,
+    .phone-owned-label,
+    .phone-section-heading strong
+) {
+    color: var(--phone-accent-strong) !important;
+}
+
+/* Message composer */
+
+.phone-messenger-window:is(
+    .phone-theme-christmas,
+    .phone-theme-halloween,
+    .phone-theme-valentines,
+    .phone-theme-easter,
+    .phone-theme-summer,
+    .phone-theme-winter,
+    .phone-theme-autumn,
+    .phone-theme-newyear,
+    .phone-theme-pride,
+    .phone-theme-retro_hotel,
+    .phone-theme-retro-hotel,
+    .phone-theme-spring,
+    .phone-theme-stpatricks
+) .phone-reply-composer {
+    background: var(--phone-panel) !important;
+    border-color: var(--phone-border) !important;
+}
+
+/* Notification dot */
+
+.phone-messenger-window:is(
+    .phone-theme-christmas,
+    .phone-theme-halloween,
+    .phone-theme-valentines,
+    .phone-theme-easter,
+    .phone-theme-summer,
+    .phone-theme-winter,
+    .phone-theme-autumn,
+    .phone-theme-newyear,
+    .phone-theme-pride,
+    .phone-theme-retro_hotel,
+    .phone-theme-retro-hotel,
+    .phone-theme-spring,
+    .phone-theme-stpatricks
+) .phone-notification-dot {
+    background: var(--phone-accent-strong) !important;
+}
+

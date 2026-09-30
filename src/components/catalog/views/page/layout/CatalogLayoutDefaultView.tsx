@@ -1,7 +1,7 @@
 import { FC } from 'react';
-import { GetConfigurationValue, LocalizeText, ProductTypeEnum, SanitizeHtml } from '../../../../../api';
+import { CatalogType, GetConfigurationValue, LocalizeText, ProductTypeEnum, SanitizeHtml } from '../../../../../api';
 import { Text } from '../../../../../common';
-import { getCatalogGridMetrics, useCatalogData, useCatalogDisplayPreferences } from '../../../../../hooks';
+import { getCatalogGridMetrics, useCatalogData, useCatalogDisplayPreferences, useCatalogUiState } from '../../../../../hooks';
 import { CatalogHeaderView } from '../../catalog-header/CatalogHeaderView';
 import { CatalogAddOnBadgeWidgetView } from '../widgets/CatalogAddOnBadgeWidgetView';
 import { CatalogItemGridWidgetView } from '../widgets/CatalogItemGridWidgetView';
@@ -59,9 +59,9 @@ export const CatalogLayoutDefaultView: FC<CatalogLayoutProps> = (props) => {
                             {/* Bottom Actions Stack */}
                             <div className="flex flex-col gap-2 w-full mt-auto pt-2 border-t border-[#2e2822]">
                                 {/* Qty Row */}
-                                <div className="flex items-center justify-between w-full">
-                                    <span className="text-[11px] font-bold text-white shrink-0">Qty</span>
-                                    <div className="nitro-catalog-spinner-box flex items-center justify-end">
+                                <div className="nitro-catalog-desktop-quantity-row flex items-center justify-between w-full">
+                                    <span className="nitro-catalog-desktop-quantity-label text-[11px] font-bold text-white shrink-0">Qty</span>
+                                    <div className="nitro-catalog-spinner-box nitro-catalog-desktop-spinner-slot">
                                         <CatalogSpinnerWidgetView />
                                     </div>
                                 </div>

@@ -43,15 +43,50 @@ export const PurchasableClothingConfirmView: FC<PurchasableClothingConfirmViewPr
         if (roomSession && objectId >= 0) {
             const furniData = GetFurnitureDataForRoomObject(roomSession.roomId, objectId, RoomObjectCategory.FLOOR);
 
+            console.warn('[CLOTHING-DEBUG] clicked item', {
+                roomId: roomSession.roomId,
+                objectId,
+                gender,
+                figure,
+                furniData,
+                customParams: furniData?.customParams
+            });
+
             if (furniData && furniData.customParams && furniData.customParams.length) {
                 const setIds = furniData.customParams
                     .split(',')
                     .map((part) => parseInt(part))
                     .filter((id) => !isNaN(id));
 
+                console.warn('[CLOTHING-DEBUG] parsed set ids', setIds);
+
+                const manager = GetAvatarRenderManager();
+                const structure = manager?.structureData;
+
                 for (const setId of setIds) {
-                    if (GetAvatarRenderManager().isValidFigureSetForGender(setId, gender)) validSets.push(setId);
+                    const partSet = structure?.getFigurePartSet(setId);
+                    const valid = manager?.isValidFigureSetForGender(setId, gender) ?? false;
+
+                    console.warn('[CLOTHING-DEBUG] figure set check', {
+                        setId,
+                        found: !!partSet,
+                        type: partSet?.type,
+                        setGender: partSet?.gender,
+                        userGender: gender,
+                        selectable: partSet?.isSelectable,
+                        sellable: partSet?.isSellable,
+                        valid
+                    });
+
+                    if (valid) validSets.push(setId);
                 }
+
+                console.warn('[CLOTHING-DEBUG] final validation', {
+                    objectId,
+                    customParams: furniData.customParams,
+                    setIds,
+                    validSets
+                });
 
                 if (validSets.length) mode = MODE_PURCHASABLE_CLOTHING;
             }

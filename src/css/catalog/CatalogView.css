@@ -6313,128 +6313,135 @@ html.nitro-mobile-mode .nitro-catalog-default-layout .nitro-catalog-grid-shell {
 
 
 /* ==========================================================================
-   NITRO DESKTOP HIGH-DPI CATALOG GUARD
-   --------------------------------------------------------------------------
-   Only applies when:
-     - Nitro detected devicePixelRatio > 1
-     - viewport is desktop-sized
-     - device uses a precise/fine pointer
-
-   This deliberately leaves the custom mobile client alone.
+   XERO DESKTOP CATALOG QUANTITY - CLEAN FINAL
+   Desktop catalogue only. Mobile untouched.
    ========================================================================== */
+@media (min-width: 761px) and (pointer: fine) {
 
-@media (min-width: 1024px) and (pointer: fine) {
-
-    .nitro-app-root.nitro-high-dpi .nitro-catalog-window {
-        box-sizing: border-box !important;
-    }
-
-    /*
-     * Give the product/purchase panel additional vertical breathing room.
-     * The standard catalogue currently fixes this panel at 220px.
-     */
-    .nitro-app-root.nitro-high-dpi
+    html:not(.nitro-mobile-mode)
     .nitro-catalog-default-layout
-    .nitro-catalog-product-view {
-        height: 250px !important;
-        min-height: 250px !important;
-        max-height: 250px !important;
-        flex-shrink: 0 !important;
-        overflow: visible !important;
-    }
-
-    /*
-     * Prevent the right purchase card from clipping its own children.
-     */
-    .nitro-app-root.nitro-high-dpi
-    .nitro-catalog-default-layout
-    .nitro-catalog-offer-details {
-        min-width: 0 !important;
-        min-height: 0 !important;
-        overflow: visible !important;
-    }
-
-    /*
-     * Keep the title/price portion flexible rather than allowing it to push
-     * the purchase area outside the details card.
-     */
-    .nitro-app-root.nitro-high-dpi
-    .nitro-catalog-offer-details > :first-child {
-        min-width: 0 !important;
-        min-height: 0 !important;
-        flex: 0 1 auto !important;
-    }
-
-    /*
-     * Bottom purchase block must always remain inside the visible card.
-     */
-    .nitro-app-root.nitro-high-dpi
-    .nitro-catalog-offer-details > :last-child {
-        position: relative !important;
-        flex: 0 0 auto !important;
-        min-width: 0 !important;
+    .nitro-catalog-desktop-quantity-row {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
         width: 100% !important;
-        margin-top: auto !important;
+        min-height: 26px !important;
+        overflow: visible !important;
+    }
+
+    html:not(.nitro-mobile-mode)
+    .nitro-catalog-default-layout
+    .nitro-catalog-desktop-spinner-slot {
+        position: relative !important;
+        display: block !important;
+        flex: 0 0 110px !important;
+        width: 110px !important;
+        min-width: 110px !important;
+        max-width: 110px !important;
+        height: 25px !important;
+        min-height: 25px !important;
+        overflow: visible !important;
+    }
+
+    html:not(.nitro-mobile-mode)
+    .nitro-catalog-desktop-spinner-slot
+    .nitro-catalog-standard-spinner {
+        display: block !important;
+        position: relative !important;
+        width: 110px !important;
+        min-width: 110px !important;
+        max-width: 110px !important;
+        height: 25px !important;
+        min-height: 25px !important;
+        overflow: visible !important;
+    }
+
+    html:not(.nitro-mobile-mode)
+    .nitro-catalog-desktop-spinner-slot
+    .nitro-catalog-standard-spinner-label,
+
+    html:not(.nitro-mobile-mode)
+    .nitro-catalog-desktop-spinner-slot
+    .nitro-catalog-standard-spinner-discount {
+        display: none !important;
+    }
+
+    html:not(.nitro-mobile-mode)
+    .nitro-catalog-desktop-spinner-slot
+    button.nitro-catalog-standard-spinner-button {
+        display: block !important;
+        position: absolute !important;
+        top: 1px !important;
+        width: 22px !important;
+        min-width: 22px !important;
+        height: 22px !important;
+        min-height: 22px !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
         z-index: 5 !important;
     }
 
-    /*
-     * Quantity spinner may shrink but may never force the card wider.
-     */
-    .nitro-app-root.nitro-high-dpi
-    .nitro-catalog-spinner-box {
-        min-width: 0 !important;
-        max-width: 100% !important;
+    html:not(.nitro-mobile-mode)
+    .nitro-catalog-desktop-spinner-slot
+    button.nitro-catalog-standard-spinner-button-less {
+        left: 0 !important;
     }
 
-    /*
-     * Gift + Buy:
-     * force the two purchase actions into the available width instead of
-     * allowing Habbo-skin minimum widths to push them outside the panel.
-     */
-    .nitro-app-root.nitro-high-dpi
-    .nitro-catalog-offer-actions {
-        display: grid !important;
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-        gap: 6px !important;
-        align-items: stretch !important;
-        width: 100% !important;
-        min-width: 0 !important;
-        max-width: 100% !important;
+    html:not(.nitro-mobile-mode)
+    .nitro-catalog-desktop-spinner-slot
+    .nitro-catalog-standard-spinner-input-frame {
+        display: block !important;
+        position: absolute !important;
+        left: 32px !important;
+        top: 0 !important;
+        width: 42px !important;
+        min-width: 42px !important;
+        height: 25px !important;
+        min-height: 25px !important;
+        overflow: hidden !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        background: #ffffff !important;
+        border: 1px solid #000000 !important;
+        border-radius: 2px !important;
+        box-sizing: border-box !important;
+        z-index: 4 !important;
     }
 
-    .nitro-app-root.nitro-high-dpi
-    .nitro-catalog-offer-actions
-    .nitro-catalog-standard-button,
-    .nitro-app-root.nitro-high-dpi
-    .nitro-catalog-offer-actions
-    .nitro-catalog-standard-gift-button,
-    .nitro-app-root.nitro-high-dpi
-    .nitro-catalog-offer-actions
-    .nitro-catalog-standard-buy-button {
+    html:not(.nitro-mobile-mode)
+    .nitro-catalog-desktop-spinner-slot
+    .nitro-catalog-standard-spinner-input-frame::before {
+        display: none !important;
+    }
+
+    html:not(.nitro-mobile-mode)
+    .nitro-catalog-desktop-spinner-slot
+    .nitro-catalog-standard-spinner-value {
+        display: block !important;
+        position: absolute !important;
+        inset: 0 !important;
         width: 100% !important;
-        min-width: 0 !important;
-        max-width: 100% !important;
+        height: 100% !important;
         margin: 0 !important;
+        padding: 0 2px !important;
+        border: 0 !important;
+        outline: 0 !important;
+        background: transparent !important;
+        color: #000000 !important;
+        font-size: 11px !important;
+        line-height: 23px !important;
+        text-align: center !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        z-index: 6 !important;
         box-sizing: border-box !important;
     }
 
-    /*
-     * If there is only a Buy button, allow it to occupy the available row.
-     */
-    .nitro-app-root.nitro-high-dpi
-    .nitro-catalog-offer-actions
-    .nitro-catalog-standard-buy-button:only-child {
-        grid-column: 1 / -1 !important;
-    }
-
-    /*
-     * The item grid is the flexible part of the catalogue, therefore it takes
-     * the small amount of space added to the product panel.
-     */
-    .nitro-app-root.nitro-high-dpi
-    .nitro-catalog-grid-shell {
-        min-height: 0 !important;
-        flex: 1 1 auto !important;
+    html:not(.nitro-mobile-mode)
+    .nitro-catalog-desktop-spinner-slot
+    button.nitro-catalog-standard-spinner-button-more {
+        left: 84px !important;
     }
 }

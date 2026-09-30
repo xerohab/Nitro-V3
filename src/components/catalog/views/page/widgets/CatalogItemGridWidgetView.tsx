@@ -151,14 +151,15 @@ export const CatalogItemGridWidgetView: FC<CatalogItemGridWidgetViewProps> = (pr
     const selectOffer = (offer: IPurchasableOffer) => {
         if (!offer) return;
 
-        // Search offers already carry their real catalogue offer/page ids.
-        // Set the exact clicked object directly so selection never gets re-resolved
-        // against another offer that happens to share an index or transient id.
-        if (searchResult) {
-            setCurrentOffer?.(offer);
-            return;
-        }
-
+        /*
+         * Search results can contain lazy FurnitureOffer placeholders until
+         * ProductOfferEvent replaces them with the real catalogue Offer.
+         *
+         * Always pass search clicks through selectCatalogOffer as well.
+         * useCatalog already knows how to activate a lazy search offer without
+         * replacing the resolved currentOffer, and real offers are selected
+         * normally. This preserves bundlePurchaseAllowed and therefore Qty.
+         */
         selectCatalogOffer?.(offer);
     };
 

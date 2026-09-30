@@ -646,8 +646,19 @@ const useCatalogStore = () => {
 
             // Unbind search offers from currentPage to prevent falling back to default page offers
             if (searchResult && searchResult.offers) {
+                /*
+                 * Search result entries are lazy FurnitureOffer placeholders.
+                 * Never put that placeholder back into currentOffer when clicked,
+                 * otherwise the resolved price and bundlePurchaseAllowed state
+                 * disappear until another ProductOfferEvent resolves it.
+                 */
+                if (targetOffer.isLazy && targetOffer.offerId > -1) {
+                    targetOffer.activate();
+                    return;
+                }
+
                 setCurrentOffer(targetOffer);
-                if (targetOffer.isLazy && targetOffer.offerId > -1) targetOffer.activate();
+
                 return;
             }
 
@@ -862,6 +873,25 @@ const useCatalogStore = () => {
         }
 
         cacheResolvedOffer(offer);
+
+        /*
+         * Replace the temporary FurnitureOffer inside search results with
+         * the real resolved Offer returned by ProductOfferEvent.
+         *
+         * Without this, clicking the same search tile again selects the
+         * lazy FurnitureOffer and temporarily loses price and
+         * bundlePurchaseAllowed, which hides the Qty spinner.
+         */
+        if (searchResult?.offers?.length) {
+            const searchOfferIndex = searchResult.offers.findIndex(
+                (searchOffer) => searchOffer.offerId === offer.offerId
+            );
+
+            if (searchOfferIndex > -1) {
+                searchResult.offers[searchOfferIndex] = offer;
+                setSearchResult({ ...searchResult });
+            }
+        }
 
         const matchingNodes = getNodesByOfferId(offer.offerId, true) || getNodesByOfferId(offer.offerId);
 

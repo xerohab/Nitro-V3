@@ -2024,7 +2024,17 @@ export const FriendsMessengerView: FC<{}> = (props) => {
         key: string,
         kind: 'message' | 'notification' = 'message'
     ) => {
-        const normalized = String(key || '')
+        const rawKey = String(key || '');
+
+        const seasonalMatch = rawKey.match(
+            /^sound_(christmas|halloween|valentines|easter|summer|winter|autumn|newyear|pride|retro_hotel|spring|stpatricks)_(?:message|notification)$/
+        );
+
+        if (seasonalMatch) {
+            return `/client/phone/sounds/${ kind }/${ seasonalMatch[1] }.wav`;
+        }
+
+        const normalized = rawKey
             .replace(/^sound_/, '')
             .replaceAll('_', '-')
             .replace(/[^a-z0-9-]/gi, '');
