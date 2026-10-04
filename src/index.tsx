@@ -17,6 +17,7 @@ const queryClient = new QueryClient({
 
 import './css/habbo/HabboTheme.css';
 import './css/index.css';
+import './css/ui2/UI2.css';
 
 import './css/avatar-editor/AvatarEditorView.css';
 import './css/backgrounds/BackgroundsView.css';

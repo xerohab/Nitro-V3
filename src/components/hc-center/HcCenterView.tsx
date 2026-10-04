@@ -7,7 +7,8 @@ import {
     RemoveLinkEventTracker,
     ScrGetKickbackInfoMessageComposer,
     ScrKickbackData,
-    ScrSendKickbackInfoMessageEvent
+    ScrSendKickbackInfoMessageEvent,
+    ClubOfferData,
 } from '@octane/renderer';
 import { FC, useEffect, useState } from 'react';
 import { ClubStatus, FriendlyTime, GetClubBadge, GetConfigurationValue, LocalizeText, SendMessageComposer } from '../../api';
@@ -26,7 +27,7 @@ import {
     OctaneCardView,
     Text
 } from '../../common';
-import { useInventoryBadges, useMessageEvent, usePurse, useSessionInfo } from '../../hooks';
+import { useClubOffers, useInventoryBadges, useMessageEvent, usePurse, useSessionInfo } from '../../hooks';
 
 export const HcCenterView: FC<{}> = (props) => {
     const [isVisible, setIsVisible] = useState(false);
@@ -34,8 +35,9 @@ export const HcCenterView: FC<{}> = (props) => {
     const [unclaimedGifts, setUnclaimedGifts] = useState(0);
     const [badgeCode, setBadgeCode] = useState(null);
     const { userFigure = null } = useSessionInfo();
-    const { purse = null, clubStatus = null } = usePurse();
+    const { purse = null, clubStatus = null, getCurrencyAmount = null } = usePurse();
     const { badgeCodes = [], activate = null, deactivate = null } = useInventoryBadges();
+    const { data: clubOffers = null } = useClubOffers(1, { enabled: isVisible });
 
     const getClubText = () => {
         if (purse.clubDays <= 0) return LocalizeText('purse.clubdays.zero.amount.text');
@@ -157,13 +159,23 @@ export const HcCenterView: FC<{}> = (props) => {
     );
 
     return (
-        <OctaneCardView className="min-w-0 w-[min(430px,calc(100vw-16px))] max-w-[calc(100vw-16px)] max-h-[calc(100vh-16px)] resize-none" theme="primary-slim">
+        <OctaneCardView className="solace-hc-center min-w-0 w-[min(430px,calc(100vw-16px))] max-w-[calc(100vw-16px)] max-h-[calc(100vh-16px)] resize-none" theme="primary-slim">
             <OctaneCardHeaderView headerText={LocalizeText('generic.hccenter')} onCloseClick={() => setIsVisible(false)} />
             <Flex className="bg-muted/50 p-3" position="relative">
                 <Column gap={2}>
                     <div className="w-[213px] h-[37px] bg-contain bg-no-repeat" style={{ backgroundImage: `url(${hcLogo})` }} />
-                    <Button variant="success" onClick={(event) => CreateLinkEvent('catalog/open/' + GetConfigurationValue('catalog.links')['hc.buy_hc'])}>
-                        {LocalizeText(clubStatus === ClubStatus.ACTIVE ? 'hccenter.btn.extend' : 'hccenter.btn.buy')}
+                    <Button
+                        variant="success"
+                        onClick={() => CreateLinkEvent(
+                            'catalog/open/' +
+                            GetConfigurationValue('catalog.links')['hc.buy_hc']
+                        )}
+                    >
+                        {LocalizeText(
+                            clubStatus === ClubStatus.ACTIVE
+                                ? 'hccenter.btn.extend'
+                                : 'hccenter.btn.buy'
+                        )}
                     </Button>
                 </Column>
                 <div className="absolute right-0 top-0 p-2 z-[4]">
@@ -253,6 +265,55 @@ export const HcCenterView: FC<{}> = (props) => {
                         </Button>
                     </Flex>
                 )}
+                <Column className="solace-hc-offers" gap={2}>
+                    <div className="solace-hc-section-heading">
+                        <strong>{clubStatus === ClubStatus.ACTIVE ? 'Extend your HC' : 'Join Habbo Club'}</strong>
+                        <span>Membership packages</span>
+                    </div>
+
+                    <div className="solace-hc-offer-grid">
+                        {(clubOffers ?? []).map((offer) => (
+                            <div
+                                key={offer.offerId}
+                                className={`solace-hc-offer-card ${offer.vip ? 'is-vip' : 'is-hc'}`}
+                            >
+                                <div className="solace-hc-offer-name">
+                                    {offer.months > 0
+                                        ? `${offer.months} ${offer.months === 1 ? 'Month' : 'Months'}`
+                                        : `${offer.extraDays} Days`}
+                                </div>
+
+                                <div className="solace-hc-offer-price">
+                                    {offer.priceCredits > 0 && (
+                                        <span>{offer.priceCredits} Credits</span>
+                                    )}
+
+                                    {offer.priceCredits > 0 && offer.priceActivityPoints > 0 && (
+                                        <span className="solace-hc-offer-plus">+</span>
+                                    )}
+
+                                    {offer.priceActivityPoints > 0 && (
+                                        <span>
+                                            {offer.priceActivityPoints}
+                                            {offer.priceActivityPointsType === 5 ? ' Diamonds' : ' Points'}
+                                        </span>
+                                    )}
+                                </div>
+
+                                <Button
+                                    variant="success"
+                                    onClick={() => CreateLinkEvent(
+                                        'catalog/open/' +
+                                        GetConfigurationValue('catalog.links')['hc.buy_hc']
+                                    )}
+                                >
+                                    {LocalizeText('catalog.club.button.buy')}
+                                </Button>
+                            </div>
+                        ))}
+                    </div>
+                </Column>
+
                 {GetConfigurationValue('hc.center')['benefits.info'] && (
                     <Column
                         className="rounded p-3 bg-no-repeat bg-right-top border border-card-grid-item-border"

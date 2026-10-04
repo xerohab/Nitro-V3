@@ -1089,7 +1089,7 @@
 }
 
 /* Purchased clothing category paging */
-.nitro-avatar-editor-category-scroll {
+.octane-avatar-editor-category-scroll {
     appearance: none;
     position: absolute;
     top: 129px;
@@ -1106,38 +1106,38 @@
     image-rendering: pixelated;
 }
 
-.nitro-avatar-editor-category-scroll.is-left {
+.octane-avatar-editor-category-scroll.is-left {
     left: 299px;
     background-image: url('@/assets/images/scrollbar/left.png');
 }
 
-.nitro-avatar-editor-category-scroll.is-left:hover {
+.octane-avatar-editor-category-scroll.is-left:hover {
     background-image: url('@/assets/images/scrollbar/left_hover.png');
 }
 
-.nitro-avatar-editor-category-scroll.is-left:active {
+.octane-avatar-editor-category-scroll.is-left:active {
     background-image: url('@/assets/images/scrollbar/left_active.png');
 }
 
-.nitro-avatar-editor-category-scroll.is-right {
+.octane-avatar-editor-category-scroll.is-right {
     left: 316px;
     background-image: url('@/assets/images/scrollbar/right.png');
 }
 
-.nitro-avatar-editor-category-scroll.is-right:hover {
+.octane-avatar-editor-category-scroll.is-right:hover {
     background-image: url('@/assets/images/scrollbar/right_hover.png');
 }
 
-.nitro-avatar-editor-category-scroll.is-right:active {
+.octane-avatar-editor-category-scroll.is-right:active {
     background-image: url('@/assets/images/scrollbar/right_active.png');
 }
 
 /* Hide the native scrollbar when Purchased uses arrow paging */
-.nitro-avatar-editor-subcategories.is-paged {
+.octane-avatar-editor-subcategories.is-paged {
     width: 276px;
     scrollbar-width: none;
 }
 
-.nitro-avatar-editor-subcategories.is-paged::-webkit-scrollbar {
+.octane-avatar-editor-subcategories.is-paged::-webkit-scrollbar {
     display: none;
 }

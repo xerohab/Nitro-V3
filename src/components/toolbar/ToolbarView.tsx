@@ -391,7 +391,7 @@ export const ToolbarView: FC<{ isInRoom: boolean }> = props =>
                         alignItems="center"
                         justifyContent="center"
                         className="pointer-events-auto h-full w-full min-w-0 flex-1"
-                        id="toolbar-chat-input-container" />
+                        id="toolbar-chat-input-container-ui1" />
                 </div> }
 
             <motion.div
@@ -548,7 +548,7 @@ export const ToolbarView: FC<{ isInRoom: boolean }> = props =>
                             { (mentionsUnread > 0) &&
                                 <LayoutItemCountView count={ mentionsUnread } className="absolute -right-2 -top-1" /> }
                         </motion.div> }
-                    <div className={ `h-full shrink-0 ${ desktopBlockClasses }` } id="toolbar-friend-bar-container-desktop" />
+                    <div className={ `h-full shrink-0 ${ desktopBlockClasses }` } id="toolbar-friend-bar-container-desktop-ui1" />
                     </>) }
                 </motion.div>
                 <button

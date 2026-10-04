@@ -1,3 +1,4 @@
+import { useUI2 } from '../../../ui2/UI2Context';
 import { GetSessionDataManager, HabboClubLevelEnum, RoomControllerLevel } from '@octane/renderer';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -11,7 +12,8 @@ import { ChatInputStickerSelectorView } from './ChatInputStickerSelectorView';
 import { ChatInputMentionSelectorView } from './ChatInputMentionSelectorView';
 import { ChatInputStyleSelectorView } from './ChatInputStyleSelectorView';
 
-export const ChatInputView: FC<{}> = (props) => {
+export const ChatInputView: FC<{ }> = (props) => {
+    const { enabled: ui2Enabled } = useUI2();
     const [chatValue, setChatValue] = useState<string>('');
     const [portalTarget, setPortalTarget] = useState<HTMLElement>(null);
     const { chatStyleId = 0, updateChatStyleId = null } = useSessionInfo();
@@ -353,7 +355,11 @@ export const ChatInputView: FC<{}> = (props) => {
         let frame = 0;
 
         const locate = () => {
-            const target = document.getElementById('toolbar-chat-input-container');
+            const target = document.getElementById(
+                ui2Enabled
+                    ? 'toolbar-chat-input-container-ui2'
+                    : 'toolbar-chat-input-container-ui1'
+            );
 
             if (target) {
                 setPortalTarget(target);
@@ -366,7 +372,7 @@ export const ChatInputView: FC<{}> = (props) => {
         locate();
 
         return () => window.cancelAnimationFrame(frame);
-    }, [roomSession, portalTarget]);
+    }, [roomSession, ui2Enabled]);
 
     if (!roomSession || roomSession.isSpectator || !portalTarget) return null;
 

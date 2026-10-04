@@ -47,8 +47,12 @@ export const CatalogLayoutPetView: FC<CatalogLayoutProps> = ({ page = null }) =>
     activePageIdRef.current = page?.pageId ?? -1;
     const { currentOffer = null } = useCatalogData();
     const { setCurrentOffer = null } = useCatalogUiState();
-    const breed = (currentOffer?.product?.productData?.type as unknown as string) ?? '';
-    const { data: petPalette = null } = useSellablePetPalette(breed);
+    // Sellable pet palettes are keyed by the protocol breed identifier,
+    // not by the catalogue productData.type string.
+    // Keep this derived from petIndex so custom pets use the same lookup
+    // path as the previously working pet catalogue.
+    const breed = petIndex >= 0 ? `a0 pet${petIndex}` : '';
+    const { data: petPalette = null } = useSellablePetPalette(breed, { enabled: petIndex >= 0 });
     const legacyPet = isLegacyPetType(petIndex);
     const clubLevel = useUserDataSnapshot().clubLevel;
     const isHc = clubLevel > 0;
@@ -130,11 +134,18 @@ export const CatalogLayoutPetView: FC<CatalogLayoutProps> = ({ page = null }) =>
         [legacyPet, petAssetRefreshKey, petIndex, sellablePalettes]
     );
 
+    // Solace fixed-colour custom pets are valid even when the emulator
+    // does not return a SellablePetPalettes entry. Their catalogue race
+    // is always 0, so do not make rendering/purchasing depend on a
+    // palette packet that may never arrive.
     const fixedColorPet =
         !legacyPet &&
-        sellablePalettes.length > 0 &&
-        !hasRendererPaletteColors &&
         (
+            // Pigeons: fixed-colour renderer assets, no palette data.
+            petIndex === 21 ||
+            petIndex === 22 ||
+
+            // Existing fixed-colour Solace pets.
             petIndex === 37 ||
             (petIndex >= 38 && petIndex <= 65) ||
             (petIndex >= 69 && petIndex <= 80) ||
@@ -157,22 +168,18 @@ export const CatalogLayoutPetView: FC<CatalogLayoutProps> = ({ page = null }) =>
         : (newPetChoices[selectedPaletteIndex]?.colors[0] ?? 0xffffff);
 
     const purchaseExtraData = useMemo(() => {
-        if (!petName || !selectedPalette) return '';
+        if (!petName) return '';
 
-        // Preserve upstream HC-only breed protection before any Solace
-        // direct-purchase path can construct purchasable extra data.
+        // Fixed-colour pets do not expose renderer palette data.
+        // This includes Wise Pidgeon (21) and Cunning Pidgeon (22).
+        if (fixedColorPet) return `${petName}\n0\nFFFFFF`;
+
+        if (!selectedPalette) return '';
+
+        // Preserve upstream HC-only breed protection.
         if ((selectedPalette as { clubOnly?: boolean }).clubOnly && !isHc) return '';
 
         // Solace fixed-colour custom pets use race 0.
-        if (
-            petIndex === 37 ||
-            (petIndex >= 38 && petIndex <= 65) ||
-            (petIndex >= 69 && petIndex <= 80) ||
-            (petIndex >= 83 && petIndex <= 106)
-        ) {
-            return `${petName}\n0\nFFFFFF`;
-        }
-
         // Custom baby pets have genuine renderer palettes.
         if (petIndex >= 66 && petIndex <= 68) {
             return `${petName}\n${selectedPalette.paletteId}\nFFFFFF`;
@@ -188,7 +195,7 @@ export const CatalogLayoutPetView: FC<CatalogLayoutProps> = ({ page = null }) =>
             selectedPalette,
             petIndex === 36 ? 0xffffff : selectedColor
         );
-    }, [isHc, legacyPet, petIndex, petName, selectedColor, selectedColorIndex, selectedPalette]);
+    }, [fixedColorPet, isHc, legacyPet, petIndex, petName, selectedColor, selectedColorIndex, selectedPalette]);
 
     const validationErrorMessage = useMemo(() => {
         const errorKeys: Record<number, string> = {
@@ -203,20 +210,7 @@ export const CatalogLayoutPetView: FC<CatalogLayoutProps> = ({ page = null }) =>
     }, [approvalResult]);
 
     const requestPurchase = useCallback(() => {
-        console.log('[PET37 CLICK DEBUG]', {
-            petIndex,
-            breed,
-            pageId: page?.pageId,
-            offerId: currentOffer?.offerId,
-            offerName: currentOffer?.product?.productData?.type,
-            petName,
-            selectedPaletteIndex,
-            selectedPalette,
-            selectedColor,
-            purchaseExtraData,
-            approvalPending,
-            purchasePending: purchasePendingRef.current
-        });
+
         if (approvalPending || purchasePendingRef.current || !page || !currentOffer || !purchaseExtraData) return;
 
         // Custom pets bypass the legacy name-approval round trip.
@@ -317,20 +311,6 @@ export const CatalogLayoutPetView: FC<CatalogLayoutProps> = ({ page = null }) =>
     }, [approvalPending, petName]);
 
     useEffect(() => {
-        console.log('[PET PALETTE DEBUG]', {
-            petIndex,
-            breed,
-            pageId: page?.pageId,
-            offerId: currentOffer?.offerId,
-            petPalette,
-            rawPalettes: petPalette?.palettes ?? [],
-            sellablePalettes,
-            selectablePalettes,
-            effectiveSelectablePalettes,
-            fixedColorPet,
-            selectedPaletteIndex,
-            selectedPalette
-        });
     }, [
         petIndex,
         breed,
@@ -355,7 +335,7 @@ export const CatalogLayoutPetView: FC<CatalogLayoutProps> = ({ page = null }) =>
             className={`octane-catalog-pet-layout ${legacyPet ? 'octane-catalog-pet-layout--legacy' : 'octane-catalog-pet-layout--new'}`}
         >
             <div className="octane-catalog-pet-preview relative h-[240px] min-h-[240px] overflow-hidden">
-                {petIndex >= 0 && (legacyPet || fixedColorPet || hasRendererPaletteColors) && (
+                {petIndex >= 0 && (
                     <div className="octane-catalog-pet-preview-image">
                         <LayoutPetImageView
                             direction={legacyPet || petIndex === 15 ? 2 : 3}

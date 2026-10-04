@@ -3,7 +3,7 @@ export * from './AvatarEditorIcon';
 export * from './AvatarEditorModelView';
 export * from './AvatarEditorNftView';
 export * from './AvatarEditorPetView';
-export * from './AvatarEditorView';
+export * from './AvatarEditorSelectorView';
 export * from './AvatarEditorWardrobeView';
 export * from './figure-set';
 export * from './palette-set';

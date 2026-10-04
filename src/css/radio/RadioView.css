@@ -4,9 +4,9 @@
 
 .radio-eq {
     display: flex;
+    height: 12px;
     align-items: flex-end;
     gap: 2px;
-    height: 12px;
 }
 
 .radio-eq span {
@@ -14,24 +14,28 @@
     height: 30%;
     border-radius: 2px;
     background: #38bdf8;
-    opacity: 0.55;
+    opacity: .55;
 }
 
 .radio-eq.is-live span {
     opacity: 1;
-    animation: radioEq 0.9s ease-in-out infinite;
+    animation: radioEq .9s ease-in-out infinite;
 }
 
 .radio-eq span:nth-child(2) {
-    animation-delay: 0.18s;
+    animation-delay: .18s;
 }
 
 .radio-eq span:nth-child(3) {
-    animation-delay: 0.36s;
+    animation-delay: .36s;
 }
 
 .radio-eq span:nth-child(4) {
-    animation-delay: 0.12s;
+    animation-delay: .12s;
+}
+
+.radio-vol {
+    accent-color: #38bdf8;
 }
 
 @keyframes radioEq {
@@ -45,6 +49,384 @@
     }
 }
 
-.radio-vol {
-    accent-color: #38bdf8;
+
+/* ============================================================
+   UI2 RADIO ONLY
+   Classic remains controlled by its original component classes.
+   ============================================================ */
+
+@media (min-width: 641px) {
+
+    html.solace-ui2-enabled .solace-ui2-radio {
+        width: 190px;
+        max-width: 190px;
+        overflow: visible;
+        border: 1px solid
+            color-mix(
+                in srgb,
+                var(--solace-ui2-colour) 60%,
+                #111
+            );
+        border-radius: 7px;
+        color: white;
+        background: #17191e;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, .42);
+    }
+
+    html.solace-ui2-enabled .radio-widget__header {
+        display: flex;
+        height: 29px;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 5px 4px 7px;
+        border-radius: 6px 6px 0 0;
+        color: white;
+        background:
+            linear-gradient(
+                180deg,
+                color-mix(
+                    in srgb,
+                    var(--solace-ui2-colour) 88%,
+                    white 5%
+                ),
+                color-mix(
+                    in srgb,
+                    var(--solace-ui2-colour) 78%,
+                    black 18%
+                )
+            );
+    }
+
+    html.solace-ui2-enabled .radio-widget__title-icon {
+        flex: 0 0 auto;
+        font-size: 10px;
+    }
+
+    html.solace-ui2-enabled .radio-widget__title {
+        min-width: 0;
+        flex: 1;
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: .07em;
+        text-transform: uppercase;
+    }
+
+    html.solace-ui2-enabled .radio-widget__window-button {
+        display: flex;
+        width: 19px;
+        height: 19px;
+        flex: 0 0 19px;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(255,255,255,.13);
+        border-radius: 4px;
+        color: white;
+        background: rgba(0,0,0,.17);
+        font-size: 8px;
+        cursor: pointer;
+        pointer-events: auto;
+    }
+
+    html.solace-ui2-enabled
+    .radio-widget__window-button--close:hover {
+        background: #b91c1c;
+    }
+
+    html.solace-ui2-enabled .radio-widget__body {
+        padding: 7px;
+    }
+
+    html.solace-ui2-enabled .radio-widget__station {
+        display: flex;
+        min-height: 34px;
+        align-items: center;
+        gap: 6px;
+    }
+
+    html.solace-ui2-enabled .radio-widget__play {
+        display: flex;
+        width: 28px;
+        height: 28px;
+        flex: 0 0 28px;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        border-radius: 50%;
+        color: white;
+        background: var(--solace-ui2-colour);
+        font-size: 9px;
+        cursor: pointer;
+    }
+
+    html.solace-ui2-enabled .radio-widget__station-copy {
+        min-width: 0;
+        flex: 1;
+    }
+
+    html.solace-ui2-enabled .radio-widget__station-name {
+        overflow: hidden;
+        font-size: 10px;
+        font-weight: 800;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    html.solace-ui2-enabled .radio-widget__station-meta {
+        display: flex;
+        min-width: 0;
+        align-items: center;
+        gap: 4px;
+        margin-top: 2px;
+    }
+
+    html.solace-ui2-enabled .radio-widget__live {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        color:
+            color-mix(
+                in srgb,
+                var(--solace-ui2-colour) 68%,
+                white
+            );
+        font-size: 7px;
+        font-weight: 900;
+    }
+
+    html.solace-ui2-enabled .radio-widget__live-dot {
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: var(--solace-ui2-colour);
+    }
+
+    html.solace-ui2-enabled .radio-widget__genre {
+        overflow: hidden;
+        color: rgba(255,255,255,.5);
+        font-size: 8px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    html.solace-ui2-enabled .radio-widget__station > .radio-eq {
+        height: 12px;
+    }
+
+    html.solace-ui2-enabled
+    .radio-widget__station > .radio-eq span {
+        width: 2px;
+        background: var(--solace-ui2-colour);
+    }
+
+    html.solace-ui2-enabled .radio-widget__volume {
+        display: flex;
+        height: 24px;
+        align-items: center;
+        gap: 5px;
+        margin-top: 5px;
+        padding: 3px 6px;
+        border-radius: 5px;
+        background: rgba(0,0,0,.18);
+        font-size: 9px;
+    }
+
+    html.solace-ui2-enabled .radio-widget__volume .radio-vol {
+        min-width: 0;
+        flex: 1;
+        accent-color: var(--solace-ui2-colour);
+    }
+
+    html.solace-ui2-enabled .radio-widget__picker-wrap {
+        position: relative;
+        margin-top: 5px;
+    }
+
+    html.solace-ui2-enabled .radio-widget__picker-button {
+        display: flex;
+        width: 100%;
+        height: 26px;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 7px;
+        border: 1px solid
+            color-mix(
+                in srgb,
+                var(--solace-ui2-colour) 48%,
+                #333
+            );
+        border-radius: 5px;
+        color: white;
+        background: #22252a;
+        font-size: 9px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    html.solace-ui2-enabled
+    .radio-widget__picker-button.is-open {
+        border-color: var(--solace-ui2-colour);
+    }
+
+    html.solace-ui2-enabled .radio-widget__picker {
+        position: absolute;
+        right: 0;
+        top: calc(100% + 4px);
+        bottom: auto;
+        left: 0;
+        z-index: 500;
+        overflow: hidden;
+        padding: 3px;
+        border: 1px solid var(--solace-ui2-colour);
+        border-radius: 5px;
+        background: #17191e;
+        box-shadow: 0 8px 18px rgba(0,0,0,.45);
+    }
+
+    html.solace-ui2-enabled .radio-widget__station-option {
+        display: flex;
+        width: 100%;
+        min-height: 31px;
+        align-items: center;
+        padding: 4px 6px;
+        border: 1px solid transparent;
+        border-radius: 4px;
+        color: white;
+        background: transparent;
+        text-align: left;
+        cursor: pointer;
+    }
+
+    html.solace-ui2-enabled
+    .radio-widget__station-option:hover {
+        background: rgba(255,255,255,.06);
+    }
+
+    html.solace-ui2-enabled
+    .radio-widget__station-option.is-active {
+        border-color: var(--solace-ui2-colour);
+        background:
+            color-mix(
+                in srgb,
+                var(--solace-ui2-colour) 18%,
+                transparent
+            );
+    }
+
+    html.solace-ui2-enabled .radio-widget__option-copy {
+        display: flex;
+        min-width: 0;
+        flex: 1;
+        flex-direction: column;
+    }
+
+    html.solace-ui2-enabled .radio-widget__option-copy strong {
+        overflow: hidden;
+        font-size: 9px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    html.solace-ui2-enabled .radio-widget__option-copy small {
+        overflow: hidden;
+        margin-top: 1px;
+        color: rgba(255,255,255,.45);
+        font-size: 7px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    html.solace-ui2-enabled .radio-widget__message {
+        padding: 5px;
+        color: rgba(255,255,255,.55);
+        font-size: 8px;
+    }
+
+    html.solace-ui2-enabled
+    .radio-widget__message--error {
+        color: #fca5a5;
+    }
+}
+
+
+/* ============================================================
+   UI2 RADIO — SEASONAL THEME DECORATION
+   Classic radio is intentionally unaffected.
+   ============================================================ */
+
+@media (min-width: 641px)
+{
+    html.solace-ui2-enabled
+    .solace-ui2-radio
+    .radio-widget__seasonal-header-icon
+    {
+        position: relative;
+        z-index: 2;
+
+        display: inline-flex;
+        width: 14px;
+        height: 14px;
+        flex: 0 0 14px;
+
+        align-items: center;
+        justify-content: center;
+
+        font-size: 11px;
+        line-height: 1;
+
+        filter:
+            drop-shadow(0 1px 1px rgba(0,0,0,.35));
+
+        pointer-events: none;
+    }
+
+    html.solace-ui2-enabled
+    .solace-ui2-radio
+    .radio-widget__body
+    {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+    }
+
+    html.solace-ui2-enabled
+    .solace-ui2-radio
+    .radio-widget__seasonal-watermark
+    {
+        position: absolute;
+        right: 5px;
+        top: 29px;
+        z-index: -1;
+
+        display: block;
+
+        font-size: 46px;
+        line-height: 1;
+
+        opacity: .075;
+
+        filter:
+            grayscale(.12)
+            drop-shadow(0 2px 2px rgba(0,0,0,.2));
+
+        transform: rotate(-8deg);
+
+        user-select: none;
+        pointer-events: none;
+    }
+
+    html.solace-ui2-enabled
+    .solace-ui2-radio
+    .radio-widget__station,
+
+    html.solace-ui2-enabled
+    .solace-ui2-radio
+    .radio-widget__volume,
+
+    html.solace-ui2-enabled
+    .solace-ui2-radio
+    .radio-widget__picker-wrap
+    {
+        position: relative;
+        z-index: 1;
+    }
 }

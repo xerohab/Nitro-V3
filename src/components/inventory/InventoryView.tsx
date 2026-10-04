@@ -45,6 +45,7 @@ import { InventoryWiredTradeView } from './views/furniture/InventoryWiredTradeVi
 import { BADGE_MAIN_ACHIEVEMENTS, BADGE_MAIN_ALL, BADGE_MAIN_NORMAL, BADGE_RARITY_ALL, InventoryCategoryFilterView } from './views/InventoryCategoryFilterView';
 import { InventoryPetView } from './views/pet/InventoryPetView';
 import { InventoryPrefixView } from './views/prefix/InventoryPrefixView';
+import { InventoryHabbiconView } from './views/habbicon/InventoryHabbiconView';
 
 const TAB_FURNITURE = 'inventory.furni';
 const TAB_CLOTHING = 'inventory.clothing';
@@ -52,15 +53,26 @@ const TAB_BOTS = 'inventory.bots';
 const TAB_PETS = 'inventory.furni.tab.pets';
 const TAB_BADGES = 'inventory.badges';
 const TAB_PREFIXES = 'inventory.prefixes';
-const TABS = [TAB_FURNITURE, TAB_CLOTHING, TAB_PETS, TAB_BADGES, TAB_BOTS, TAB_PREFIXES];
+const TAB_HABBICONS = 'inventory.habbicons';
+
+const TABS = [
+    TAB_FURNITURE,
+    TAB_PETS,
+    TAB_CLOTHING,
+    TAB_BADGES,
+    TAB_PREFIXES,
+    TAB_BOTS,
+    TAB_HABBICONS
+];
 
 const TAB_LABEL_FALLBACK: Record<string, string> = {
     [TAB_FURNITURE]: 'Furniture',
     [TAB_CLOTHING]: 'Clothing',
     [TAB_PETS]: 'Pets',
     [TAB_BADGES]: 'Badges',
+    [TAB_PREFIXES]: 'Prefixes',
     [TAB_BOTS]: 'Bots',
-    [TAB_PREFIXES]: 'Prefixes'
+    [TAB_HABBICONS]: 'Habbicons'
 };
 
 const tabLabel = (name: string) => {
@@ -79,7 +91,9 @@ const TAB_BY_CODE: Record<string, string> = {
     pets: TAB_PETS,
     badges: TAB_BADGES,
     prefixes: TAB_PREFIXES,
-    bots: TAB_BOTS
+    bots: TAB_BOTS,
+    habbicons: TAB_HABBICONS,
+    habbicon: TAB_HABBICONS
 };
 
 const getFurnitureDataForGroup = (groupItem: GroupItem): any => {
@@ -130,7 +144,8 @@ const UNSEEN_BY_TAB: Record<string, number> = {
     [TAB_PETS]: UnseenItemCategory.PET,
     [TAB_BADGES]: UnseenItemCategory.BADGE,
     [TAB_BOTS]: UnseenItemCategory.BOT,
-    [TAB_PREFIXES]: UnseenItemCategory.PREFIX
+    [TAB_PREFIXES]: UnseenItemCategory.PREFIX,
+    [TAB_HABBICONS]: 8
 };
 
 // AIR 13 keeps rented furni in the furni tab, so their unseen counter lands with owned furni.
@@ -380,6 +395,7 @@ export const InventoryView: FC<{}> = () => {
                                 {currentTab === TAB_BADGES && <InventoryBadgeView filteredBadgeCodes={filteredBadgeCodes} />}
                                 {currentTab === TAB_BOTS && <InventoryBotView roomPreviewer={roomPreviewer} roomSession={roomSession} />}
                                 {currentTab === TAB_PREFIXES && <InventoryPrefixView />}
+                                {currentTab === TAB_HABBICONS && <InventoryHabbiconView />}
                             </div>
                         </div>
                     </>

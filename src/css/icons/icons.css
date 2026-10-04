@@ -838,3 +838,62 @@
     width: 34px;
     height: 36px;
 }
+
+
+/* Solace generic Video Player icon — intentionally no YouTube branding */
+.octane-icon.icon-video-player
+{
+    position:relative;
+
+    width:36px;
+    height:36px;
+
+    border:3px solid currentColor;
+    border-radius:6px;
+
+    background:none !important;
+
+    box-sizing:border-box;
+}
+
+.octane-icon.icon-video-player::before
+{
+    content:"";
+
+    position:absolute;
+
+    left:11px;
+    top:7px;
+
+    width:0;
+    height:0;
+
+    border-top:8px solid transparent;
+    border-bottom:8px solid transparent;
+    border-left:12px solid currentColor;
+}
+
+.octane-icon.icon-video-player::after
+{
+    content:"";
+
+    position:absolute;
+
+    left:7px;
+    right:7px;
+    bottom:-7px;
+
+    height:3px;
+
+    border-radius:2px;
+
+    background:currentColor;
+}
+
+
+/* Solace UI2 — smaller Video Player toolbar glyph */
+html.solace-ui2-enabled .octane-icon.icon-video-player
+{
+    transform:scale(.78);
+    transform-origin:center;
+}

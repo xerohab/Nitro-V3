@@ -32,11 +32,41 @@ export const NavigatorSearchResultView: FC<NavigatorSearchResultViewProps> = (pr
 
     const getResultTitle = () => {
         const name = searchResult.code;
+        const data = searchResult.data;
 
-        if (!name || !name.length) return searchResult.data;
-        if (name.startsWith('${')) return name.slice(2, name.length - 1);
+        const resolveTitle = (value?: string) => {
+            if (!value) return '';
 
-        return localizeWithFallback('navigator.searchcode.title.' + name, searchResult.data || name);
+            if (value.startsWith('${') && value.endsWith('}'))
+            {
+                const key = value.slice(2, -1);
+
+                return localizeWithFallback(key, key);
+            }
+
+            if (value.startsWith('navigator.'))
+            {
+                return localizeWithFallback(value, value);
+            }
+
+            return value;
+        };
+
+        const resolvedData = resolveTitle(data);
+
+        if (!name || !name.length) return resolvedData;
+
+        const resolvedName = resolveTitle(name);
+
+        if (name.startsWith('${') || name.startsWith('navigator.'))
+        {
+            return resolvedName;
+        }
+
+        return localizeWithFallback(
+            'navigator.searchcode.title.' + name,
+            resolvedData || resolvedName || name
+        );
     };
 
     const toggleDisplayMode = () => {

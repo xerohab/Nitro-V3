@@ -5073,3 +5073,250 @@
     width: auto !important;
     min-width: 0 !important;
 }
+
+/* ============================================================================
+   CATALOG DESKTOP FINAL FIX
+   IMPORTANT:
+   - Desktop only.
+   - Do NOT affect the custom mobile client.
+   - Pet rendering/purchase logic is untouched.
+   ============================================================================ */
+
+@media (min-width: 769px) {
+
+    /*
+     * ------------------------------------------------------------
+     * PRODUCT PREVIEW
+     * ------------------------------------------------------------
+     *
+     * The old layout had a 240px product box containing a 348px
+     * renderer which was then clipped. Give the desktop preview
+     * enough vertical room instead.
+     */
+
+    .octane-catalog-default-layout {
+        height: 460px !important;
+        min-height: 460px !important;
+        max-height: 460px !important;
+    }
+
+    .octane-catalog-product-view {
+        height: 260px !important;
+        min-height: 260px !important;
+        max-height: 260px !important;
+        overflow: visible !important;
+        flex-shrink: 0 !important;
+    }
+
+    .octane-catalog-offer-panel {
+        height: 260px !important;
+        min-height: 260px !important;
+        max-height: 260px !important;
+    }
+
+    .octane-catalog-offer-preview {
+        height: 260px !important;
+        min-height: 260px !important;
+        max-height: 260px !important;
+        overflow: hidden !important;
+    }
+
+    .octane-catalog-offer-preview > .shadow-room-previewer {
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 260px !important;
+        min-height: 260px !important;
+        max-height: 260px !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+    }
+
+    .octane-catalog-offer-preview
+        > .shadow-room-previewer
+        > .shadow-room-previewer-canvas {
+        display: block !important;
+        width: 100% !important;
+        height: 260px !important;
+        min-height: 260px !important;
+        max-height: 260px !important;
+        max-width: 100% !important;
+        object-fit: fill !important;
+    }
+
+    /*
+     * Keep preview arrows inside the larger preview.
+     */
+    .octane-catalog-preview-controls {
+        top: 8px !important;
+        right: 6px !important;
+        z-index: 50 !important;
+    }
+
+    /*
+     * ------------------------------------------------------------
+     * ITEM GRID / SCROLLING
+     * ------------------------------------------------------------
+     *
+     * Move the item grid down to match the larger preview while
+     * retaining the catalogue's bottom price/purchase rows.
+     */
+
+    .octane-catalog-default-layout .octane-catalog-grid-shell {
+        top: 265px !important;
+        bottom: 60px !important;
+        height: 135px !important;
+        min-height: 135px !important;
+        max-height: 135px !important;
+        overflow: auto !important;
+    }
+
+    .octane-catalog-default-layout
+        .octane-catalog-grid-shell
+        .octane-classic-scroll-area-viewport {
+        overflow: auto !important;
+    }
+
+    .octane-catalog-default-layout
+        .octane-catalog-item-grid-scroll-area {
+        overflow: auto !important;
+    }
+
+    /*
+     * Never hide the catalogue scrollbar on desktop.
+     */
+    .octane-catalog-default-layout
+        .octane-classic-scroll-area-viewport::-webkit-scrollbar {
+        width: 14px;
+        height: 14px;
+    }
+
+    /*
+     * ------------------------------------------------------------
+     * PRODUCT DETAILS PANEL
+     * ------------------------------------------------------------
+     *
+     * White background as requested, with the text remaining
+     * readable.
+     */
+
+    .octane-catalog-offer-details {
+        background: #ffffff !important;
+        color: #222222 !important;
+        overflow: visible !important;
+        box-sizing: border-box !important;
+    }
+
+    .octane-catalog-offer-details
+        .octane-catalog-product-details-name,
+    .octane-catalog-offer-details
+        .octane-catalog-product-details-description {
+        color: #222222 !important;
+        opacity: 1 !important;
+        text-shadow: none !important;
+    }
+
+    /*
+     * ------------------------------------------------------------
+     * QUANTITY
+     * ------------------------------------------------------------
+     *
+     * Quantity stays on its own row and is never removed or
+     * squeezed by the purchase buttons.
+     */
+
+    .octane-catalog-desktop-quantity-row {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        flex: 0 0 auto !important;
+    }
+
+    .octane-catalog-desktop-spinner-slot {
+        flex: 0 0 auto !important;
+        min-width: 0 !important;
+    }
+
+    .octane-catalog-standard-spinner {
+        flex: 0 0 auto !important;
+    }
+
+    /*
+     * ------------------------------------------------------------
+     * BUY / BUY GIFT
+     * ------------------------------------------------------------
+     *
+     * Use the actual button class names.
+     * Both buttons get exactly the same width and height.
+     *
+     * They share the available width instead of retaining the old
+     * fixed 170px width which caused the right button to be clipped.
+     */
+
+    .octane-catalog-offer-actions {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: stretch !important;
+        justify-content: stretch !important;
+        gap: 5px !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        height: 24px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        flex: 0 0 24px !important;
+        overflow: visible !important;
+    }
+
+    .octane-catalog-window
+        .octane-catalog-offer-actions
+        .octane-catalog-standard-buy-button,
+
+    .octane-catalog-window
+        .octane-catalog-offer-actions
+        .octane-catalog-standard-gift-button {
+        flex: 1 1 0 !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        height: 24px !important;
+        min-height: 24px !important;
+        margin: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    /*
+     * Do not allow the old 170px desktop rules to win.
+     */
+    .octane-catalog-window
+        .octane-catalog-standard-buy-button,
+
+    .octane-catalog-window
+        .octane-catalog-standard-gift-button {
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: none !important;
+    }
+
+    /*
+     * Keep the catalogue content itself scrollable rather than
+     * allowing an individual section to swallow the scrollbar.
+     */
+    .octane-catalog-content-shell {
+        min-height: 0 !important;
+    }
+
+    .octane-catalog-layout-shell {
+        min-height: 0 !important;
+    }
+}
+
+/*
+ * IMPORTANT:
+ * No mobile rules are added here.
+ *
+ * The previous working mobile CSS is deliberately left untouched.
+ */
+

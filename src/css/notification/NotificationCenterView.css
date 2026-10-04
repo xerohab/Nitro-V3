@@ -716,6 +716,13 @@
     align-items: flex-end;
     gap: 4px;
     pointer-events: none;
+
+    /*
+     * UI2 purse uses z-index 30050.
+     * Notifications must remain above the purse when it is open.
+     */
+    position: relative;
+    z-index: 40000 !important;
 }
 
 .octane-rightside-notifications > * {

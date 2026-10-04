@@ -8,7 +8,7 @@ import {
     SetClothingChangeDataMessageComposer,
     UserFigureComposer
 } from '@octane/renderer';
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
 import { FaDice, FaRedo, FaTrash } from 'react-icons/fa';
 import { AvatarEditorAction, LocalizeText, SendMessageComposer } from '../../api';
 import mainGenericSrc from '../../assets/images/avatareditor/air/main-generic.png';
@@ -23,6 +23,7 @@ import { HabbiconsSubmenuOwned } from '../../assets/images/habbicons';
 import { OctaneCardContentView, OctaneCardHeaderView, OctaneCardTabsItemView, OctaneCardTabsView, OctaneCardView } from '../../common';
 import { useAvatarEditor } from '../../hooks';
 import { AvatarEditorFigurePreviewView } from './AvatarEditorFigurePreviewView';
+import { AvatarEditorIcon } from './AvatarEditorIcon';
 import { AvatarEditorModelView } from './AvatarEditorModelView';
 import { AvatarEditorNftView } from './AvatarEditorNftView';
 import { AvatarEditorPetView } from './AvatarEditorPetView';
@@ -52,7 +53,9 @@ const MAIN_TAB_ORDER: string[] = [
     'purchased'
 ];
 
-export const AvatarEditorView: FC<{}> = (props) => {
+export const AvatarEditorClassicView: FC<{}> = (props) => {
+    const mainTabsRef = useRef<HTMLDivElement>(null);
+    const [mainTabPage, setMainTabPage] = useState(0);
     const [isVisible, setIsVisible] = useState(false);
     const [isWardrobeOpen, setIsWardrobeOpen] = useState(false);
     const {
@@ -163,7 +166,7 @@ export const AvatarEditorView: FC<{}> = (props) => {
 
     return (
         <OctaneCardView
-            className={`octane-avatar-editor${isWardrobeOpen ? ' is-wardrobe-open' : ''}`}
+            className={`octane-avatar-editor solace-classic-avatar-editor${isWardrobeOpen ? ' is-wardrobe-open' : ''}`}
             frameStyle={3}
             isResizable={false}
             uniqueKey="avatar-editor"
@@ -178,24 +181,55 @@ export const AvatarEditorView: FC<{}> = (props) => {
                         <span>{GetSessionDataManager().userName}</span>
                     </div>
                     <div className="octane-avatar-editor-tab-row">
-                        <OctaneCardTabsView classNames={['avatar-editor-tabs']}>
-                            {orderedModelKeys.map((modelKey) => (
-                                <OctaneCardTabsItemView
-                                    key={modelKey}
-                                    classNames={['octane-avatar-editor-main-tab', `is-${modelKey}`]}
-                                    isActive={activeModelKey === modelKey}
-                                    onClick={() => setActiveModelKey(modelKey)}
-                                >
-                                    <img
-                                        className="octane-avatar-editor-main-tab-icon"
-                                        src={MAIN_TAB_ICONS[modelKey]}
-                                        alt={modelKey === 'purchased' ? 'Purchased' : ''}
-                                        title={modelKey === 'purchased' ? 'Purchased' : undefined}
-                                        draggable={false}
-                                    />
-                                </OctaneCardTabsItemView>
-                            ))}
-                        </OctaneCardTabsView>
+                        {mainTabPage > 0 && (
+                            <button
+                                type="button"
+                                className="octane-avatar-editor-main-category-scroll is-left"
+                                aria-label="Previous avatar categories"
+                                onClick={() => {
+                                    const nextPage = Math.max(0, mainTabPage - 1);
+                                    setMainTabPage(nextPage);
+                                    mainTabsRef.current?.scrollTo({ left: nextPage * 312, behavior: 'auto' });
+                                }}
+                            >
+                                <AvatarEditorIcon icon="arrow-left" />
+                            </button>
+                        )}
+
+                        <div ref={mainTabsRef} className="octane-avatar-editor-main-tabs-viewport">
+                            <OctaneCardTabsView classNames={['avatar-editor-tabs']}>
+                                {orderedModelKeys.map((modelKey) => (
+                                    <OctaneCardTabsItemView
+                                        key={modelKey}
+                                        classNames={['octane-avatar-editor-main-tab', `is-${modelKey}`]}
+                                        isActive={activeModelKey === modelKey}
+                                        onClick={() => setActiveModelKey(modelKey)}
+                                    >
+                                        <img
+                                            className="octane-avatar-editor-main-tab-icon"
+                                            src={MAIN_TAB_ICONS[modelKey]}
+                                            alt={modelKey === 'purchased' ? 'Purchased' : ''}
+                                            title={modelKey === 'purchased' ? 'Purchased' : undefined}
+                                            draggable={false}
+                                        />
+                                    </OctaneCardTabsItemView>
+                                ))}
+                            </OctaneCardTabsView>
+                        </div>
+
+                        {orderedModelKeys.length > 6 && mainTabPage === 0 && (
+                            <button
+                                type="button"
+                                className="octane-avatar-editor-main-category-scroll is-right"
+                                aria-label="Next avatar categories"
+                                onClick={() => {
+                                    setMainTabPage(1);
+                                    mainTabsRef.current?.scrollTo({ left: 312, behavior: 'auto' });
+                                }}
+                            >
+                                <AvatarEditorIcon icon="arrow-right" />
+                            </button>
+                        )}
                     </div>
                     {canUseWardrobe && (
                         <button
@@ -209,12 +243,17 @@ export const AvatarEditorView: FC<{}> = (props) => {
                         </button>
                     )}
                     <div className="octane-avatar-editor-main">
-                        {activeModelKey.length > 0 && !isPetsOpen && !isNftOpen && (
-                            <AvatarEditorModelView categories={avatarModels[activeModelKey]} name={activeModelKey} />
-                        )}
-                        {isPetsOpen && <AvatarEditorPetView categories={avatarModels[activeModelKey]} />}
-                        {isNftOpen && <AvatarEditorNftView categories={avatarModels[activeModelKey]} />}
-                        <AvatarEditorFigurePreviewView />
+                        <div className="solace-classic-avatar-preview-column">
+                            <AvatarEditorFigurePreviewView />
+                        </div>
+
+                        <div className="solace-classic-avatar-clothing-column">
+                            {activeModelKey.length > 0 && !isPetsOpen && !isNftOpen && (
+                                <AvatarEditorModelView categories={avatarModels[activeModelKey]} name={activeModelKey} />
+                            )}
+                            {isPetsOpen && <AvatarEditorPetView categories={avatarModels[activeModelKey]} />}
+                            {isNftOpen && <AvatarEditorNftView categories={avatarModels[activeModelKey]} />}
+                        </div>
                         {!clothingChangeData && (
                             <div className="octane-avatar-editor-secondary-actions">
                                 <button

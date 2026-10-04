@@ -800,3 +800,61 @@
     .octane-inventory-window .octane-inventory-preview-state {
         right: 6px;
     }
+
+/* =========================================================
+   HABBICONS INVENTORY TAB
+   Isolated from furniture/clothing inventory styling.
+   ========================================================= */
+
+.octane-inventory-habbicons {
+    display: grid;
+    grid-template-columns: repeat(5, 42px);
+    grid-auto-rows: 42px;
+    gap: 4px;
+    padding: 6px;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+.octane-inventory-habbicon {
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    margin: 0;
+    border: 1px solid transparent;
+    background: rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.octane-inventory-habbicon:hover {
+    border-color: rgba(255, 255, 255, 0.55);
+    background: rgba(255, 255, 255, 0.16);
+}
+
+.octane-inventory-habbicon.is-favourite {
+    border-color: rgba(255, 215, 0, 0.55);
+}
+
+.octane-inventory-habbicon img {
+    max-width: 40px;
+    max-height: 40px;
+    width: auto;
+    height: auto;
+    image-rendering: pixelated;
+    pointer-events: none;
+}
+
+.octane-inventory-habbicon-placeholder {
+    font-size: 9px;
+    opacity: 0.7;
+}
+
+.octane-inventory-habbicons-empty {
+    padding: 20px;
+    text-align: center;
+    opacity: 0.75;
+}

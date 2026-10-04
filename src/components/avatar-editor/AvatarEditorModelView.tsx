@@ -121,7 +121,7 @@ export const AvatarEditorModelView: FC<{
             )}
 
             <div className="octane-avatar-editor-parts-grid">
-                <AvatarEditorFigureSetView category={activeCategory} columnCount={6} />
+                <AvatarEditorFigureSetView category={activeCategory} columnCount={8} />
             </div>
 
             <button

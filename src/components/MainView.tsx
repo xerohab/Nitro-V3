@@ -10,7 +10,7 @@ import {
     RoomSessionEvent
 } from '@octane/renderer';
 import { AnimatePresence, motion } from 'framer-motion';
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useState, useMemo } from 'react';
 import { GetConfigurationValue, IsTouchDevice, SendMessageComposer } from '../api';
 import { useMentionMessages, useOctaneEventReducer } from '../hooks';
 import { markAllRead } from '../hooks/mentions/mentionsStore';
@@ -54,6 +54,7 @@ import { RightSideView } from './right-side/RightSideView';
 import { RoomView } from './room/RoomView';
 import { SoundboardView } from './soundboard/SoundboardView';
 import { ToolbarView } from './toolbar/ToolbarView';
+import { useUI2 } from './ui2/UI2Context';
 import { TranslationBootstrap } from './translation/TranslationBootstrap';
 import { TranslationSettingsView } from './translation/TranslationSettingsView';
 import { TraxEditorView } from './trax-editor/TraxEditorView';
@@ -67,6 +68,37 @@ import { WiredCreatorToolsView } from './wired-tools/WiredCreatorToolsView';
 
 export const MainView: FC<{}> = (props) =>
 {
+    const { enabled: ui2Enabled } = useUI2();
+
+    const touchLayout = useMemo(() =>
+    {
+        try
+        {
+            const params = new URLSearchParams(window.location.search);
+
+            if(
+                params.get('mobile') === '1' ||
+                params.get('mobile') === 'true'
+            )
+            {
+                return true;
+            }
+
+            if(
+                params.get('mobile') === '0' ||
+                params.get('desktop') === '1'
+            )
+            {
+                return false;
+            }
+
+            return window.matchMedia('(pointer: coarse), (hover: none)').matches;
+        }
+        catch
+        {
+            return false;
+        }
+    }, []);
     const [isReady, setIsReady] = useState(false);
     const [localizationVersion, setLocalizationVersion] = useState(0);
     const [mentionsVisible, setMentionsVisible] = useState(false);
@@ -199,7 +231,9 @@ export const MainView: FC<{}> = (props) =>
                     </motion.div>
                 )}
             </AnimatePresence>
-            <ToolbarView isInRoom={!landingViewVisible} />
+            {(!ui2Enabled || touchLayout) && (
+                <ToolbarView isInRoom={!landingViewVisible} />
+            )}
             <TranslationBootstrap />
             <GoogleAdsView />
             <ModToolsView />

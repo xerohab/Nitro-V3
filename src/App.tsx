@@ -25,6 +25,9 @@ import { Base } from './common';
 import { LoadingView } from './components/loading/LoadingView';
 import { LoginView } from './components/login/LoginView';
 import { MainView } from './components/MainView';
+import { UI2Provider } from './components/ui2/UI2Context';
+import { UI2View } from './components/ui2/UI2View';
+
 import { ReconnectView } from './components/reconnect/ReconnectView';
 import { ClearStoredChatHistory, getConnectionFailureAction, shouldClearLoginAfterDisconnect, useConnectionState, useDevicePixelRatio, useMessageEvent, useOctaneEvent } from './hooks';
 import { SharedHookRegistry } from './state/useSharedHook';
@@ -585,10 +588,13 @@ export const App: FC<{}> = (props) => {
             )}
             {!isReady && showLogin && <LoginView onAuthenticated={handleAuthenticated} isEntering={isEnteringHotel} />}
             {isReady && (
-                <SharedHookRegistry fallback={<LoadingView message="Loading…" />}>
-                    <MainView />
-                    <ReconnectView />
-                </SharedHookRegistry>
+                <UI2Provider>
+                    <SharedHookRegistry fallback={<LoadingView message="Loading…" />}>
+                        <MainView />
+                        <ReconnectView />
+                        <UI2View />
+                    </SharedHookRegistry>
+                </UI2Provider>
             )}
             <Base id="draggable-windows-container" />
         </Base>

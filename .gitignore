@@ -53,3 +53,14 @@ Thumbs.db
 /public/nitro-assets
 /public/swf
 .superpowers/
+
+# ============================================================
+# Solace server backups / audits / temporary files
+# ============================================================
+backups/
+*.backup-*
+*.bak-before-*
+*.before-*
+*.broken-*
+*-audit.txt
+known-good-*.txt

@@ -422,7 +422,11 @@ export const UserSettingsView: FC<{}> = () => {
     }
 
     return (
-        <AirSettingsFrame backLabel={backLabel} onBack={handleBack} title={localizeWithFallback('privacy.settings.title', 'Game Privacy')} variant="privacy">
+        <>
+
+
+        {section === 'privacy' && (
+<AirSettingsFrame backLabel={backLabel} onBack={handleBack} title={localizeWithFallback('privacy.settings.title', 'Game Privacy')} variant="privacy">
             <div className="air-settings-privacy__content">
                 <fieldset>
                     <legend>{localizeWithFallback('privacy.settings.online.title', 'Online status')}</legend>
@@ -498,5 +502,7 @@ export const UserSettingsView: FC<{}> = () => {
                 </fieldset>
             </div>
         </AirSettingsFrame>
+)}
+</>
     );
 };

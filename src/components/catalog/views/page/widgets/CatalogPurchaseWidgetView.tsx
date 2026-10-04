@@ -254,9 +254,13 @@ export const CatalogPurchaseWidgetView: FC<CatalogPurchaseWidgetViewProps> = (pr
     const purchase = (isGift: boolean = false) => {
         if (habbiconOwned || purchasePendingRef.current || !currentOffer) return;
 
-        // Normal unavailable rent offers must remain blocked. Search/lazy
-        // virtual offers are resolved to their real catalogue IDs below.
-        if (!canPurchaseCatalogOffer(currentOffer)) return;
+        // Preserve the pre-merge behaviour for normal/search/lazy offers.
+        // Virtual catalogue offers resolve to their real page/offer IDs
+        // below and must not be rejected by the generic availability helper.
+        if (
+            currentOffer.isRentOffer &&
+            !canPurchaseCatalogOffer(currentOffer)
+        ) return;
 
         if (GetClubMemberLevel() < currentOffer.clubLevel) {
             CreateLinkEvent('habboUI/open/hccenter');
@@ -388,6 +392,7 @@ export const CatalogPurchaseWidgetView: FC<CatalogPurchaseWidgetViewProps> = (pr
     // resolve to real catalogue IDs during purchase. Do not disable them
     // solely because the temporary offer fails the generic helper.
     const isOfferUnavailable =
+        !!currentOffer.isRentOffer &&
         !canPurchaseCatalogOffer(currentOffer);
     // A club-locked offer replaces the purchase buttons with the club invitation; either
     // button would only open the club centre for a player below the offer's club level.
