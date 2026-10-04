@@ -86,7 +86,7 @@ export const UI2Purse: FC = () =>
             aria-label="Purse"
         >
             <div className="solace-ui2-purse-top">
-                <span className="solace-ui2-purse-brand">SOLACE</span>
+                <span className="solace-ui2-purse-brand">Purse</span>
 
                 <button
                     type="button"

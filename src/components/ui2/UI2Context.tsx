@@ -131,7 +131,7 @@ export const UI2Provider: FC<PropsWithChildren> = ({ children }) =>
     const setEnabled = (_value: boolean) =>
     {
         /*
-         * Solace UI2 is now the permanent desktop interface.
+         * Project XeroX UI is now the permanent desktop interface.
          * Keep this function for compatibility with existing consumers,
          * but do not allow legacy saved preferences to disable UI2.
          */

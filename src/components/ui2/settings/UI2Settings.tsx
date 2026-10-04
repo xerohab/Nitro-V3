@@ -172,16 +172,16 @@ export const UI2Settings: FC<UI2SettingsProps> = ({ open, onClose }) =>
             className="solace-ui2-settings"
             role="dialog"
             aria-modal="false"
-            aria-label="UI2 Appearance"
+            aria-label="UI Appearance"
         >
             <div className="solace-ui2-settings-header">
-                <strong>UI2 Appearance</strong>
+                <strong>UI Appearance</strong>
 
                 <button
                     type="button"
                     className="solace-ui2-settings-close"
                     onClick={onClose}
-                    aria-label="Close UI2 Appearance"
+                    aria-label="Close UI Appearance"
                     title="Close"
                 >
                     ×
